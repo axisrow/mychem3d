@@ -18,7 +18,7 @@ class Space:
         self.attract_k = 5
         self.ATTRACT_KOEFF= self.attract_k/100.0
         #self.ATTRACTR = 5*self.ATOMRADIUS
-        self.ROTA_KOEFF = 0.000005
+        self.ROTA_KOEFF = 0.0000005
         self.REPULSION1 = -3
         self.repulse_k1 = 15
         self.REPULSION_KOEFF1 = self.repulse_k1
@@ -132,8 +132,8 @@ class Space:
             self.np_vx *=0.9999
             self.np_vy *=0.9999
             self.np_vz *=0.9999
-            self.np_vf *=0.99
-            self.np_vf2 *=0.99
+            self.np_vf *=0.95
+            self.np_vf2 *=0.95
             self.np_vx += self.np_ax
             self.np_vy += self.np_ay
             self.np_vz += self.np_az
@@ -287,13 +287,13 @@ class Space:
                             if n1.pair == n2:
                                 if (rn>0): 
                                     a = -r2n*self.BOND_KOEFF  #atom's bond force
-                                    naf  -= self.ROTA_KOEFF * (-n1x* delta_y + n1y * delta_x) 
-                                    naf2 -= self.ROTA_KOEFF * (n1x* delta_z + n1z * delta_x) 
+                                    naf  -= self.ROTA_KOEFF * (n1x* delta_y + n1y * delta_x) 
+                                    naf2 -= self.ROTA_KOEFF * (-n1x* delta_z + n1z * delta_x) 
                                     #naf2 -=  1/rn * self.ROTA_KOEFF * cos(n1_actual_f) * atom_i.r * (sin(n1_actual_f2)* delta_z + delta_x*cos(n1_actual_f2))
                                     #naf2 = 0
                             if not n1.bonded and not n2.bonded:
                                     #a = -r2n*0.00001
-                                    naf  -= self.ROTA_KOEFF * (-n1x* delta_y + n1y * delta_x )
+                                    naf  -= self.ROTA_KOEFF * (n1x* delta_y + n1y * delta_x )
                                     naf2 -= self.ROTA_KOEFF * (n1x* delta_z + n1z * delta_x )
                                     if self.debug: print(f"naf={naf} naf2={naf2} rn={rn} a.f={self.np_f[i]} a.f2={self.np_f2[i]} ")
                             nEx += delta_x/rn * a

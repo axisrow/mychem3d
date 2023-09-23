@@ -1,7 +1,7 @@
 import random
 from re import S
 from mychem3d import mychemApp, Atom
-from math import pi
+from math import pi 
 import mychem3d
 from math import *
 
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     makepoly1(space,100,220,100)
     makeriboza(space,400,400,100)
     makeformaldehyde(space,800,100,100)
-    space.appendmixer(5)
+    space.appendmixer(20)
     #space.stoptime = 3000
     #space.DETRACT_KOEFF1 = 0
     #space.DETRACT_KOEFF2 = 0

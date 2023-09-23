@@ -45,7 +45,7 @@ class AppOgl(OpenGLFrame):
         self.lastY = 300
         self.yaw = -90
         self.pitch = 0 
-        self.fov = 45
+        self.fov = 70
         self.light_pos = glm.vec3(1.2,1.0,2.0)
 
         self.factor = 0.001
@@ -68,11 +68,11 @@ class AppOgl(OpenGLFrame):
         atom_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, atom_buffer)
 
-        stride = 4*3
+        stride = 4*6
         gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-        #gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
         gl.glEnableVertexAttribArray(0)
-        #gl.glEnableVertexAttribArray(1)
+        gl.glEnableVertexAttribArray(1)
         # Send the data over to the buffer
         gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.atom_vertices.size, self.atom_vertices, gl.GL_STATIC_DRAW)
         gl.glBindVertexArray( 0 )
@@ -169,7 +169,7 @@ class AppOgl(OpenGLFrame):
                 model =  glm.translate(pos)
                 model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
                 if n.bonded:
-                    gl.glUniform3f(objcol_loc,1.0,0.0,1.0)
+                    gl.glUniform3f(objcol_loc,0.0,1.0,0.0)
                 else:
                     gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
                 gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))

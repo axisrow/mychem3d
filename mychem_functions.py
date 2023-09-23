@@ -1,9 +1,10 @@
 from math import sin, cos, pi
-
+import numpy as np, glm
 
 def create_sphere(radius, num_segments):
     vertex_data = []
     index_data = []
+    normal_data = []
 
     for i in range(num_segments + 1):
         for j in range(num_segments + 1):
@@ -15,20 +16,22 @@ def create_sphere(radius, num_segments):
             z = radius * cos(phi)
 
             vertex_data.append((x, y, z))
+            normal_data.append(glm.normalize(glm.vec3(x,y,z)))
 
             if i < num_segments and j < num_segments:
                 first = i * (num_segments + 1) + j
                 second = first + num_segments + 1
                 index_data.extend([first, second, first + 1, second, second + 1, first + 1])
-
-    return vertex_data, index_data
+    
+    return vertex_data, index_data, normal_data
 
 
 def make_sphere_vert(radius, segments):
     vertices = []
-    vertex_data, index_data = create_sphere(radius, segments)
+    vertex_data, index_data,normal_data = create_sphere(radius, segments)
     for i in index_data:
             vertices.extend(list(vertex_data[i]))
+            vertices.extend(list(normal_data[i]))
     return vertices
 
 
