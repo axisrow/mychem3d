@@ -28,12 +28,16 @@ space = App.space
 #space.stoptime = 10
 #makesomething(space,150,250,0)
 #makesomething(space,350,250,0)
-#for i in range(0,50):
-#        space.appendatom(Atom(random.randrange(1,space.WIDTH), random.randrange(1,space.HEIGHT),random.randrange(1,space.HEIGHT), 6));
-#a = Atom(0,0,0,3)
-#a.color = (1,1.0,1.0)
-#space.appendatom(a)        
+#for i in range(0,250):
+#        space.appendatom(Atom(random.randrange(1,space.WIDTH), random.randrange(1,space.HEIGHT),random.randrange(1,space.DEPTH), random.randrange(1,6)));
+a = Atom(480,500,500,1)
+a2 = Atom(519,500,500,1,pi,f2=+pi/4)
+space.debug = True
+# space.stoptime = 2
+space.appendatom(a)        
+space.appendatom(a2)        
 #space.appendmixer(20)
 #space.export = True
 #space.stoptime = 2
 App.run()
+  

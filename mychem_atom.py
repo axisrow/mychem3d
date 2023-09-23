@@ -1,8 +1,9 @@
-from math import pi as PI
+from math import pi 
 
 class Node:
 	def __init__(self,parent):
 		self.f = 0
+		self.f2 = pi/2
 		self.bonded = False
 		self.bonded2 = False
 		self.pair = None
@@ -91,9 +92,12 @@ class Atom:
 		self.f2 = f2
 		self.vx = 0.0
 		self.vy = 0.0
+		self.vz = 0.0
 		self.ax = 0.0
 		self.ay = 0.0
+		self.az = 0.0
 		self.vf = 0.0
+		self.vf2 = 0.0
 		self.af = 0.0
 		self.m = m
 		self.q = q
@@ -127,22 +131,22 @@ class Atom:
 		if self.type<6:
 			for i in range(0,self.type):
 				n = Node(self)
-				n.f = 2*PI/self.type*i
+				n.f = 2*pi/self.type*i
 				self.nodes.append(n)
 				ep = ElectronPairing()
 				self.el_pairs.append(ep)
 		elif self.type==6:
 			(n1,n2) = (Node(self),Node(self))				
 			n1.f = 0
-			n2.f = PI
+			n2.f = pi
 			self.nodes.extend([n1,n2])
 			(ep1,ep2) = (ElectronPairing(), ElectronPairing())
 			self.el_pairs.extend([ep1,ep2])
 		elif self.type==10:
 			(n1,n2,n3) = (Node(self),Node(self),Node(self))
 			n1.f = 0
-			n2.f = PI/2
-			n3.f = PI
+			n2.f = pi/2
+			n3.f = pi
 			self.nodes.extend([n1,n2,n3])
 
 	def reset_ep(self):
@@ -197,10 +201,10 @@ class Atom:
 		if self.y>self.space.HEIGHT-self.r : 
 			self.vy= -self.vy
 			self.y= self.space.HEIGHT-self.r
-		if self.f > 2*PI:
-			self.f-= 2*PI
+		if self.f > 2*pi:
+			self.f-= 2*pi
 		if self.f < 0:
-			self.f+= 2*PI
+			self.f+= 2*pi
 
 	def next(self):
 		if not self.fixed:

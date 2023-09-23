@@ -33,5 +33,16 @@ def make_sphere_vert(radius, segments):
 
 
 
+from mychem_data import cube2_surfaces, cube2_vertices
+def make_cube2():
+     vertices = []
+     for s in cube2_surfaces:
+        for s2 in s:
+            vertices.extend(list(cube2_vertices[s2]))
+     return vertices
 
 
+
+def OnOff(b):
+	if b: return "On"
+	else: return "Off"

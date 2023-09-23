@@ -1,5 +1,6 @@
 import OpenGL.GL as gl
 import OpenGL.GL.shaders
+import glfw
 import ctypes
 from pyopengltk import OpenGLFrame
 import numpy as np
@@ -8,9 +9,8 @@ import random
 from PIL import Image
 from math import sin,cos,sqrt,pi
 import time
-from mychem_functions import make_sphere_vert
-
-#vertices = glm.array(vertices)
+from mychem_functions import make_sphere_vert,make_cube2
+from mychem_data import cube_vertices
 
 
 
@@ -21,8 +21,8 @@ class AppOgl(OpenGLFrame):
         """Initalize gl states when the frame is created"""
         gl.glViewport(0, 0, self.width, self.height)
         gl.glClearColor(0.2, 0.2, 0.2, 0.0)
-        #gl.glEnable(gl.GL_DEPTH_TEST)
-        gl.glEnable(gl.GL_CULL_FACE); 
+        gl.glEnable(gl.GL_DEPTH_TEST)
+        #gl.glEnable(gl.GL_CULL_FACE); 
         #gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
         #gl.glEnable(gl.GL_DEPTH_TEST)
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
@@ -32,12 +32,13 @@ class AppOgl(OpenGLFrame):
             OpenGL.GL.shaders.compileShader(vertex_shader, gl.GL_VERTEX_SHADER),
             OpenGL.GL.shaders.compileShader(fragment_shader, gl.GL_FRAGMENT_SHADER)
         )
-
+        self.pause = False
         self.cameraUp = glm.vec3(0,1,0)
-        self.cameraFront = glm.vec3(0,0,-1)
-        self.cameraPos = glm.vec3(0,0,2)
-        self.cameraTarget = glm.vec3(0,0,0)
-        self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
+        self.cameraFront = glm.vec3(0.5,0.5,-1)
+        self.cameraPos = glm.vec3(0.5,0.5,1)
+        self.cameraTarget = glm.vec3(0.5,0.5,0.5)
+
+        #self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
         self.keypressed = []
         self.lastframe_time= time.time()
         self.lastX = 500
@@ -47,7 +48,10 @@ class AppOgl(OpenGLFrame):
         self.fov = 45
         self.light_pos = glm.vec3(1.2,1.0,2.0)
 
-        self.vertices = np.array(make_sphere_vert(1,10), dtype=np.float32)
+        self.factor = 0.001
+
+        self.atom_vertices = np.array(make_sphere_vert(1,10), dtype=np.float32)
+        self.cube_vertices = np.array(make_cube2(), dtype=np.float32)
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
@@ -55,13 +59,14 @@ class AppOgl(OpenGLFrame):
         self.nframes = 0          
 
     def create_objects(self):
+        # create atom
         # Create a new VAO (Vertex Array Object) and bind it
         self.atomVAO = gl.glGenVertexArrays(1)
         gl.glBindVertexArray(self.atomVAO )
 
         # Generate buffers to hold our vertices
-        vertex_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vertex_buffer)
+        atom_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, atom_buffer)
 
         stride = 4*3
         gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
@@ -69,10 +74,23 @@ class AppOgl(OpenGLFrame):
         gl.glEnableVertexAttribArray(0)
         #gl.glEnableVertexAttribArray(1)
         # Send the data over to the buffer
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.vertices.size, self.vertices, gl.GL_STATIC_DRAW)
-
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.atom_vertices.size, self.atom_vertices, gl.GL_STATIC_DRAW)
         gl.glBindVertexArray( 0 )
 
+        #create container
+        self.ContainerVAO = gl.glGenVertexArrays(1)
+        gl.glBindVertexArray(self.ContainerVAO )
+        container_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,container_buffer)
+        stride = 4*3
+        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
+        #gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
+        gl.glEnableVertexAttribArray(0)
+        #gl.glEnableVertexAttribArray(1)
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.cube_vertices.size, self.cube_vertices, gl.GL_STATIC_DRAW)
+        gl.glBindVertexArray(0)
+
+#       
 #        self.lightVAO = gl.glGenVertexArrays(1)
 #        gl.glBindVertexArray(self.lightVAO )
 #        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertex_buffer)
@@ -89,8 +107,8 @@ class AppOgl(OpenGLFrame):
     
 
                            
-    def display(self):
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT )
+    def render(self):
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
         
         gl.glUseProgram(self.shader)
         radius = 20
@@ -102,11 +120,12 @@ class AppOgl(OpenGLFrame):
                  sin(glm.radians(self.pitch)),
                  cos(glm.radians(self.pitch))*sin(glm.radians(self.yaw)),
                 )
+        #self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
         self.cameraFront = glm.normalize(front)
-        view = glm.lookAt(self.cameraPos, self.cameraPos+self.cameraFront, self.cameraUp)
+        view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
         #view = glm.translate(glm.vec3(0,5,-5))
         #view = view * glm.rotate(glm.radians(-55), glm.vec3(1,0,0)) 
-        projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.1,1000.0)
+        projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,1000.0)
         #rmat = rotation_matrix((0,1,1), );
         model_loc = gl.glGetUniformLocation(self.shader, "model")
         view_loc = gl.glGetUniformLocation(self.shader, "view")
@@ -117,22 +136,64 @@ class AppOgl(OpenGLFrame):
         #
         objcol_loc = gl.glGetUniformLocation(self.shader, "objectColor")
         #light_loc = gl.glGetUniformLocation(self.shader, "lightColor")
-        
-        gl.glBindVertexArray(self.atomVAO)
 
-        for a in self.space.atoms:
-            pos = glm.vec3(a.x, a.y, a.z)
-            factor = 0.001
-            pos *= factor
+        #render atoms        
+        gl.glBindVertexArray(self.atomVAO)
+#        for a in self.space.atoms:
+        for i in range(0,self.space.np_x.size):
+            #pos = glm.vec3(a.x, a.y, a.z)
+            a = self.space.atoms[i]
+            #pos = glm.vec3(a.x, a.y, a.z)
+            pos = glm.vec3(self.space.np_x[i], self.space.np_y[i], self.space.np_z[i])
+            pos *= self.factor
             model =  glm.translate(pos)
-            model =  glm.scale(model,glm.vec3(1)*factor*a.r)
-            #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color[0],a.color[1],a.color[2])))
+            model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
             gl.glUniform3f(objcol_loc,a.color[0],a.color[1],a.color[2])
             gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
             #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
             #print(a.color)
              #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
-            gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/3))
+            gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
+
+            #render nodes
+            for n in a.nodes:
+                nx = a.r * sin(n.f2)*cos(n.f)
+                ny = a.r * sin(n.f2)*sin(n.f)
+                nz = a.r * cos(n.f2)
+                pos = glm.vec3(nx, ny, nz)
+                rot = glm.rotate(-self.space.np_f[i], glm.vec3(0,0,1))
+                rot = glm.rotate(rot, -self.space.np_f2[i], glm.vec3(0,1,0))
+                pos = (rot*pos)
+                pos += glm.vec3(self.space.np_x[i], self.space.np_y[i],self.space.np_z[i])
+                pos *= self.factor
+                model =  glm.translate(pos)
+                model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
+                if n.bonded:
+                    gl.glUniform3f(objcol_loc,1.0,0.0,1.0)
+                else:
+                    gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
+                gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+                #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
+                #print(a.color)
+                #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
+
+
+
+        gl.glBindVertexArray( 0 )
+
+        # draw container            
+        gl.glBindVertexArray(self.ContainerVAO)
+        gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
+        #model =  glm.translate()
+        model =  glm.mat4()
+        model =  glm.translate(model, glm.vec3(0.5, 0.5,0.5))
+        model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
+        #model =  glm.scale(model,glm.vec3(1))
+        gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
+        gl.glDrawArrays(gl.GL_QUADS, 0, int(self.cube_vertices.size))
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
         gl.glBindVertexArray( 0 )
         gl.glUseProgram(0)
 
@@ -152,13 +213,18 @@ class AppOgl(OpenGLFrame):
         """Render a single frame"""
         
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        self.space.compute()
-        self.display()
+        if not self.pause:
+#            for i in range(1,1):
+                n = self.space.compute()
+        self.render()
         self.curframe_time = time.time()
         self.framedelta = self.curframe_time - self.lastframe_time 
    #     self.do_movement()
-
+        #time.sleep(0.1)
         self.lastframe_time = self.curframe_time
         tm = time.time() - self.start
+        throttle = 1/100 - self.framedelta
+        if throttle>0:
+            time.sleep(throttle)
         self.nframes += 1
         #print("fps",self.nframes / tm, end="\r" )
