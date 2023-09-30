@@ -4,7 +4,7 @@ from mychem3d import mychemApp, Atom
 from math import pi 
 import mychem3d
 from math import *
-
+import glm
 
 def makestar1(space,x,y,z):
         D=20
@@ -19,43 +19,39 @@ def makestar1(space,x,y,z):
         space.appendatom(Atom(x,y-2*D,z,1,pi*3/2))
 
 
+        
+
 def makemethan(space,x,y,z):
+        D=17
+        #f = glm.radians(109.47)-pi
+        space.appendatom(Atom(x,y,z,4,r=10))
+        space.appendatom(Atom(x,y,z+D,1,f=0,f2=-pi/2, r=6))
+        for i in range(0,3):
+            rot = glm.quat(glm.vec3(0,pi/6,i*2*pi/3))
+            hx,hy,hz = rot*glm.vec3(D,0,0)
+            space.appendatom(Atom(x+hx,y+hy,z+hz,1,f=i*2*pi/3+pi,f2=pi/6, r=6))
+        
+
+def makemethan_old(space,x,y,z):
         D=16
-        space.appendatom(Atom(x,y,z,4,m=12,r=10))
-        space.appendatom(Atom(x,y,z+D,1,f=0,f2=pi/2, r=6))
-        f = 0 
-        f2 = 2/3*pi
-        dx = D* sin(f2)*cos(f)
-        dy = D* sin(f2)*sin(f)
-        dz = D* cos(f2)
-        space.appendatom(Atom(x+dx,y+dy,z+dz,1,f=f,f2=f2-pi/2+pi, r=6))
-        f = 2/3*pi
-        f2 = 2/3*pi
-        dx = D* sin(f2)*cos(f)
-        dy = D* sin(f2)*sin(f)
-        dz = D* cos(f2)
-        space.appendatom(Atom(x+dx,y+dy,z+dz,1,f=2*pi-f,f2=f2-pi/2+pi, r=6))
-        f= 4/3*pi
-        f2 = 2/3*pi
-        dx = D* sin(f2)*cos(f)
-        dy = D* sin(f2)*sin(f)
-        dz = D* cos(f2)
-        space.appendatom(Atom(x+dx,y+dy,z+dz,1,f=pi-f,f2=f-pi/2+pi, r=6))
-        
-        
+        space.appendatom(Atom(x,y,z,4,r=10))
+        space.appendatom(Atom(x+D,y,z,1,f=pi, r=6))
+        space.appendatom(Atom(x-D,y,z,1,f=0, r=6))
+        space.appendatom(Atom(x,y+D,z,1,f=3*pi/2, r=6))
+        space.appendatom(Atom(x,y-D,z,1,f=pi/2, r=6))
 
 
-def makeethan(space,x,y,z):
-        D=20
+def makeethan_old(space,x,y,z):
+        D=40
         D2=16
-        space.appendatom(Atom(x,y,z,4,m=12))
-        space.appendatom(Atom(x+D,y,z,4,m=12))
-        space.appendatom(Atom(x-D2,y,z,1,r=6))
-        space.appendatom(Atom(x,y-D2,z,1,pi*3/2,r=6))
-        space.appendatom(Atom(x,y+D2,z,1,pi/2,r=6))
-        space.appendatom(Atom(x+D+D2,y,z,1,pi,r=6))
-        space.appendatom(Atom(x+D,y-D2,z,1,pi*3/2,r=6))
-        space.appendatom(Atom(x+D,y+D2,z,1,pi/2,r=6))
+        space.appendatom(Atom(x,y,z,4))
+        space.appendatom(Atom(x+D,y,z,4))
+        #space.appendatom(Atom(x-D2,y,z,1,r=6))
+        #space.appendatom(Atom(x,y-D2,z,1,pi*3/2,r=6))
+        #space.appendatom(Atom(x,y+D2,z,1,pi/2,r=6))
+        #space.appendatom(Atom(x+D+D2,y,z,1,pi,r=6))
+        #space.appendatom(Atom(x+D,y-D2,z,1,pi*3/2,r=6))
+        #space.appendatom(Atom(x+D,y+D2,z,1,pi/2,r=6))
 
 # n - количество лучей
 # m - длина лучей
@@ -65,16 +61,16 @@ def makesuperstar(space,ox,oy, oz, n,m=1):
     R = D*n/pi/4*2
     for i in range(0,n):
             x = ox+cos(f)*R
-            y = oy-sin(f)*R
+            y = oy+sin(f)*R
             a1= Atom(x, y, oz, 3,2*pi/n*i)
             space.appendatom(a1)
             for j in range(0,m):
                 x = ox+cos(f)*(R+D*j+D)
-                y = oy-sin(f)*(R+D*j+D)
+                y = oy+sin(f)*(R+D*j+D)
                 a1= Atom(x, y, oz, 2, 2*pi/n*i)
                 space.appendatom(a1)
             x = ox+cos(f)*(R+D*m+D)
-            y = oy-sin(f)*(R+D*m+D)
+            y = oy+sin(f)*(R+D*m+D)
             a1= Atom(x, y, oz,1,2*pi/n*i+pi)
             space.appendatom(a1)
             f+=2*pi/n
@@ -179,23 +175,31 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
 #
-    makeCO2(space,250,50,100)
-    makeH2O(space,350,50,100)
-    makemethan(space, 100,100,100)
-    makeethan(space,50,100,100)
-    makestar1(space,160,100,100)
-    makesuperstar(space,300,200,100,20)
-    makesuperstar(space,700,300,100,10,5)
-    makepoly1(space,100,220,100)
-    makeriboza(space,400,400,100)
-    makeformaldehyde(space,800,100,100)
-    space.appendmixer(20)
+    #makeCO2(space,250,50,100)
+     #makeH2O(space,350,50,100)
+    #makemethan_old(space, 500,500,500)
+    #makeethan(space,50,100,100)
+    #makestar1(space,160,100,100)
+    #makesuperstar(space,500,500,500,20)
+    #makesuperstar(space,700,300,100,10,5)
+    #makepoly1(space,100,220,100)
+    #makeriboza(space,400,400,100)
+    #makeformaldehyde(space,800,100,100)
+    #for i in range(0,50):
+#        makemethan_old(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
+#    space.appendmixer(20)
+    #makeethan_old(space,500,500,500)
+    #for i in range(0,50):
+        #makemethan(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
+
+    makemethan(space, 500,500,500)
     #space.stoptime = 3000
     #space.DETRACT_KOEFF1 = 0
     #space.DETRACT_KOEFF2 = 0
     #space.export = True
     #space.export_nodes = True
     #space.competitive =True
+#    space.stoptime=0
     App.run()
 #
 #

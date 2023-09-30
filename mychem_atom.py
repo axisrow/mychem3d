@@ -1,9 +1,10 @@
-from math import pi 
+from math import pi,sin,cos
+import glm
 
 class Node:
 	def __init__(self,parent):
 		self.f = 0
-		self.f2 = pi/2
+		self.f2 = 0
 		self.bonded = False
 		self.bonded2 = False
 		self.pair = None
@@ -14,7 +15,7 @@ class Node:
 		#PHCSNO
 		type1 = self.parent.type
 		type2 = n.parent.type
-		table=[5,1,4,6,3,2]
+		table=[5,1,4,400,6,3,2]
 		i1 = table.index(type1)
 		i2 = table.index(type2)
 		canbond = False
@@ -81,15 +82,13 @@ class ElectronPairing():
 
 class Atom:
 	id = 0
-	def __init__(self,x,y,z, type=1,f=0,f2=0,r=10,m=1,q=1,fixed=False):
+	def __init__(self,x,y,z, type=1,f=0,f2=0,r=10,m=1,q=0,fixed=False):
 		Atom.id += 1
 		self.id = Atom.id
 		self.YSHIFT = 0
 		self.x = x
 		self.y = y
 		self.z = z
-		self.f = f
-		self.f2 = f2
 		self.vx = 0.0
 		self.vy = 0.0
 		self.vz = 0.0
@@ -117,7 +116,7 @@ class Atom:
 			self.color = (1.0,0.0,0.0)
 		if self.type==3:
 			self.color = (0.5,0.5,0.5)
-		if self.type==4:
+		if self.type==4 or self.type==400:
 			self.color = (1.0, 1.0, 0.0)
 		if self.type==5:
 			self.color = (128/255,64/255,48/255)
@@ -128,13 +127,34 @@ class Atom:
 		if self.type==100:
 			self.color = (1.0, 0.0, 1.0)
 
-		if self.type<6:
+		if self.type<6 and self.type!=4:
 			for i in range(0,self.type):
 				n = Node(self)
 				n.f = 2*pi/self.type*i
 				self.nodes.append(n)
 				ep = ElectronPairing()
 				self.el_pairs.append(ep)
+		elif type==400: #plane carbon
+			for i in range(0,4):
+				n = Node(self)
+				n.f = 2*pi/4*i
+				self.nodes.append(n)
+				ep = ElectronPairing()
+				self.el_pairs.append(ep)
+
+		elif self.type==4:
+			(n1,n2,n3,n4) = (Node(self),Node(self),Node(self),Node(self))
+			n1.f = 0
+			n1.f2 = pi/2
+			n2.f= 0
+			n2.f2= -pi/6
+			n3.f= 2*pi/3
+			n3.f2= -pi/6
+			n4.f= 4*pi/3
+			n4.f2= -pi/6
+			self.nodes.extend([n1,n2,n3,n4])
+			(ep1,ep2,ep3,ep4) = (ElectronPairing(), ElectronPairing(),ElectronPairing(),ElectronPairing())
+			self.el_pairs.extend([ep1,ep2,ep3,ep4])
 		elif self.type==6:
 			(n1,n2) = (Node(self),Node(self))				
 			n1.f = 0
@@ -148,6 +168,10 @@ class Atom:
 			n2.f = pi/2
 			n3.f = pi
 			self.nodes.extend([n1,n2,n3])
+		self.rot = glm.quat(glm.vec3(0,-f2,f))
+		self.rotv = glm.quat()
+
+
 
 	def reset_ep(self):
 		for ep in self.el_pairs:

@@ -49,3 +49,8 @@ def make_cube2():
 def OnOff(b):
 	if b: return "On"
 	else: return "Off"
+
+
+#def molecule_extend(space, a1, nn1, type, nn2=1):
+
+#    node1=a1.nodes[nn1]

@@ -45,12 +45,12 @@ class AppOgl(OpenGLFrame):
         self.lastY = 300
         self.yaw = -90
         self.pitch = 0 
-        self.fov = 70
+        self.fov = 50
         self.light_pos = glm.vec3(1.2,1.0,2.0)
 
         self.factor = 0.001
 
-        self.atom_vertices = np.array(make_sphere_vert(1,10), dtype=np.float32)
+        self.atom_vertices = np.array(make_sphere_vert(1,20), dtype=np.float32)
         self.cube_vertices = np.array(make_cube2(), dtype=np.float32)
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
@@ -137,9 +137,49 @@ class AppOgl(OpenGLFrame):
         objcol_loc = gl.glGetUniformLocation(self.shader, "objectColor")
         #light_loc = gl.glGetUniformLocation(self.shader, "lightColor")
 
-        #render atoms        
         gl.glBindVertexArray(self.atomVAO)
-#        for a in self.space.atoms:
+        #render merge_atom
+        for a in self.space.merge_atoms:
+            pos = glm.vec3(a.x, a.y, a.z)
+            pos -= glm.vec3(500,500,500)
+            pos = self.space.merge_rot * pos
+            pos += glm.vec3(500,500,500)
+            pos += self.space.merge_pos
+            pos *= self.factor
+            
+            model =  glm.translate(pos)
+            model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
+            gl.glUniform3f(objcol_loc,a.color[0],a.color[1],a.color[2])
+            gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+            #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
+            #print(a.color)
+             #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
+            gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
+
+            #render merge atoms nodes
+            for n in a.nodes:
+                r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
+                pos = a.rot * r1
+                pos += glm.vec3(a.x,a.y,a.z)
+                pos -= glm.vec3(500,500,500)
+                pos = self.space.merge_rot * pos
+                pos += glm.vec3(500,500,500)
+                pos += self.space.merge_pos
+                pos *= self.factor
+                model =  glm.translate(pos)
+                model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
+                if n.bonded:
+                    gl.glUniform3f(objcol_loc,0.0,1.0,0.0)
+                else:
+                    gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
+                gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+                #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
+                #print(a.color)
+                #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
+
+
+        #render np_atoms        
         for i in range(0,self.space.np_x.size):
             #pos = glm.vec3(a.x, a.y, a.z)
             a = self.space.atoms[i]
@@ -157,13 +197,8 @@ class AppOgl(OpenGLFrame):
 
             #render nodes
             for n in a.nodes:
-                nx = a.r * sin(n.f2)*cos(n.f)
-                ny = a.r * sin(n.f2)*sin(n.f)
-                nz = a.r * cos(n.f2)
-                pos = glm.vec3(nx, ny, nz)
-                rot = glm.rotate(-self.space.np_f[i], glm.vec3(0,0,1))
-                rot = glm.rotate(rot, -self.space.np_f2[i], glm.vec3(0,1,0))
-                pos = (rot*pos)
+                r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
+                pos = self.space.np_rot[int(i)] * r1
                 pos += glm.vec3(self.space.np_x[i], self.space.np_y[i],self.space.np_z[i])
                 pos *= self.factor
                 model =  glm.translate(pos)
@@ -196,6 +231,8 @@ class AppOgl(OpenGLFrame):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
         gl.glBindVertexArray( 0 )
         gl.glUseProgram(0)
+
+
 
     def do_movement(self):
         cameraSpeed = 5 * self.framedelta

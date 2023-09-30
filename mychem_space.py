@@ -1,6 +1,6 @@
 import os
 import json
-from math import sqrt,sin,cos,pi
+from math import sqrt,sin,cos,pi,acos
 import numpy as np
 import random
 from mychem_atom import Atom
@@ -15,15 +15,15 @@ class Space:
         self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.2
         self.BONDR = 5
-        self.attract_k = 5
+        self.attract_k = 50
         self.ATTRACT_KOEFF= self.attract_k/100.0
         #self.ATTRACTR = 5*self.ATOMRADIUS
-        self.ROTA_KOEFF = 0.0000005
+        self.ROTA_KOEFF = 0.0005
         self.REPULSION1 = -3
         self.repulse_k1 = 15
         self.REPULSION_KOEFF1 = self.repulse_k1
         self.REPULSION2 = 6
-        self.repulse_k2 = 50
+        self.repulse_k2 = 20
         self.REPULSION_KOEFF2= self.repulse_k2/10.0
         self.MAXVELOCITY = 1
         self.t = -1
@@ -38,11 +38,13 @@ class Space:
         self.standard = True
         self.merge_atoms = []
         self.merge_mixers = []
+        self.merge_pos = glm.vec3(0,0,0)
+        self.merge_rot = glm.quat()
         self.select_mode = False
         self.gravity = False
         self.shake = False
-        self.SHAKE_KOEFF = 1.5
-        self.competitive = False
+        self.SHAKE_KOEFF = 1
+        self.competitive = True
         self.redox = False
         self.redox_rate = 1
         self.segmented_redox = True
@@ -59,11 +61,11 @@ class Space:
 
     def appendmixer(self,n=1):
         for i in range(0,n):
-            m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),0,100)
+            m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),100)
             m.space = self
             m.vx = 1
             m.vy = 1
-            m.vy = 1
+            m.vz = 1
             m.m = 40
             self.mixers.append(m)
             self.atoms.append(m)
@@ -80,13 +82,12 @@ class Space:
         self.np_ax = np.empty((N))
         self.np_ay = np.empty((N))
         self.np_az = np.empty((N))
-        self.np_f = np.empty((N))
-        self.np_f2 = np.empty((N))
-        self.np_vf = np.empty((N))
-        self.np_vf2 = np.empty((N))
         self.np_type = np.empty((N))
         self.np_m = np.empty((N))
         self.np_q = np.empty((N))
+        self.np_rot = glm.array.zeros(N,glm.quat)
+        self.np_rotv = glm.array.zeros(N,glm.quat)
+
 
         for i in range(0,N):
             atom_i = self.atoms[i]
@@ -101,10 +102,8 @@ class Space:
             self.np_ax[i]=atom_i.ax
             self.np_ay[i]=atom_i.ay
             self.np_az[i]=atom_i.az
-            self.np_f[i]=atom_i.f
-            self.np_f2[i]=atom_i.f2
-            self.np_vf[i]=atom_i.vf
-            self.np_vf2[i]=atom_i.vf2
+            self.np_rot[i]=atom_i.rot
+            self.np_rotv[i]=atom_i.rotv
             self.np_q[i]=atom_i.q
             self.np_type[i]=atom_i.type
         self.np_SUMRADIUS = np.add.outer(self.np_r,self.np_r)
@@ -124,24 +123,21 @@ class Space:
             atom_i.ax=self.np_ax[i]
             atom_i.ay=self.np_ay[i]
             atom_i.az=self.np_az[i]
-            atom_i.f=self.np_f[i]
-            atom_i.f2=self.np_f2[i]
             atom_i.q=self.np_q[i]
+            atom_i.rot = self.np_rot[i]
+            atom_i.rotv = self.np_rotv[i]
 
     def np_next(self):
             self.np_vx *=0.9999
             self.np_vy *=0.9999
             self.np_vz *=0.9999
-            self.np_vf *=0.95
-            self.np_vf2 *=0.95
             self.np_vx += self.np_ax
             self.np_vy += self.np_ay
             self.np_vz += self.np_az
             self.np_x += self.np_vx
             self.np_y += self.np_vy
             self.np_z += self.np_vz
-            self.np_f += self.np_vf
-            self.np_f2 += self.np_vf2
+            self.np_rot = self.np_rotv*self.np_rot
 
 
     def np_limits(self): 
@@ -151,11 +147,6 @@ class Space:
         self.np_vy[self.np_vy> self.MAXVELOCITY] = self.MAXVELOCITY
         self.np_vz[self.np_vz< -self.MAXVELOCITY] = -self.MAXVELOCITY
         self.np_vz[self.np_vz> self.MAXVELOCITY] = self.MAXVELOCITY
-        self.np_f[self.np_f> 2*pi] -=2*pi
-        self.np_f[self.np_f< 0] += 2*pi
-        self.np_f2[self.np_f2> pi] -=2*pi
-        self.np_f2[self.np_f2< -pi] += 2*pi
-
 
         b = self.np_x< self.np_r
         self.np_x[b] = self.np_r[b]
@@ -211,6 +202,8 @@ class Space:
                             a+= Q*self.ATTRACT_KOEFF*0.1
                         else:
                             a += np.divide(Q,r,where=r!=0)*self.ATTRACT_KOEFF
+                        if self.debug: 
+                            print(f"a={a} \nq={Q}")
             np.fill_diagonal(a,0)
             a_x = np.divide(delta_x,r,where=r!=0) *a
             a_y = np.divide(delta_y,r,where=r!=0) *a
@@ -223,9 +216,8 @@ class Space:
             Ey = a_y.sum(axis=1)
             Ez = a_z.sum(axis=1)
             for i in range(0,N):
-                naf = 0
-                naf2 = 0
-                jj = np.where(np.logical_and(r[i]>0,r[i]<40))
+                totalrotv = glm.quat()
+                jj = np.where(np.logical_and(r[i]>0,r[i]<60))
                 #print("jj=", jj)
                 allnEx = 0
                 allnEy = 0
@@ -235,42 +227,32 @@ class Space:
                     atom_i = self.atoms[i]
                     atom_j = self.atoms[j]
                     for n1 in atom_i.nodes:
-                        n1x = atom_i.r * sin(n1.f2)*cos(n1.f)
-                        n1y = atom_i.r * sin(n1.f2)*sin(n1.f)
-                        n1z = atom_i.r * cos(n1.f2)
-                        pos = glm.vec3(n1x, n1y, n1z)
-                        rot = glm.rotate(-self.np_f[i], glm.vec3(0,0,1))
-                        rot = glm.rotate(rot, -self.np_f2[i], glm.vec3(0,1,0))
-                        pos = (rot*pos)
-                        #pos += glm.vec3(self.np_x[i], self.np_y[i],self.np_z[i])
-                        (n1x,n1y,n1z) = pos.to_tuple()
+                        r1 = glm.quat(glm.vec3(0,-n1.f2,n1.f)) * glm.vec3(atom_i.r,0,0)
+                        v1 =  self.np_rot[i] * r1
+                        (n1x, n1y, n1z) = v1
                         nEx = 0
                         nEy = 0
                         nEz = 0
-                        naf = 0
-                        
                         for n2 in atom_j.nodes:
-                            n2x = atom_j.r * sin(n2.f2)*cos(n2.f)
-                            n2y = atom_j.r * sin(n2.f2)*sin(n2.f)
-                            n2z = atom_j.r * cos(n2.f2)
-                            pos = glm.vec3(n2x, n2y, n2z)
-                            rot = glm.rotate(-self.np_f[j], glm.vec3(0,0,1))
-                            rot = glm.rotate(rot, -self.np_f2[j], glm.vec3(0,1,0))
-                            pos = (rot*pos)
-                            #pos += glm.vec3(self.np_x[j], self.np_y[j],self.np_z[j])
-                            (n2x,n2y,n2z) = pos.to_tuple()
+                            r2 = glm.quat(glm.vec3(0,-n2.f2,n2.f)) * glm.vec3(atom_j.r,0,0)
+                            v3= (n2x, n2y, n2z)  = self.np_rot[int(j)] * r2
+
                             delta_x = n1x-n2x + self.np_x[i] - self.np_x[j]
                             delta_y = n1y-n2y + self.np_y[i] - self.np_y[j]
                             delta_z = n1z-n2z + self.np_z[i] - self.np_z[j]
-
+                            #v2 = glm.vec3(delta_x, delta_y, delta_z)
+                            v2 = glm.vec3(n2x + self.np_x[j] - self.np_x[i],
+                                          n2y + self.np_y[j] - self.np_y[i],
+                                          n2z + self.np_z[j] - self.np_z[i])
+                            
                             r2n = delta_x*delta_x + delta_y*delta_y + delta_z*delta_z
                             rn = sqrt(r2n) 
                             if rn==0: continue
                             a = 0
                             if rn<self.BONDR and not n1.bonded and not n2.bonded:
                                 if n1.bond(n2):
-                                    if self.debug:
-                                        print("bond")
+                                    #if self.debug:
+                                    print("bond")
                                     self.np_q[i] = atom_i.calculate_q()
                                     self.np_q[j] = atom_j.calculate_q()
                                     self.np_vx[i] *=0.5
@@ -285,17 +267,27 @@ class Space:
                                     self.np_q[i] = atom_i.calculate_q()
                                     self.np_q[j] = atom_j.calculate_q()
                             if n1.pair == n2:
-                                if (rn>0): 
                                     a = -r2n*self.BOND_KOEFF  #atom's bond force
-                                    naf  -= self.ROTA_KOEFF * (n1x* delta_y + n1y * delta_x) 
-                                    naf2 -= self.ROTA_KOEFF * (-n1x* delta_z + n1z * delta_x) 
-                                    #naf2 -=  1/rn * self.ROTA_KOEFF * cos(n1_actual_f) * atom_i.r * (sin(n1_actual_f2)* delta_z + delta_x*cos(n1_actual_f2))
-                                    #naf2 = 0
-                            if not n1.bonded and not n2.bonded:
-                                    #a = -r2n*0.00001
-                                    naf  -= self.ROTA_KOEFF * (n1x* delta_y + n1y * delta_x )
-                                    naf2 -= self.ROTA_KOEFF * (n1x* delta_z + n1z * delta_x )
-                                    if self.debug: print(f"naf={naf} naf2={naf2} rn={rn} a.f={self.np_f[i]} a.f2={self.np_f2[i]} ")
+#                            if (not n1.bonded and not n2.bonded):
+#                                a = -0.001
+                            if (n1.pair == n2) or (not n1.bonded and not n2.bonded):
+                                    if self.debug: print(f"v1={v1}, v2={v2}, v3={v3}")
+                                    v1 = glm.normalize(v1)
+                                    v2 = glm.normalize(v2)
+                                    if self.debug: print(f"v1n={v1}, v2n={v2}")
+                                    dt = glm.dot(v1,v2)
+                                    if dt>1: dt=1
+                                    if dt<-1: dt=-1
+                                    #print(dt)
+                                    if v1!=v2:
+                                        axis = glm.normalize(glm.cross(v1,v2))
+                                        angle = acos(dt)
+                                        
+                                        angle_a=angle*self.ROTA_KOEFF/rn
+                                        rot = glm.quat(cos(angle_a/2), sin(angle_a/2)*glm.vec3(axis))
+                                        totalrotv = rot * totalrotv
+                                    #naf2=0
+                                        if self.debug: print(f"axis={axis} angle={angle} dt={dt}")
                             nEx += delta_x/rn * a
                             nEy += delta_y/rn * a
                             nEz += delta_z/rn * a
@@ -304,21 +296,20 @@ class Space:
                         allnEy = allnEy + nEy
                         allnEz = allnEz + nEz
                         
-                        self.np_vf[i] += naf
-                        self.np_vf2[i] += naf2
-
+                self.np_rotv[i] = totalrotv #* self.np_rotv[i]
+                
                 Ex[i] += allnEx
                 Ey[i] += allnEy
                 Ez[i] += allnEz
+                if self.debug: print("##")
             self.np_ax= Ex/self.np_m
             self.np_ay= Ey/self.np_m
             self.np_az= Ez/self.np_m
-            if self.debug: print("##")
             #print(self.np_az)
 
 
             if self.gravity:
-                self.np_ay += self.g
+                self.np_ay -= self.g
 
             if self.shake:
                 self.np_ax += self.SHAKE_KOEFF * (np.random.rand(N)-0.5)
@@ -345,7 +336,7 @@ class Space:
 
             self.np_next()
             self.np_limits()
-            self.numpy2atoms()
+            #self.numpy2atoms()
             return N
 
 
@@ -362,8 +353,9 @@ class Space:
             atom["x"] = round(self.atoms[i].x,4)
             atom["y"] = round(self.atoms[i].y,4)
             atom["z"] = round(self.atoms[i].z,4)
-            atom["f"] = round(self.atoms[i].f,4)
-            atom["f2"] = round(self.atoms[i].f2,4)
+            #atom["f"] = round(self.atoms[i].f,4)
+            #atom["f2"] = round(self.atoms[i].f2,4)
+            atom["rot"] = self.atoms[i].rot.to_tuple()
             atom["vx"] = round(self.atoms[i].vx,4)
             atom["vy"] = round(self.atoms[i].vy,4)
             atom["vz"] = round(self.atoms[i].vz,4)
@@ -382,28 +374,28 @@ class Space:
             if "z" in a:
                 z = a["z"]
                 vz = a["vz"]
-                f2 = a["f2"]
+                rot = glm.quat(a["rot"])
             else:
                 z = 500
                 vz = 0
-                f2 = 0
+                if type==4: type=400
+                rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type)
             aa.vx = a["vx"]
             aa.vy = a["vy"]
             aa.vz = vz
-            aa.r=a["r"]
-            aa.f=a["f"]
-            aa.f2=f2
+            aa.rot = rot
             aa.q=a["q"]
-            aa.f=a["f"]
             aa.m=a["m"]
+#            if not "version" in j:
+#                 aa.f= 2*pi - aa.f
             if merge:
                 aa.space = self
-                (self.merge_offsetx, self.merge_offsety) =  (self.WIDTH/2,self.HEIGHT/2)
-                (cx,cy) = self.getpointer()
-                aa.x = aa.x - self.merge_offsetx + cx
-                aa.y = aa.y - self.merge_offsety + cy
-                (self.merge_offsetx, self.merge_offsety) = (cx,cy)
+                #(self.merge_offsetx, self.merge_offsety) =  (self.WIDTH/2,self.HEIGHT/2)
+                #(cx,cy) = self.getpointer()
+                #aa.x = aa.x - self.merge_offsetx + cx
+                #aa.y = aa.y - self.merge_offsety + cy
+                #(self.merge_offsetx, self.merge_offsety) = (cx,cy)
                 self.merge_atoms.append(aa)
                 if type == 100:
                     self.merge_mixers.append(aa)
