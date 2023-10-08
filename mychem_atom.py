@@ -8,7 +8,6 @@ class Node:
 		self.bonded = False
 		self.bonded2 = False
 		self.pair = None
-		self.canvas_id = None
 		self.parent = parent
 
 	def shift_q(self, n):
@@ -127,7 +126,7 @@ class Atom:
 		if self.type==100:
 			self.color = (1.0, 0.0, 1.0)
 
-		if self.type<6 and self.type!=4:
+		if self.type<6 and self.type!=4 and self.type!=2:
 			for i in range(0,self.type):
 				n = Node(self)
 				n.f = 2*pi/self.type*i
@@ -141,17 +140,26 @@ class Atom:
 				self.nodes.append(n)
 				ep = ElectronPairing()
 				self.el_pairs.append(ep)
+		elif self.type == 2:
+			(n1,n2) = (Node(self),Node(self))
+			n1.f = 0
+			n1.f2 = 0
+			n2.f= glm.radians(104.45)
+			n2.f2= 0
+			self.nodes.extend([n1,n2])
+			(ep1,ep2) = (ElectronPairing(), ElectronPairing())
+			self.el_pairs.extend([ep1,ep2])
 
 		elif self.type==4:
 			(n1,n2,n3,n4) = (Node(self),Node(self),Node(self),Node(self))
 			n1.f = 0
 			n1.f2 = pi/2
 			n2.f= 0
-			n2.f2= -pi/6
+			n2.f2= -glm.radians(109.47-90)
 			n3.f= 2*pi/3
-			n3.f2= -pi/6
+			n3.f2= -glm.radians(109.47-90)
 			n4.f= 4*pi/3
-			n4.f2= -pi/6
+			n4.f2= -glm.radians(109.47-90)
 			self.nodes.extend([n1,n2,n3,n4])
 			(ep1,ep2,ep3,ep4) = (ElectronPairing(), ElectronPairing(),ElectronPairing(),ElectronPairing())
 			self.el_pairs.extend([ep1,ep2,ep3,ep4])

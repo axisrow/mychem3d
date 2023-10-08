@@ -14,7 +14,7 @@ class Space:
         self.DEPTH=depth
         self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.2
-        self.BONDR = 5
+        self.BONDR = 4
         self.attract_k = 50
         self.ATTRACT_KOEFF= self.attract_k/100.0
         #self.ATTRACTR = 5*self.ATOMRADIUS
@@ -23,7 +23,7 @@ class Space:
         self.repulse_k1 = 15
         self.REPULSION_KOEFF1 = self.repulse_k1
         self.REPULSION2 = 6
-        self.repulse_k2 = 20
+        self.repulse_k2 = 15
         self.REPULSION_KOEFF2= self.repulse_k2/10.0
         self.MAXVELOCITY = 1
         self.t = -1
@@ -40,10 +40,12 @@ class Space:
         self.merge_mixers = []
         self.merge_pos = glm.vec3(0,0,0)
         self.merge_rot = glm.quat()
+        self.merge_center = glm.vec3(0,0,0)
         self.select_mode = False
+        self.select_i = 0 
         self.gravity = False
         self.shake = False
-        self.SHAKE_KOEFF = 1
+        self.SHAKE_KOEFF = 0.5
         self.competitive = True
         self.redox = False
         self.redox_rate = 1
@@ -52,7 +54,7 @@ class Space:
         self.linear_field = False
         self.update_delta= 5
         self.show_q = False
-
+        self.action = None
 
 
     def appendatom(self,a):
@@ -174,15 +176,28 @@ class Space:
         self.np_vz[b] = - self.np_vz[b]
 
 
+    def get_mergeobject_center(self):
+         sumx, sumy, sumz = 0,0,0
+         N = len(self.merge_atoms)
+         for a in self.merge_atoms:
+              sumx+=a.x
+              sumy+=a.y
+              sumz+=a.z
+         center = glm.vec3([sumx/N, sumy/N, sumz/N])
+         return center
+    
+            
+              
 
     def compute(self):
             N = len(self.atoms)
-            if N==0:
-                return 0
+#            if N==0:
+#                return 0
             self.t +=1
             if self.stoptime!= -1:
                 if self.t>self.stoptime:
                     return 0
+
 
             #Ex=np.zeros(N)
             #Ey=np.zeros(N)
@@ -251,8 +266,8 @@ class Space:
                             a = 0
                             if rn<self.BONDR and not n1.bonded and not n2.bonded:
                                 if n1.bond(n2):
-                                    #if self.debug:
-                                    print("bond")
+                                    if self.debug:
+                                        print("bond")
                                     self.np_q[i] = atom_i.calculate_q()
                                     self.np_q[j] = atom_j.calculate_q()
                                     self.np_vx[i] *=0.5
@@ -282,8 +297,7 @@ class Space:
                                     if v1!=v2:
                                         axis = glm.normalize(glm.cross(v1,v2))
                                         angle = acos(dt)
-                                        
-                                        angle_a=angle*self.ROTA_KOEFF/rn
+                                        angle_a=angle*self.ROTA_KOEFF/100
                                         rot = glm.quat(cos(angle_a/2), sin(angle_a/2)*glm.vec3(axis))
                                         totalrotv = rot * totalrotv
                                     #naf2=0
@@ -296,7 +310,7 @@ class Space:
                         allnEy = allnEy + nEy
                         allnEz = allnEz + nEz
                         
-                self.np_rotv[i] = totalrotv #* self.np_rotv[i]
+                self.np_rotv[i] = totalrotv * self.np_rotv[i]
                 
                 Ex[i] += allnEx
                 Ey[i] += allnEy
@@ -325,8 +339,7 @@ class Space:
                 self.np_vz[np.logical_and(self.np_type==100,self.np_vz>=0)] = 1
                 self.np_vz[np.logical_and(self.np_type==100,self.np_vz<0)] = -1
 
-            #if self.action:
-            #self.action(self)
+
 
 
             #if self.moving_mode:
@@ -336,6 +349,10 @@ class Space:
 
             self.np_next()
             self.np_limits()
+            
+            
+            if self.action:
+                self.action(self)            
             #self.numpy2atoms()
             return N
 
@@ -387,6 +404,7 @@ class Space:
             aa.rot = rot
             aa.q=a["q"]
             aa.m=a["m"]
+            aa.r=a["r"]
 #            if not "version" in j:
 #                 aa.f= 2*pi - aa.f
             if merge:

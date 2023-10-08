@@ -90,7 +90,21 @@ class AppOgl(OpenGLFrame):
         gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.cube_vertices.size, self.cube_vertices, gl.GL_STATIC_DRAW)
         gl.glBindVertexArray(0)
 
-#       
+        #create line
+        self.lineVAO = gl.glGenVertexArrays(1)
+        gl.glBindVertexArray(self.lineVAO )
+        line_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, line_buffer)
+        stride=4*6
+        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
+        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
+        gl.glEnableVertexAttribArray(0)
+        gl.glEnableVertexAttribArray(1)
+        line_vertices = np.array([ 0.0, 0.0, 0.0,  0.0,0.0,-1.0, 1.0,0.0,0.0, 0.0,0.0,-1.0 ], dtype=np.float32)
+        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*line_vertices.size, line_vertices, gl.GL_STATIC_DRAW)
+        gl.glBindVertexArray(0)
+
+
 #        self.lightVAO = gl.glGenVertexArrays(1)
 #        gl.glBindVertexArray(self.lightVAO )
 #        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertex_buffer)
@@ -111,8 +125,6 @@ class AppOgl(OpenGLFrame):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
         
         gl.glUseProgram(self.shader)
-        radius = 20
-        
         #camX = math.cos(self.nframes/500)*radius
         #camZ = math.sin(self.nframes/500)*radius
         #cameraPos = glm.vec3(camX,3, camZ)
@@ -122,16 +134,16 @@ class AppOgl(OpenGLFrame):
                 )
         #self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
         self.cameraFront = glm.normalize(front)
-        view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
+        self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
         #view = glm.translate(glm.vec3(0,5,-5))
         #view = view * glm.rotate(glm.radians(-55), glm.vec3(1,0,0)) 
-        projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,1000.0)
+        self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,1000.0)
         #rmat = rotation_matrix((0,1,1), );
         model_loc = gl.glGetUniformLocation(self.shader, "model")
         view_loc = gl.glGetUniformLocation(self.shader, "view")
         proj_loc = gl.glGetUniformLocation(self.shader, "projection")
-        gl.glUniformMatrix4fv(view_loc,1, gl.GL_FALSE, glm.value_ptr(view))
-        gl.glUniformMatrix4fv(proj_loc,1, gl.GL_FALSE, glm.value_ptr(projection))
+        gl.glUniformMatrix4fv(view_loc,1, gl.GL_FALSE, glm.value_ptr(self.view))
+        gl.glUniformMatrix4fv(proj_loc,1, gl.GL_FALSE, glm.value_ptr(self.projection))
 
         #
         objcol_loc = gl.glGetUniformLocation(self.shader, "objectColor")
@@ -139,11 +151,12 @@ class AppOgl(OpenGLFrame):
 
         gl.glBindVertexArray(self.atomVAO)
         #render merge_atom
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         for a in self.space.merge_atoms:
             pos = glm.vec3(a.x, a.y, a.z)
-            pos -= glm.vec3(500,500,500)
+            pos -= self.space.merge_center
             pos = self.space.merge_rot * pos
-            pos += glm.vec3(500,500,500)
+            pos += self.space.merge_center
             pos += self.space.merge_pos
             pos *= self.factor
             
@@ -161,9 +174,9 @@ class AppOgl(OpenGLFrame):
                 r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
                 pos = a.rot * r1
                 pos += glm.vec3(a.x,a.y,a.z)
-                pos -= glm.vec3(500,500,500)
+                pos -= self.space.merge_center
                 pos = self.space.merge_rot * pos
-                pos += glm.vec3(500,500,500)
+                pos += self.space.merge_center
                 pos += self.space.merge_pos
                 pos *= self.factor
                 model =  glm.translate(pos)
@@ -177,7 +190,7 @@ class AppOgl(OpenGLFrame):
                 #print(a.color)
                 #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
                 gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
-
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         #render np_atoms        
         for i in range(0,self.space.np_x.size):
@@ -213,8 +226,6 @@ class AppOgl(OpenGLFrame):
                 #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
                 gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
 
-
-
         gl.glBindVertexArray( 0 )
 
         # draw container            
@@ -230,8 +241,26 @@ class AppOgl(OpenGLFrame):
         gl.glDrawArrays(gl.GL_QUADS, 0, int(self.cube_vertices.size))
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
         gl.glBindVertexArray( 0 )
-        gl.glUseProgram(0)
 
+        #render selector
+        if self.space.select_mode:
+            gl.glBindVertexArray(self.atomVAO)
+            #Установка цвета линии
+            gl.glUniform3f(objcol_loc,1.0,0.0,0.0)
+            if len(self.space.np_x)>0:
+                model =  glm.mat4()
+                pos = glm.vec3(self.space.np_x[self.space.select_i],self.space.np_y[self.space.select_i],self.space.np_z[self.space.select_i])
+                model =  glm.translate(model, pos * self.factor  )
+                model =  glm.scale(model, glm.vec3(0.01,0.01,0.01))
+                gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
+                gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.atom_vertices.size/3))
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+
+                # Нарисовать линию между двумя точками
+                #    gl.glDrawArrays(gl.GL_LINES, 0, 2)
+
+        gl.glUseProgram(0)
 
 
     def do_movement(self):

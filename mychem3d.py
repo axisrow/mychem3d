@@ -28,6 +28,7 @@ class mychemApp():
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
+        sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -46,7 +47,7 @@ class mychemApp():
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title = "MyChem 3D"
+        self.root.title("MyChem 3D")
         self.space = Space()
         self.init_menu()
         self.lastX = 300
@@ -57,6 +58,8 @@ class mychemApp():
         self.root.bind("4", self.handle_add_atom2)
         self.root.bind("5", self.handle_add_atom2)
         self.root.bind("6", self.handle_add_atom2)
+        self.root.bind("<Left>", self.handle_cursor)
+        self.root.bind("<Right>", self.handle_cursor)
         #self.root.bind("<KeyRelease>", self.handle_keyrelease)
         self.root.bind("<space>", self.handle_space)
         self.root.bind("<Alt-r>", self.handle_reset)
@@ -64,8 +67,11 @@ class mychemApp():
         self.root.bind("<Alt-o>", self.file_open)
         self.root.bind("<Alt-s>", self.file_save)
         self.root.bind("<Button-1>", self.handle_mouseb1)
+        self.root.bind("<Return>", self.handle_enter)
+        self.root.bind("<Escape>", self.handle_escape)
         self.root.bind("<B1-Motion>", self.handle_mouse1move)
         self.root.bind("<Motion>", self.handle_motion)
+        self.root.bind("<Double-Button-1>", self.handle_doubleclick)
         self.root.bind("<s>", self.handle_shake)
         self.root.bind("x", self.handle_mode)
         self.root.bind("y", self.handle_mode)
@@ -107,8 +113,8 @@ class mychemApp():
         self.space.numpy2atoms()
         self.pause = True
         self.glframe.pause = True
-        #self.status_bar.settime(self.t)
-        #self.status_bar.setinfo("Number of atoms: "+str(len(self.atoms)))
+        self.status_bar.settime(self.space.t)
+        self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
 
     def handle_space(self,event=None):
@@ -119,6 +125,7 @@ class mychemApp():
 
 
     def handle_mode(self,event=None):
+        if not self.merge_mode: return
         if event.keysym == "r":
            self.ttype = "r" + self.ttype[1]
            self.status_bar.set("Rotate "+ self.ttype[1] )
@@ -145,6 +152,9 @@ class mychemApp():
             self.space.shake = not self.space.shake
         self.status_bar.set("Random shake is "+ OnOff(self.space.shake))
 
+    def handle_redox(self,event=None):
+        self.space.redox = not self.space.redox
+        self.status_bar.set("Random redox is "+ OnOff(self.space.redox))
 
     def handle_g(self,event=None):
         if event:
@@ -169,6 +179,11 @@ class mychemApp():
         self.sim_pause()
         self.space.atoms = []	
         self.space.mixers = []
+        self.space.merge_pos = glm.vec3(0,0,0)
+        self.space.merge_rot = glm.quat()
+        self.space.merge_atoms = []
+        self.space.select_mode = False
+        self.merge_mode = False
         self.space.atoms2numpy()
         self.status_bar.set("New file")
 
@@ -197,8 +212,9 @@ class mychemApp():
         self.recentdata = mergedata
         self.resetdata = mergedata 
         self.merge_mode=True
-        self.ttype = "mx"
+        self.space.select_mode = False
         self.space.load_data(mergedata, merge=True)
+        self.space.merge_center = self.space.get_mergeobject_center()
         #self.canvas.configure(cursor="hand2")
         #self.status_bar.set("Merging mode")
 
@@ -209,8 +225,8 @@ class mychemApp():
         self.sim_pause()
         self.merge_atoms = []
         self.merge_mode=True
-        self.ttype = "mx"
         self.space.load_data(self.recentdata, merge=True)
+        self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
 
     def file_save(self,event=None):
@@ -227,25 +243,67 @@ class mychemApp():
     def file_exit(self,event=None):
         pass
 
+    def handle_cursor(self,event=None):
+        if self.merge_mode == True: return
+        self.space.select_mode = True
+        N = self.space.np_x.size
+        if event.keysym == "Left":
+            self.space.select_i -=1
+            if self.space.select_i < 0:
+                self.space.select_i=N-1
+        if event.keysym == "Right":
+            self.space.select_i +=1
+            if self.space.select_i >=N:
+                self.space.select_i =0
 
     def handle_reset(self,event=None):
         if not self.resetdata:
             return
         self.file_new()
         self.space.load_data(self.resetdata)
+        self.space.atoms2numpy()
         self.status_bar.set("Reset to previos loaded")
     
     def handle_add_atom2(self,event=None):
         self.handle_add_atom(keysym=event.keysym)
 
     def handle_add_atom(self,keysym=""):
+        self.sim_pause()
         self.space.merge_pos.x +=25
         self.merge_mode = True
         self.ttype = "mx"
         if keysym in ["1","2","3","4","5","6"]:
-            a = Atom(500,500,500,int(keysym))
+            createtype = int(keysym)
+            a = Atom(500,500,500,createtype)
+            if createtype==1:
+                    r = 6
+                    m = 1
+                    q = 0
+            elif createtype==2:
+                    r = 8
+                    m = 16
+                    q = 0
+            elif createtype==3:
+                    r = 9
+                    m = 14
+                    q = 0
+            elif createtype==4:
+                    m = 12
+                    r = 10
+                    q = 0
+            elif createtype==5:
+                    m = 31
+                    r = 12
+                    q = 0
+            elif createtype==6:
+                    m = 32
+                    r = 12
+                    q = 0            
+            a.m = m
+            a.r = r
+            a.q = q
         self.space.merge_atoms = [a]
-            
+        self.space.merge_center = self.space.get_mergeobject_center()    
         
          #if not event.keysym in self.keypressed:
          #    self.keypressed.append(event.keysym)
@@ -254,22 +312,51 @@ class mychemApp():
     #     if event.keysym in self.keypressed:
     #          self.keypressed.remove(event.keysym)
 
-    def handle_mouseb1(self,event:tk.Event):
-        self.lastX = event.x
-        self.lastY = event.y
+    def handle_escape(self,event):
         if self.merge_mode:
             self.merge_mode = False
+            self.space.merge_atoms = []
+
+    def handle_doubleclick(self,event):
+        if self.merge_mode:
+            self.handle_enter(event)
+            return
+        #(x,y,z) = glm.unProject(glm.vec3(event.x,event.y,0),self.glframe.view,self.glframe.projection, (0,0,self.glframe.width,self.glframe.height))
+        #print(x,y,z)
+
+        
+    def handle_enter(self,event:tk.Event):
+        if self.space.select_mode:
+            self.sim_pause()
+            a = self.space.atoms[self.space.select_i]
+            self.space.merge_atoms = [a]
+            self.space.merge_pos = glm.vec3(0,0,0)
+            self.space.merge_rot = glm.quat()
+            self.space.atoms.remove(a)
+            self.space.merge_center = self.space.get_mergeobject_center()
+            self.merge_mode = True
+            
+            self.space.select_mode = False
+            self.space.atoms2numpy()
+            return
+        if self.merge_mode:
+            self.merge_mode = False 
             for a in self.space.merge_atoms:
                 pos = glm.vec3(a.x, a.y, a.z)
-                pos -= glm.vec3(500,500,500)
+                pos -= self.space.merge_center
                 pos = self.space.merge_rot * pos
-                pos += glm.vec3(500,500,500)
+                pos += self.space.merge_center
                 pos += self.space.merge_pos
                 (a.x,a.y,a.z) = pos
                 a.rot = self.space.merge_rot * a.rot
                 self.space.appendatom(a)
             self.space.merge_atoms = []
+            self.resetdata = self.space.make_export()
             self.space.atoms2numpy()
+
+    def handle_mouseb1(self,event:tk.Event):
+        self.lastX = event.x
+        self.lastY = event.y
             
         
 
