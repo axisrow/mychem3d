@@ -105,7 +105,7 @@ class mychemApp():
 
     def sim_run(self):
         #self.glframe.atoms2ssbo()
-        self.glframe.atoms2ssbo()
+        #self.glframe.atoms2ssbo()
         self.pause = False
         self.glframe.pause = False
         self.status_bar.set("Running")

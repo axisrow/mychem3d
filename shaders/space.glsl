@@ -1,7 +1,7 @@
 #version 430
 
 // Set up our compute groups
-layout(local_size_x=1, local_size_y=1) in;
+layout(local_size_x=100, local_size_y=1) in;
 
 // Input uniforms go here if you need them.
 // Some examples:
@@ -44,68 +44,83 @@ float rand(vec2 co){
 }
 
 
-void next(){
-    In.atoms[i].v += In.atoms[i].a;
-    In.atoms[i].pos += In.atoms[i].v;
-    In.atoms[i].pos.w=1.0;
-}
-
-
-void limits(){
+void limits(inout vec3 pos,  inout vec3 v){
     //limits
-    if (In.atoms[i].pos.x > 1000){
-        In.atoms[i].pos.x == 1000;
-        In.atoms[i].v.x = - In.atoms[i].v.x ;
+    if (pos.x > 1000){
+        pos.x = 1000;
+        v.x = -v.x ;
     }
 
-    if (In.atoms[i].pos.y > 1000){
-        In.atoms[i].pos.y == 1000;
-        In.atoms[i].v.y = - In.atoms[i].v.y ;
+    if (pos.y > 1000){
+        pos.y = 1000;
+        v.y = - v.y ;
     }
 
-    if (In.atoms[i].pos.z > 1000){
-        In.atoms[i].pos.z = 1000;
-        In.atoms[i].v.z = - In.atoms[i].v.z ;
+    if (pos.z > 1000){
+        pos.z = 1000;
+        v.z = - v.z ;
     }
 
-        if (In.atoms[i].pos.x < 0){
-        In.atoms[i].pos.x = 0;
-        In.atoms[i].v.x = - In.atoms[i].v.x ;
+    if (pos.x < 0){
+        pos.x = 0;
+        v.x = - v.x ;
     }
 
-    if (In.atoms[i].pos.y < 0){
-        In.atoms[i].pos.y = 0;
-        In.atoms[i].v.y = - In.atoms[i].v.y ;
+    if (pos.y < 0){
+        pos.y = 0;
+        v.y = - v.y ;
     }
 
-    if (In.atoms[i].pos.z < 0){
-        In.atoms[i].pos.z = 0;
-        In.atoms[i].v.z = - In.atoms[i].v.z ;
+    if (pos.z < 0){
+        pos.z = 0;
+        v.z = v.z ;
     }
 }
 
 void main()
 {
     Atom atom_i, atom_j;
-    atom_i = In.atoms[i];
-    //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
+    vec3 pos_i,pos_j, v_i, v_j;
     
-    next();
-    limits();
+    atom_i = In.atoms[i];
+    
+    pos_i= atom_i.pos.xyz;
+    v_i = atom_i.v.xyz;
+    //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
+
+    //next
+    v_i += atom_i.a.xyz;
+    v_i *=0.995;
+    pos_i += v_i;
+    limits(pos_i,v_i);
+
 
     float sum = 0;
     float r, a;
     vec3 delta;
+    vec3 sum_a = vec3(0,0,0);
+    vec3 E = vec3(0,0,0);
     for (int j=0;j<In.atoms.length();j++){
         if (i == j) continue;
-        //atom_j = In.atoms[i];
-        delta = In.atoms[i].pos.xyz - In.atoms[j].pos.xyz;
+        atom_j = In.atoms[j];
+        pos_j = atom_j.pos.xyz;
+        delta = pos_i - pos_j;
         //delta = atom_i.pos.xyz - atom_j.pos.xyz;
-        r = distance(atom_i.pos.xyz, atom_j.pos.xyz );
-        a = -1/r*0.01;
+        r = distance(pos_i, pos_j);
+        a = 0;
+        if (r<10)
+            a = 1/r*0.5;
+        else 
+            a = - 1/r*0.01;
+        
+        E += delta/r*a;
     }
+    
+    Atom atom_out=atom_i;
 
-    Out.atoms[i].a.xyz = delta/r*a;
-    Out.atoms[i].a.w = 0;
-    //Out.atoms[i].a.xyz = vec3(0.001,0.001,0.001);
+    atom_out.a.xyz = E;
+    //atom_out.a.xyz = vec3(0.01,0.01,0.01);
+    atom_out.v.xyz = v_i;
+    atom_out.pos.xyz = pos_i;
+    Out.atoms[i] = atom_out;
 }

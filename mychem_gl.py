@@ -337,18 +337,19 @@ class AppOgl(OpenGLFrame):
         gl.glUseProgram(0)
 
         # render computed atoms
-        gl.glUseProgram(self.gpu_code)
-        gl.glBindVertexArray(self.atomVAO)
         
         #for i in range(1,10):
         if not self.pause:
-            gl.glDispatchCompute(1000,100,1)        
-            gl.glMemoryBarrier(gl.GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            gl.glUseProgram(self.gpu_code)
+            #gl.glBindVertexArray(self.atomVAO)
+
+            gl.glDispatchCompute(100,1,1)        
+            gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
         
-        self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
-        gl.glUseProgram(0)
+            self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
+            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
+            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
+            gl.glUseProgram(0)
         #glfw.swap_buffers(self.);
         #glfwPollEvents();
 
@@ -380,7 +381,7 @@ class AppOgl(OpenGLFrame):
         self.lastframe_time = self.curframe_time
         tm = time.time() - self.start
         throttle = 1/100 - self.framedelta
-        if throttle>0:
-            time.sleep(throttle)
+        #if throttle>0:
+            #time.sleep(throttle)
         self.nframes += 1
         print("fps",self.nframes / tm, end="\r" )
