@@ -100,17 +100,18 @@ class mychemApp():
 
     def run(self):
         self.resetdata = self.space.make_export()
-        self.space.atoms2numpy()
+        #self.glframe.atoms2ssbo()
         self.root.mainloop()
 
     def sim_run(self):
-        self.space.atoms2numpy()
+        #self.glframe.atoms2ssbo()
+        self.glframe.atoms2ssbo()
         self.pause = False
         self.glframe.pause = False
         self.status_bar.set("Running")
 
     def sim_pause(self):
-        self.space.numpy2atoms()
+        #self.space.numpy2atoms()
         self.pause = True
         self.glframe.pause = True
         self.status_bar.settime(self.space.t)
@@ -164,7 +165,7 @@ class mychemApp():
     def handle_zero(self,event=None):
         self.space.numpy2atoms()
         self.space.appendmixer(1)
-        self.space.atoms2numpy()
+        self.glframe.atoms2ssbo()
 
 
     def handle_bondlock(self,event=None):
@@ -184,7 +185,7 @@ class mychemApp():
         self.space.merge_atoms = []
         self.space.select_mode = False
         self.merge_mode = False
-        self.space.atoms2numpy()
+        self.glframe.atoms2ssbo()
         self.status_bar.set("New file")
 
     def file_open(self,event=None):
@@ -261,7 +262,7 @@ class mychemApp():
             return
         self.file_new()
         self.space.load_data(self.resetdata)
-        self.space.atoms2numpy()
+        self.glframe.atoms2ssbo()
         self.status_bar.set("Reset to previos loaded")
     
     def handle_add_atom2(self,event=None):
@@ -337,7 +338,7 @@ class mychemApp():
             self.merge_mode = True
             
             self.space.select_mode = False
-            self.space.atoms2numpy()
+            self.glframe.atoms2ssbo()
             return
         if self.merge_mode:
             self.merge_mode = False 
@@ -352,7 +353,7 @@ class mychemApp():
                 self.space.appendatom(a)
             self.space.merge_atoms = []
             self.resetdata = self.space.make_export()
-            self.space.atoms2numpy()
+            self.glframe.atoms2ssbo()
 
     def handle_mouseb1(self,event:tk.Event):
         self.lastX = event.x

@@ -19,6 +19,26 @@ def makestar1(space,x,y,z):
         space.appendatom(Atom(x,y-2*D,z,1,pi*3/2))
 
 
+def makecyclopropane(space,x,y,z):
+        space.appendatom(Atom(x,y,z,4,r=10,m=12))
+        space.appendatom(Atom(x,y,z,4,r=10,m=12))
+        space.appendatom(Atom(x,y,z,4,r=10,m=12))
+
+def makeclew(space,x,y,z):
+     D = 16
+     f = 0
+     f2 = 0
+     r = 60
+     for i in range (1,100):
+        r = r + 1
+        f += 2*pi*r/D 
+        f2 = i/20
+        dx = r*sin(f2)*cos(f)
+        dy = r*sin(f2)*sin(f)
+        dz = r*cos(f2)
+        a = Atom(x+dx,y+dy,z+dx,2,r=8)
+        space.appendatom(a)
+
         
 
 def makemethan(space,x,y,z):
@@ -30,28 +50,51 @@ def makemethan(space,x,y,z):
             rot = glm.quat(glm.vec3(0,pi/6,i*2*pi/3))
             hx,hy,hz = rot*glm.vec3(D,0,0)
             space.appendatom(Atom(x+hx,y+hy,z+hz,1,f=i*2*pi/3+pi,f2=pi/6, r=6))
-        
+
+def makeethan(space,x,y,z):
+        D=17
+        D2=20
+        #f = glm.radians(109.47)-pi
+        space.appendatom(Atom(x,y,z,4,r=10))
+        for i in range(0,3):
+            rot = glm.quat(glm.vec3(0,pi/6,i*2*pi/3))
+            hx,hy,hz = rot*glm.vec3(D,0,0)
+            space.appendatom(Atom(x+hx,y+hy,z+hz,1,f=i*2*pi/3+pi,f2=pi/6, r=6))
+        space.appendatom(Atom(x,y,z+D2,4,r=10,f2=pi,f=pi/6))
+        for i in range(0,3):
+            rot = glm.quat(glm.vec3(0,-pi/6,i*2*pi/3))
+            hx,hy,hz = rot*glm.vec3(D,0,0)
+            #space.appendatom(Atom(x+hx,y+hy,z+hz+D2,1,f=i*2*pi/3+pi,f2=-pi/6, r=6))
+
+
+def makealkane(space,x,y,z,n):
+     space.appendatom(Atom(x-3,y-15,z-6,1,f=pi/2,r=6,m=1))
+     for i in range(0,n):
+         f2 = i%2 * pi
+         dx = -10 * (i%2) 
+         dz = -10 * (i%2) 
+         space.appendatom(Atom(x+dx,y+i*15,z+dz,4,f2=f2,r=10,m=12))
+         if i%2 == 0:
+             space.appendatom(Atom(x,y+i*15,z+17,1,f2=-pi/2,r=6,m=1))
+             space.appendatom(Atom(x+17,y+i*15,z-5,1,f=pi,f2=0,r=6,m=1))
+         else:
+             space.appendatom(Atom(x+dx,y+i*15,z+dz-17,1,f2=pi/2,r=6,m=1))
+             space.appendatom(Atom(x+dx-15,y+i*15,z+dz+5,1,f=0,f2=0,r=6,m=1))
+     space.appendatom(Atom(x-5,y+n*15,z-5,1,f=3*pi/2,r=6,m=1))
 
 def makemethan_old(space,x,y,z):
         D=16
-        space.appendatom(Atom(x,y,z,4,r=10))
+        space.appendatom(Atom(x,y,z,400,r=10))
         space.appendatom(Atom(x+D,y,z,1,f=pi, r=6))
         space.appendatom(Atom(x-D,y,z,1,f=0, r=6))
         space.appendatom(Atom(x,y+D,z,1,f=3*pi/2, r=6))
         space.appendatom(Atom(x,y-D,z,1,f=pi/2, r=6))
 
 
-def makeethan_old(space,x,y,z):
-        D=40
-        D2=16
-        space.appendatom(Atom(x,y,z,4))
-        space.appendatom(Atom(x+D,y,z,4))
-        #space.appendatom(Atom(x-D2,y,z,1,r=6))
-        #space.appendatom(Atom(x,y-D2,z,1,pi*3/2,r=6))
-        #space.appendatom(Atom(x,y+D2,z,1,pi/2,r=6))
-        #space.appendatom(Atom(x+D+D2,y,z,1,pi,r=6))
-        #space.appendatom(Atom(x+D,y-D2,z,1,pi*3/2,r=6))
-        #space.appendatom(Atom(x+D,y+D2,z,1,pi/2,r=6))
+
+
+
+
 
 # n - количество лучей
 # m - длина лучей
@@ -192,14 +235,21 @@ if __name__ == '__main__':
     #for i in range(0,50):
         #makemethan(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
 
-    makemethan(space, 500,500,500)
-    #space.stoptime = 3000
+    #makemethan(space, 500,500,500)
+#    makeethan(space, 500,500,500)
+#    makeclew(space,500,500,500)
+    makealkane(space,500,400,500,40)
+    makealkane(space,100,400,500,40)
+    makealkane(space,200,400,500,40)
+    makealkane(space,300,400,500,40)
+    space.competitive = False
+#    space.stoptime = 0
     #space.DETRACT_KOEFF1 = 0
     #space.DETRACT_KOEFF2 = 0
     #space.export = True
     #space.export_nodes = True
     #space.competitive =True
-#    space.stoptime=0
+    #space.stoptime=5
     App.run()
 #
 #

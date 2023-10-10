@@ -88,15 +88,17 @@ class Atom:
 		self.x = x
 		self.y = y
 		self.z = z
+		self.pos = glm.vec3(x,y,z)
 		self.vx = 0.0
 		self.vy = 0.0
 		self.vz = 0.0
+		self.v = glm.vec3(0,0,0)
 		self.ax = 0.0
 		self.ay = 0.0
 		self.az = 0.0
+		self.a = glm.vec3(0,0,0)
 		self.vf = 0.0
 		self.vf2 = 0.0
-		self.af = 0.0
 		self.m = m
 		self.q = q
 		self.type = type
@@ -204,47 +206,3 @@ class Atom:
 				p.calculate_q()	
 		self.calculate_q()
 
-	def draw(self,canvas):
-		pass
-#		self.canvas_id = canvas.create_oval(self.x-self.r,self.y-self.r,self.x+self.r,self.y+self.r,outline=self.color,fill=self.color)
-#		for n in self.nodes:
-#			nx = self.x + cos(n.f+self.f)*self.r
-#			ny = self.y - sin(n.f+self.f)*self.r
-#			if n.bonded:
-#				n.canvas_id = canvas.create_oval(nx-1,ny-1,nx+1,ny+1,outline=self.BONDEDCOLOR,fill=self.BONDEDCOLOR)
-#			else:
-#				n.canvas_id = canvas.create_oval(nx-1,ny-1,nx+1,ny+1,outline=self.UNBONDEDCOLOR,fill=self.UNBONDEDCOLOR)
-
-	def limits(self):
-		if self.vx < -self.MAXVELOCITY: self.vx=-self.MAXVELOCITY
-		if self.vx > self.MAXVELOCITY: self.vx=self.MAXVELOCITY
-		if self.vy < -self.MAXVELOCITY: self.vy=-self.MAXVELOCITY
-		if self.vy > self.MAXVELOCITY: self.vy=self.MAXVELOCITY
-
-		if self.x < self.r: 
-			self.vx= -self.vx
-			self.x = self.r
-		if self.x>self.space.WIDTH-self.r : 
-			self.vx= -self.vx
-			self.x = self.space.WIDTH-self.r
-		if self.y < self.r:
-			self.vy= -self.vy
-			self.y = self.r
-		if self.y>self.space.HEIGHT-self.r : 
-			self.vy= -self.vy
-			self.y= self.space.HEIGHT-self.r
-		if self.f > 2*pi:
-			self.f-= 2*pi
-		if self.f < 0:
-			self.f+= 2*pi
-
-	def next(self):
-		if not self.fixed:
-#			self.vx = self.vx + self.ax
-#			self.vy = self.vy + self.ay
-#			self.vf = self.vf + self.af
-#			self.x  = self.x+self.vx
-#			self.y  = self.y+self.vy
-#			self.f  = self.f+self.vf
-
-			self.limits()
