@@ -24,6 +24,7 @@ struct Atom
     float m;
     float ncount;
     vec4 rot;
+    vec4 rotv;
     vec4 color;
     Node nodes[5];
 };
@@ -51,8 +52,29 @@ float rand(vec2 co){
 }
 
 
+vec4 qmul(vec4 q1, vec4 q2)
+{
+         return vec4(
+             q2.xyz * q1.w + q1.xyz * q2.w + cross(q1.xyz, q2.xyz),
+             q1.w * q2.w - dot(q1.xyz, q2.xyz)
+         );
+}
+   
+     // Vector rotation with a quaternion
+     // http://mathworld.wolfram.com/Quaternion.html
+vec3 rotate_vector(vec3 v, vec4 r)
+{
+         vec4 r_c = r * vec4(-1, -1, -1, 1);
+         return qmul(r, qmul(vec4(v, 0), r_c)).xyz;
+}
+
 void limits(inout vec3 pos,  inout vec3 v){
-    //limits
+    if(v.x>1) v.x=1;
+    if(v.y>1) v.y=1;
+    if(v.z>1) v.z=1;
+    if(v.x<-1) v.x=-1;
+    if(v.y<-1) v.y=-1;
+    if(v.z<-1) v.z=-1;
     if (pos.x > 1000){
         pos.x = 1000;
         v.x = -v.x ;
@@ -84,6 +106,16 @@ void limits(inout vec3 pos,  inout vec3 v){
     }
 }
 
+float BONDR = 3;
+float BOND_KOEFF = 0.004;
+float ATTRACT_KOEFF= 0.5;
+float ROTA_KOEFF = 0.001;
+float REPULSION1 = -3;
+float REPULSION_KOEFF1 = 15;
+float REPULSION2 = 6;
+float REPULSION_KOEFF2= 0.01;
+
+
 void main()
 {
     Atom atom_i, atom_j;
@@ -97,36 +129,92 @@ void main()
 
     //next
     v_i += atom_i.a.xyz;
-    v_i *=0.995;
+    v_i *=0.999;      //dumping 
     pos_i += v_i;
-    limits(pos_i,v_i);
+    atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
 
+    limits(pos_i,v_i); //borders of container
 
     float sum = 0;
-    float r, a;
-    vec3 delta;
-    vec3 sum_a = vec3(0,0,0);
-    vec3 E = vec3(0,0,0);
+    float r;   //distance between atoms
+    float a;   //acceleration
+    float sumradius;   
+    vec3 delta;  //coordinates delta
+    vec3 sum_a = vec3(0.0,0.0,0.0);
+    vec3 E = vec3(0.0,0.0,0.0);
+    vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
+    
     for (int j=0;j<In.atoms.length();j++){
         if (i == j) continue;
         atom_j = In.atoms[j];
         pos_j = atom_j.pos.xyz;
         delta = pos_i - pos_j;
-        //delta = atom_i.pos.xyz - atom_j.pos.xyz;
+        sumradius = atom_i.r + atom_j.r;
         r = distance(pos_i, pos_j);
         a = 0;
-        if (r<21)
-            a = 0.1;
-        else 
-            a = - 1/r*0.0001;
+        if (r<(sumradius+REPULSION1))
+            a = 1/r * REPULSION_KOEFF1;
+        if (r<(sumradius+REPULSION2))
+            a = 1/r * REPULSION_KOEFF2;
         
-        E += delta/r*a;
+        //a += -0.0005;
+        E += delta/r*a;   //
+        
+        float rn;
+        vec3 nE,ni_realpos,nj_realpos,ndelta;
+        vec3 allnE = vec3(0,0,0);  
+        if (r<60) {
+            for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+                nE = vec3(0.0,0.0,0.0);
+                for (int nj = 0; nj<atom_j.ncount; nj++){
+                    ni_realpos = rotate_vector(atom_i.nodes[ni].pos.xyz, atom_i.rot);
+                    nj_realpos = rotate_vector(atom_j.nodes[nj].pos.xyz, atom_j.rot);
+                    ndelta =  ni_realpos - nj_realpos + delta;
+                    rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
+                    //if (rn == 0) continue;
+                    a = 0;
+                    if (rn<BONDR){
+                        a = -((rn-BONDR/2)*(rn-BONDR/2))*BOND_KOEFF;
+                    }
+                    else {
+                      a = -0.000001;
+                    }
+                    nE += ndelta/rn*a;
+
+                    vec3 target_direction = nj_realpos + pos_j - pos_i;
+                    vec3 v1 = normalize(ni_realpos);
+                    vec3 v2 = normalize(target_direction);
+                    float dt = dot(v1,v2);
+                    if(dt>1) dt=1;
+                    if(dt<-1) dt=-1;
+                    if (v1!=v2){
+                        vec3 axis = cross(v1,v2);
+                        float angle = acos(dt);
+                        angle = angle * ROTA_KOEFF/rn*100;
+                        vec4 rot = vec4(sin(angle/2)* axis,cos(angle/2) ); // quat
+                        totalrot = normalize(qmul(rot, totalrot));
+                    }
+
+                }
+                allnE += nE;
+            }
+
+            E += allnE;
+        }
     }
     
     Atom atom_out=atom_i;
 
-    atom_out.a.xyz = E;
-    atom_out.a.y -= 0.001;
+    atom_out.a.xyz = E/atom_i.m;
+    //totalrot = vec4(0, sin(-0.0001),sin(-0.0001), cos(-0.0001));    
+    //atom_out.rotv = normalize(qmul(totalrot, atom_i.rotv));
+    atom_out.rotv = totalrot;
+    //if(atom_i.type==4.0)
+      //  atom_out.rotv = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));
+    //float pi = 3.1415;
+    //atom_out.rot = qmul(vec4(0,sin(-pi/4),0,cos(-pi/4)), vec4(0,sin(0),0,cos(0)));
+
+    //atom_out.a.y -= 0.001; //gravity
     //atom_out.a.xyz = vec3(0.01,0.01,0.01);
     atom_out.v.xyz = v_i;
     atom_out.pos.xyz = pos_i;

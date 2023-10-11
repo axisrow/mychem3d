@@ -165,7 +165,7 @@ class mychemApp():
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity))
 
     def handle_zero(self,event=None):
-        self.space.numpy2atoms()
+        #self.space.numpy2atoms()
         self.space.appendmixer(1)
         self.glframe.atoms2ssbo()
 
@@ -214,7 +214,7 @@ class mychemApp():
         self.space.merge_atoms = []
         mergedata = json.loads(f.read())
         self.recentdata = mergedata
-        self.resetdata = mergedata 
+        #self.resetdata = mergedata 
         self.merge_mode=True
         self.space.select_mode = False
         self.space.load_data(mergedata, merge=True)

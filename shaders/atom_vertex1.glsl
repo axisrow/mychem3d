@@ -14,6 +14,7 @@ struct Atom
     float m;
     float ncount;
     vec4 rot;
+    vec4 rotv;
     vec4 color;
     Node nodes[5];
 };
@@ -25,6 +26,7 @@ layout(std430, binding=0) buffer atoms_in
     Atom atoms[];
 } In;
 
+//layout(std430, binding=0) buffer atoms_in
 
 
 layout (location = 0) in vec3 position;
@@ -32,6 +34,7 @@ layout (location = 1) in vec3 normal;
 
 uniform vec3 objectColor;
 uniform int mode;
+uniform int nodeindex;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -48,18 +51,34 @@ out vec3 FragPos;
 //out Atom currentAtom;
 
 
+vec4 qmul(vec4 q1, vec4 q2)
+{
+         return vec4(
+             q2.xyz * q1.w + q1.xyz * q2.w + cross(q1.xyz, q2.xyz),
+             q1.w * q2.w - dot(q1.xyz, q2.xyz)
+         );
+}
+   
+// Vector rotation with a quaternion
+// http://mathworld.wolfram.com/Quaternion.html
+vec3 rotate_vector(vec3 v, vec4 r)
+{
+         vec4 r_c = r * vec4(-1, -1, -1, 1);
+         return qmul(r, qmul(vec4(v, 0), r_c)).xyz;
+}
+
+
 void main()
 {
-    if (mode==0){ 
+    if (mode==0){  //merge atoms and nodes 
 //        float factor = 0.001;
         gl_Position = projection * view * model * vec4(position, 1.0f);
         ObjectColor = objectColor;
         FragPos = vec3(model * vec4(position, 1.0f));
         Normal = normal;
     }
-    if (mode==1){
+    if (mode==1){ //atoms
         bool bug = false; 
-        float radius = 10;
         float factor = 0.001;
         Atom currentAtom = In.atoms[gl_InstanceID];
 //        mat4 model = mat4( factor,  0,  0, 0,
@@ -68,7 +87,7 @@ void main()
 //                           currentAtom.pos.x,  currentAtom.pos.y  ,  currentAtom.pos.z ,    1  
 //                           );
 
-        vec4 vposition = vec4(position * radius * factor +  currentAtom.pos.xyz*factor, 1.0f) ;
+        vec4 vposition = vec4(position * currentAtom.r * factor +  currentAtom.pos.xyz*factor, 1.0f) ;
         //atom_position = currentAtom.pos*factor;
         gl_Position = projection * view * vposition;
 //        if (currentAtom.pos.x != 515.0){
@@ -81,5 +100,15 @@ void main()
         FragPos = vposition.xyz;
         Normal = normal;
     }
-    
+    if (mode==2) { //nodes
+        float factor = 0.001;
+        Atom currentAtom = In.atoms[gl_InstanceID];
+        vec3 nodepos = rotate_vector(currentAtom.nodes[nodeindex].pos.xyz, currentAtom.rot);
+        nodepos += currentAtom.pos.xyz;
+        vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
+        gl_Position = projection * view * vposition;
+        ObjectColor = vec3(1,1,1);
+        FragPos = vposition.xyz;
+        Normal = normal;
+    }
 }

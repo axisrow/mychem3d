@@ -22,7 +22,7 @@ class Space:
         self.REPULSION1 = -3
         self.repulse_k1 = 15
         self.REPULSION_KOEFF1 = self.repulse_k1
-        self.REPULSION2 = 6
+        self.REPULSION2 = 5
         self.repulse_k2 = 15
         self.REPULSION_KOEFF2= self.repulse_k2/10.0
         self.MAXVELOCITY = 1
@@ -396,12 +396,11 @@ class Space:
                 vz = 0
                 if type==4: type=400
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
-            aa = Atom(a["x"],a["y"],z, type=type)
+            aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
             aa.v = glm.vec3(a["vx"],a["vy"],vz)
             aa.rot = rot
             aa.q=a["q"]
             aa.m=a["m"]
-            aa.r=a["r"]
 #            if not "version" in j:
 #                 aa.f= 2*pi - aa.f
             if merge:
