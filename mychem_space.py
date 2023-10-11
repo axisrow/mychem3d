@@ -266,7 +266,7 @@ class Space:
                             a = 0
                             if rn<self.BONDR and not n1.bonded and not n2.bonded:
                                 if n1.bond(n2):
-                                    if self.debug:
+                                    if self.debug2:
                                         print("bond")
                                     self.np_q[i] = atom_i.calculate_q()
                                     self.np_q[j] = atom_j.calculate_q()
@@ -278,6 +278,8 @@ class Space:
                                     self.np_vz[j] *=0.5
                             if rn>self.BONDR and n1.pair == n2:
                                 if not self.bondlock:
+                                    if self.debug2:
+                                         print("unbond")
                                     n1.unbond()
                                     self.np_q[i] = atom_i.calculate_q()
                                     self.np_q[j] = atom_j.calculate_q()

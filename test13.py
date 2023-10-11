@@ -30,9 +30,9 @@ space = App.space
 #makesomething(space,350,250,0)
 #for i in range(0,250):
 #        space.appendatom(Atom(random.randrange(1,space.WIDTH), random.randrange(1,space.HEIGHT),random.randrange(1,space.DEPTH), random.randrange(1,6)));
-a = Atom(480,500,500,1)
-a2 = Atom(519,500,500,1,pi,f2=+pi/4)
-space.debug = True
+a = Atom(480,500,500,1,f=0,r=8,m=1)
+a2 = Atom(495,500,500,1,pi,f2=0,r=8,m=1)
+space.debug2 = True
 # space.stoptime = 2
 space.appendatom(a)        
 space.appendatom(a2)        
