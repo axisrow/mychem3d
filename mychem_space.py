@@ -177,13 +177,12 @@ class Space:
 
 
     def get_mergeobject_center(self):
-         sumx, sumy, sumz = 0,0,0
+         sum = glm.vec3(0,0,0)
          N = len(self.merge_atoms)
          for a in self.merge_atoms:
-              sumx+=a.x
-              sumy+=a.y
-              sumz+=a.z
-         center = glm.vec3([sumx/N, sumy/N, sumz/N])
+              sum += a.pos
+         center = sum/N
+         print("center=",center)
          return center
     
             
@@ -367,15 +366,15 @@ class Space:
             atom = {}
             atom["id"] = self.atoms[i].id
             atom["type"] = self.atoms[i].type
-            atom["x"] = round(self.atoms[i].x,4)
-            atom["y"] = round(self.atoms[i].y,4)
-            atom["z"] = round(self.atoms[i].z,4)
+            atom["x"] = round(self.atoms[i].pos.x,4)
+            atom["y"] = round(self.atoms[i].pos.y,4)
+            atom["z"] = round(self.atoms[i].pos.z,4)
             #atom["f"] = round(self.atoms[i].f,4)
             #atom["f2"] = round(self.atoms[i].f2,4)
             atom["rot"] = self.atoms[i].rot.to_tuple()
-            atom["vx"] = round(self.atoms[i].vx,4)
-            atom["vy"] = round(self.atoms[i].vy,4)
-            atom["vz"] = round(self.atoms[i].vz,4)
+            atom["vx"] = round(self.atoms[i].v.x,4)
+            atom["vy"] = round(self.atoms[i].v.y,4)
+            atom["vz"] = round(self.atoms[i].v.z,4)
             atom["q"] = self.atoms[i].q
             atom["m"] = self.atoms[i].m
             atom["r"] = self.atoms[i].r
@@ -398,9 +397,7 @@ class Space:
                 if type==4: type=400
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type)
-            aa.vx = a["vx"]
-            aa.vy = a["vy"]
-            aa.vz = vz
+            aa.v = glm.vec3(a["vx"],a["vy"],vz)
             aa.rot = rot
             aa.q=a["q"]
             aa.m=a["m"]
@@ -409,11 +406,6 @@ class Space:
 #                 aa.f= 2*pi - aa.f
             if merge:
                 aa.space = self
-                #(self.merge_offsetx, self.merge_offsety) =  (self.WIDTH/2,self.HEIGHT/2)
-                #(cx,cy) = self.getpointer()
-                #aa.x = aa.x - self.merge_offsetx + cx
-                #aa.y = aa.y - self.merge_offsety + cy
-                #(self.merge_offsetx, self.merge_offsety) = (cx,cy)
                 self.merge_atoms.append(aa)
                 if type == 100:
                     self.merge_mixers.append(aa)
@@ -421,7 +413,7 @@ class Space:
                 self.appendatom(aa)
                 if type == 100:
                     self.mixers.append(aa)
-        self.atoms2numpy()					
+        			
 
 
 

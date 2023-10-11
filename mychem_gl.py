@@ -102,16 +102,32 @@ class AppOgl(OpenGLFrame):
                 a_data.append(a.a.y)
                 a_data.append(a.a.z)
                 a_data.append(0.0)
-                # type
+                # type, radius, m
                 a_data.append(a.type)
+                a_data.append(a.r)
+                a_data.append(a.m)
                 a_data.append(0.0)
-                a_data.append(0.0)
-                a_data.append(0.0)
+                #rot 
+                a_data.append(a.rot.x)
+                a_data.append(a.rot.y)
+                a_data.append(a.rot.z)
+                a_data.append(a.rot.w)
                 #color
                 a_data.append(a.color[0])
                 a_data.append(a.color[1])
                 a_data.append(a.color[2])
                 a_data.append(1.0)
+                for n in a.nodes:
+                    a_data.append(n.pos.x)
+                    a_data.append(n.pos.y)
+                    a_data.append(n.pos.z)
+                    a_data.append(0.0)
+                for i in range(0,5-len(a.nodes)):
+                    a_data.append(0.0)
+                    a_data.append(0.0)
+                    a_data.append(0.0)
+                    a_data.append(0.0)
+                    
             a_data = np.array(a_data, dtype=np.float32)
         else:
             a_data = np.array([], dtype=np.float32)
@@ -226,13 +242,12 @@ class AppOgl(OpenGLFrame):
         #render merge_atom
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         for a in self.space.merge_atoms:
-            pos = glm.vec3(a.x, a.y, a.z)
+            pos = glm.vec3(a.pos)
             pos -= self.space.merge_center
             pos = self.space.merge_rot * pos
             pos += self.space.merge_center
             pos += self.space.merge_pos
             pos *= self.factor
-            
             model =  glm.translate(pos)
             model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
             gl.glUniform3f(objcol_loc,a.color[0],a.color[1],a.color[2])
@@ -246,7 +261,7 @@ class AppOgl(OpenGLFrame):
             for n in a.nodes:
                 r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
                 pos = a.rot * r1
-                pos += glm.vec3(a.x,a.y,a.z)
+                pos += a.pos
                 pos -= self.space.merge_center
                 pos = self.space.merge_rot * pos
                 pos += self.space.merge_center
@@ -338,17 +353,16 @@ class AppOgl(OpenGLFrame):
 
         # render computed atoms
         
-        #for i in range(1,10):
+        
         if not self.pause:
             gl.glUseProgram(self.gpu_code)
             #gl.glBindVertexArray(self.atomVAO)
-
-            gl.glDispatchCompute(100,1,1)        
-            gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
-        
-            self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
-            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
-            gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
+            for i in range(0,1):
+                gl.glDispatchCompute(100,1,1)        
+                gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
+                self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
+                gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
+                gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
             gl.glUseProgram(0)
         #glfw.swap_buffers(self.);
         #glfwPollEvents();
@@ -381,7 +395,7 @@ class AppOgl(OpenGLFrame):
         self.lastframe_time = self.curframe_time
         tm = time.time() - self.start
         throttle = 1/100 - self.framedelta
-        #if throttle>0:
-            #time.sleep(throttle)
+        if throttle>0:
+            time.sleep(throttle)
         self.nframes += 1
         print("fps",self.nframes / tm, end="\r" )

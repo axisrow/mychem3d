@@ -1,13 +1,21 @@
 #version 430 
 
+struct Node {
+    vec4 pos;
+};
+
 struct Atom
 {
     vec4 pos;
     vec4 v;
     vec4 a;
     float type;
-    //mat4 rot;
+    float r;
+    float m;
+    float ncount;
+    vec4 rot;
     vec4 color;
+    Node nodes[5];
 };
 
 

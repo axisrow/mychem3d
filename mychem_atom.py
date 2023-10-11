@@ -9,6 +9,7 @@ class Node:
 		self.bonded2 = False
 		self.pair = None
 		self.parent = parent
+		self.pos = glm.vec3(0,0,0)
 
 	def shift_q(self, n):
 		#PHCSNO
@@ -85,17 +86,8 @@ class Atom:
 		Atom.id += 1
 		self.id = Atom.id
 		self.YSHIFT = 0
-		self.x = x
-		self.y = y
-		self.z = z
 		self.pos = glm.vec3(x,y,z)
-		self.vx = 0.0
-		self.vy = 0.0
-		self.vz = 0.0
 		self.v = glm.vec3(0,0,0)
-		self.ax = 0.0
-		self.ay = 0.0
-		self.az = 0.0
 		self.a = glm.vec3(0,0,0)
 		self.vf = 0.0
 		self.vf2 = 0.0
@@ -178,10 +170,13 @@ class Atom:
 			n2.f = pi/2
 			n3.f = pi
 			self.nodes.extend([n1,n2,n3])
+		self.calc_node_positions()
 		self.rot = glm.quat(glm.vec3(0,-f2,f))
 		self.rotv = glm.quat()
 
-
+	def calc_node_positions(self):
+		for n in self.nodes:
+			n.pos = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(self.r,0,0)
 
 	def reset_ep(self):
 		for ep in self.el_pairs:

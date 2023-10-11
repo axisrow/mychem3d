@@ -108,12 +108,14 @@ class mychemApp():
         #self.glframe.atoms2ssbo()
         self.pause = False
         self.glframe.pause = False
+        #self.glframe.animate = 1
         self.status_bar.set("Running")
 
     def sim_pause(self):
         #self.space.numpy2atoms()
         self.pause = True
         self.glframe.pause = True
+        #self.glframe.animate = 0
         self.status_bar.settime(self.space.t)
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
@@ -196,6 +198,7 @@ class mychemApp():
         f =  open(fileName,"r")		
         self.resetdata = json.loads(f.read())
         self.space.load_data(self.resetdata)
+        self.glframe.atoms2ssbo()
         self.status_bar.set("File loaded")
 
     def file_merge(self,event=None, path=None):
@@ -216,8 +219,9 @@ class mychemApp():
         self.space.select_mode = False
         self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
+        #self.glframe.atoms2ssbo()
         #self.canvas.configure(cursor="hand2")
-        #self.status_bar.set("Merging mode")
+        self.status_bar.set("Merging mode")
 
 
     def file_merge_recent(self,event=None):
@@ -227,6 +231,7 @@ class mychemApp():
         self.merge_atoms = []
         self.merge_mode=True
         self.space.load_data(self.recentdata, merge=True)
+        #self.glframe.atoms2ssbo()
         self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
 
@@ -343,12 +348,12 @@ class mychemApp():
         if self.merge_mode:
             self.merge_mode = False 
             for a in self.space.merge_atoms:
-                pos = glm.vec3(a.x, a.y, a.z)
+                pos = a.pos
                 pos -= self.space.merge_center
                 pos = self.space.merge_rot * pos
                 pos += self.space.merge_center
                 pos += self.space.merge_pos
-                (a.x,a.y,a.z) = pos
+                a.pos = pos
                 a.rot = self.space.merge_rot * a.rot
                 self.space.appendatom(a)
             self.space.merge_atoms = []

@@ -10,16 +10,23 @@ layout(local_size_x=100, local_size_y=1) in;
 //uniform float frame_time;
 
 // Structure of the ball data
+struct Node {
+    vec4 pos;
+};
+
 struct Atom
 {
     vec4 pos;
     vec4 v;
     vec4 a;
     float type;
-    //mat4 rot;
+    float r;
+    float m;
+    float ncount;
+    vec4 rot;
     vec4 color;
+    Node nodes[5];
 };
-
 // Input buffer
 layout(std430, binding=0) buffer atoms_in
 {
@@ -108,10 +115,10 @@ void main()
         //delta = atom_i.pos.xyz - atom_j.pos.xyz;
         r = distance(pos_i, pos_j);
         a = 0;
-        if (r<10)
-            a = 1/r*0.5;
+        if (r<21)
+            a = 0.1;
         else 
-            a = - 1/r*0.01;
+            a = - 1/r*0.0001;
         
         E += delta/r*a;
     }
@@ -119,6 +126,7 @@ void main()
     Atom atom_out=atom_i;
 
     atom_out.a.xyz = E;
+    atom_out.a.y -= 0.001;
     //atom_out.a.xyz = vec3(0.01,0.01,0.01);
     atom_out.v.xyz = v_i;
     atom_out.pos.xyz = pos_i;
