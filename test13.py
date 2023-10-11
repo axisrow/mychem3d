@@ -25,19 +25,29 @@ def makesomething(space,x,y,z):
 App = mychemApp()
 random.seed(1)
 space = App.space
-#space.stoptime = 10
+#space.stoptime = 10 
 #makesomething(space,150,250,0)
 #makesomething(space,350,250,0)
-#for i in range(0,250):
-#        space.appendatom(Atom(random.randrange(1,space.WIDTH), random.randrange(1,space.HEIGHT),random.randrange(1,space.DEPTH), random.randrange(1,6)));
-a = Atom(480,500,500,1)
-a2 = Atom(519,500,500,1,pi,f2=+pi/4)
-space.debug = True
-# space.stoptime = 2
+#for i in range(0,500):
+#        space.appendatom(Atom(random.randrange(1,space.WIDTH), random.randrange(1,space.HEIGHT),random.randrange(1,space.DEPTH), random.randrange(1,5)));
+        #space.appendatom(Atom(random.randrange(1,100), random.randrange(1,100),random.randrange(1,100), random.randrange(1,6)));
+a = Atom(480,500,500,1,f=0, f2=0, r=8,m=1)
+#a2 = Atom(519,500,500,1,pi, f2=pi/4)
+a2 = Atom(495.9,500,500,1,f=pi,f2=0,r=8,m=1)
+space.debug = False
+#space.stoptime = 1
 space.appendatom(a)        
 space.appendatom(a2)        
 #space.appendmixer(20)
 #space.export = True
-#space.stoptime = 2
+#space.stoptime = 0
 App.run()
+
+#import glm
+#vector = glm.vec3(1,0,0);
+#rotmat = glm.rotate(glm.radians(-90), (0,0,1) )
+#vector = rotmat * vector
+#print(vector.to_tuple())
+
+
   

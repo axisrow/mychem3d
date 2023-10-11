@@ -68,11 +68,11 @@ def makeethan(space,x,y,z):
 
 
 def makealkane(space,x,y,z,n):
-     space.appendatom(Atom(x-3,y-15,z-6,1,f=pi/2,r=6,m=1))
+     space.appendatom(Atom(x-3,y-15,z-5,1,f=pi/2,r=6,m=1))
      for i in range(0,n):
          f2 = i%2 * pi
          dx = -10 * (i%2) 
-         dz = -10 * (i%2) 
+         dz = -5 * (i%2) 
          space.appendatom(Atom(x+dx,y+i*15,z+dz,4,f2=f2,r=10,m=12))
          if i%2 == 0:
              space.appendatom(Atom(x,y+i*15,z+17,1,f2=-pi/2,r=6,m=1))
@@ -80,7 +80,7 @@ def makealkane(space,x,y,z,n):
          else:
              space.appendatom(Atom(x+dx,y+i*15,z+dz-17,1,f2=pi/2,r=6,m=1))
              space.appendatom(Atom(x+dx-15,y+i*15,z+dz+5,1,f=0,f2=0,r=6,m=1))
-     space.appendatom(Atom(x-5,y+n*15,z-5,1,f=3*pi/2,r=6,m=1))
+     space.appendatom(Atom(x-5,y+n*15,z,1,f=3*pi/2,r=6,m=1))
 
 def makemethan_old(space,x,y,z):
         D=16
@@ -235,18 +235,22 @@ if __name__ == '__main__':
     #for i in range(0,50):
         #makemethan(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
 
-    #makemethan(space, 500,500,500)
-#    makeethan(space, 500,500,500)
+#    makemethan(space, 500,500,500)
+    #makeethan(space, 500,500,500)
 #    makeclew(space,500,500,500)
-    makealkane(space,500,400,500,40)
-    makealkane(space,100,400,500,40)
-    makealkane(space,200,400,500,40)
-    makealkane(space,300,400,500,40)
+    #makealkane(space,100,400,500,40)
+    #makealkane(space,200,400,500,40)
+    #makealkane(space,300,400,500,40)
+    #akealkane(space,400,400,500,40)
+    makealkane(space,500,400,500,10)
+    makealkane(space,600,400,500,10)
+    #makealkane(space,500,500,500,3)
     space.competitive = False
 #    space.stoptime = 0
     #space.DETRACT_KOEFF1 = 0
     #space.DETRACT_KOEFF2 = 0
     #space.export = True
+    space.appendmixer(100)
     #space.export_nodes = True
     #space.competitive =True
     #space.stoptime=5
