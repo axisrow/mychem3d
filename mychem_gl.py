@@ -382,6 +382,8 @@ class AppOgl(OpenGLFrame):
         # compute atoms
         if not self.pause:
             gl.glUseProgram(self.gpu_code)
+            gl.glUniform1i(mode_loc,self.space.gravity)
+
             #gl.glBindVertexArray(self.atomVAO)
             for i in range(0,1):
                 gl.glDispatchCompute(100,1,1)        
@@ -420,7 +422,7 @@ class AppOgl(OpenGLFrame):
         #time.sleep(0.1)
         self.lastframe_time = self.curframe_time
         tm = time.time() - self.start
-        throttle = 1/100 - self.framedelta
+        throttle = 1/40 - self.framedelta
         if throttle>0:
             time.sleep(throttle)
         self.nframes += 1

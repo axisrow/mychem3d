@@ -65,9 +65,7 @@ class Space:
         for i in range(0,n):
             m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),100)
             m.space = self
-            m.vx = 1
-            m.vy = 1
-            m.vz = 1
+            m.v = glm.vec3(random.random(),random.random(),random.random())
             m.m = 40
             self.mixers.append(m)
             self.atoms.append(m)
@@ -397,7 +395,8 @@ class Space:
                 if type==4: type=400
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
-            aa.v = glm.vec3(a["vx"],a["vy"],vz)
+            #aa.v = glm.vec3(a["vx"],a["vy"],vz)
+            aa.v = glm.vec3(0,0,0)
             aa.rot = rot
             aa.q=a["q"]
             aa.m=a["m"]

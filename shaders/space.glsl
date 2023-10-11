@@ -6,8 +6,18 @@ layout(local_size_x=100, local_size_y=1) in;
 // Input uniforms go here if you need them.
 // Some examples:
 //uniform vec2 screen_size;
-//uniform vec2 force;
+uniform int gravity;
 //uniform float frame_time;
+float BONDR = 4;
+float BOND_KOEFF = 0.2;
+float ATTRACT_KOEFF= 0.5;
+float ROTA_KOEFF = 0.001;
+float REPULSION1 = -3;
+float REPULSION_KOEFF1 = 10;
+float REPULSION2 = 5;
+float REPULSION_KOEFF2= 1.5;
+
+
 
 // Structure of the ball data
 struct Node {
@@ -68,52 +78,45 @@ vec3 rotate_vector(vec3 v, vec4 r)
          return qmul(r, qmul(vec4(v, 0), r_c)).xyz;
 }
 
-void limits(inout vec3 pos,  inout vec3 v){
+void limits(inout vec3 pos,  inout vec3 v, in float radius){
     if(v.x>1) v.x=1;
     if(v.y>1) v.y=1;
     if(v.z>1) v.z=1;
     if(v.x<-1) v.x=-1;
     if(v.y<-1) v.y=-1;
     if(v.z<-1) v.z=-1;
-    if (pos.x > 1000){
-        pos.x = 1000;
+
+    if (pos.x > 1000-radius){
+        pos.x = 1000-radius;
         v.x = -v.x ;
     }
 
-    if (pos.y > 1000){
-        pos.y = 1000;
+    if (pos.y > 1000-radius){
+        pos.y = 1000-radius;
         v.y = - v.y ;
     }
 
-    if (pos.z > 1000){
-        pos.z = 1000;
+    if (pos.z > 1000-radius){
+        pos.z = 1000-radius;
         v.z = - v.z ;
     }
 
-    if (pos.x < 0){
-        pos.x = 0;
+    if (pos.x < radius){
+        pos.x = radius;
         v.x = - v.x ;
     }
 
-    if (pos.y < 0){
-        pos.y = 0;
+    if (pos.y < radius){
+        pos.y = radius;
         v.y = - v.y ;
     }
 
-    if (pos.z < 0){
-        pos.z = 0;
-        v.z = v.z ;
+    if (pos.z < radius){
+        pos.z = radius;
+        v.z = -v.z ;
     }
 }
 
-float BONDR = 3;
-float BOND_KOEFF = 0.004;
-float ATTRACT_KOEFF= 0.5;
-float ROTA_KOEFF = 0.001;
-float REPULSION1 = -3;
-float REPULSION_KOEFF1 = 15;
-float REPULSION2 = 6;
-float REPULSION_KOEFF2= 0.01;
 
 
 void main()
@@ -129,11 +132,7 @@ void main()
 
     //next
     v_i += atom_i.a.xyz;
-    v_i *=0.999;      //dumping 
-    pos_i += v_i;
-    atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
 
-    limits(pos_i,v_i); //borders of container
 
     float sum = 0;
     float r;   //distance between atoms
@@ -152,18 +151,19 @@ void main()
         sumradius = atom_i.r + atom_j.r;
         r = distance(pos_i, pos_j);
         a = 0;
-        if (r<(sumradius+REPULSION1))
-            a = 1/r * REPULSION_KOEFF1;
-        if (r<(sumradius+REPULSION2))
-            a = 1/r * REPULSION_KOEFF2;
+        if (r!=0){
+        //if (r<(sumradius+REPULSION1))
+        //    a = 1/r * REPULSION_KOEFF1;
+        //if (r<(sumradius+REPULSION2))
+            //a = 1/r * REPULSION_KOEFF2;
         
         //a += -0.0005;
         E += delta/r*a;   //
-        
+        }
         float rn;
         vec3 nE,ni_realpos,nj_realpos,ndelta;
         vec3 allnE = vec3(0,0,0);  
-        if (r<60) {
+        if (r<30) {
             for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 nE = vec3(0.0,0.0,0.0);
                 for (int nj = 0; nj<atom_j.ncount; nj++){
@@ -171,13 +171,14 @@ void main()
                     nj_realpos = rotate_vector(atom_j.nodes[nj].pos.xyz, atom_j.rot);
                     ndelta =  ni_realpos - nj_realpos + delta;
                     rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
-                    //if (rn == 0) continue;
+                    //r2n = ndelta.x*ndelta
+                    if (rn == 0) continue;
                     a = 0;
                     if (rn<BONDR){
-                        a = -((rn-BONDR/2)*(rn-BONDR/2))*BOND_KOEFF;
+                        a = -rn*rn*BOND_KOEFF;
                     }
                     else {
-                      a = -0.000001;
+                    //  a = -0.000001;
                     }
                     nE += ndelta/rn*a;
 
@@ -190,7 +191,7 @@ void main()
                     if (v1!=v2){
                         vec3 axis = cross(v1,v2);
                         float angle = acos(dt);
-                        angle = angle * ROTA_KOEFF/rn*100;
+                        angle = angle * ROTA_KOEFF * a/rn *100;
                         vec4 rot = vec4(sin(angle/2)* axis,cos(angle/2) ); // quat
                         totalrot = normalize(qmul(rot, totalrot));
                     }
@@ -214,7 +215,27 @@ void main()
     //float pi = 3.1415;
     //atom_out.rot = qmul(vec4(0,sin(-pi/4),0,cos(-pi/4)), vec4(0,sin(0),0,cos(0)));
 
-    //atom_out.a.y -= 0.001; //gravity
+    pos_i += v_i;
+    atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
+
+    limits(pos_i,v_i,atom_i.r); //borders of container
+    
+    v_i *=0.9999;      //dumping 
+
+
+    if (gravity==1) atom_out.a.y -= 0.001; //gravity
+ 
+
+ // mixer
+    if (atom_i.type==100){
+        if (v_i.x>0) v_i.x=1;
+        if (v_i.y>0) v_i.y=1;
+        if (v_i.z>0) v_i.z=1;
+        if (v_i.x<0) v_i.x=-1;
+        if (v_i.y<0) v_i.y=-1;
+        if (v_i.z<0) v_i.z=-1;
+    }
+
     //atom_out.a.xyz = vec3(0.01,0.01,0.01);
     atom_out.v.xyz = v_i;
     atom_out.pos.xyz = pos_i;
