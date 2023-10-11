@@ -8,7 +8,7 @@ struct Atom
 {
     vec4 pos;
     vec4 v;
-    vec4 a;
+//    vec4 a;
     float type;
     float r;
     float m;

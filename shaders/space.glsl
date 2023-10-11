@@ -11,7 +11,7 @@ uniform int gravity;
 float BONDR = 4;
 float BOND_KOEFF = 0.2;
 float ATTRACT_KOEFF= 0.5;
-float ROTA_KOEFF = 0.001;
+float ROTA_KOEFF = 0.00001;
 float REPULSION1 = -3;
 float REPULSION_KOEFF1 = 10;
 float REPULSION2 = 5;
@@ -28,7 +28,7 @@ struct Atom
 {
     vec4 pos;
     vec4 v;
-    vec4 a;
+//    vec4 a;
     float type;
     float r;
     float m;
@@ -130,8 +130,6 @@ void main()
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
-    //next
-    v_i += atom_i.a.xyz;
 
 
     float sum = 0;
@@ -152,18 +150,18 @@ void main()
         r = distance(pos_i, pos_j);
         a = 0;
         if (r!=0){
-        //if (r<(sumradius+REPULSION1))
-        //    a = 1/r * REPULSION_KOEFF1;
-        //if (r<(sumradius+REPULSION2))
-            //a = 1/r * REPULSION_KOEFF2;
-        
-        //a += -0.0005;
-        E += delta/r*a;   //
+            if (r<(sumradius+REPULSION1))
+                a = 1/r * REPULSION_KOEFF1;
+            if (r<(sumradius+REPULSION2))
+                a = 1/r * REPULSION_KOEFF2;
+
+            //a += -0.0005;
+            E += delta/r*a;   //
         }
         float rn;
         vec3 nE,ni_realpos,nj_realpos,ndelta;
         vec3 allnE = vec3(0,0,0);  
-        if (r<30) {
+        if (r<60) {
             for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 nE = vec3(0.0,0.0,0.0);
                 for (int nj = 0; nj<atom_j.ncount; nj++){
@@ -191,7 +189,7 @@ void main()
                     if (v1!=v2){
                         vec3 axis = cross(v1,v2);
                         float angle = acos(dt);
-                        angle = angle * ROTA_KOEFF * a/rn *100;
+                        angle = angle * ROTA_KOEFF *100;
                         vec4 rot = vec4(sin(angle/2)* axis,cos(angle/2) ); // quat
                         totalrot = normalize(qmul(rot, totalrot));
                     }
@@ -204,27 +202,9 @@ void main()
         }
     }
     
-    Atom atom_out=atom_i;
-
-    atom_out.a.xyz = E/atom_i.m;
-    //totalrot = vec4(0, sin(-0.0001),sin(-0.0001), cos(-0.0001));    
-    //atom_out.rotv = normalize(qmul(totalrot, atom_i.rotv));
-    atom_out.rotv = totalrot;
-    //if(atom_i.type==4.0)
-      //  atom_out.rotv = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));
-    //float pi = 3.1415;
-    //atom_out.rot = qmul(vec4(0,sin(-pi/4),0,cos(-pi/4)), vec4(0,sin(0),0,cos(0)));
-
-    pos_i += v_i;
-    atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
-
-    limits(pos_i,v_i,atom_i.r); //borders of container
-    
-    v_i *=0.9999;      //dumping 
-
-
-    if (gravity==1) atom_out.a.y -= 0.001; //gravity
- 
+    //totalrot = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));    
+    //atom_i.rotv = normalize(qmul(totalrot, atom_i.rotv));
+    atom_i.rotv = totalrot;
 
  // mixer
     if (atom_i.type==100){
@@ -236,8 +216,20 @@ void main()
         if (v_i.z<0) v_i.z=-1;
     }
 
+//dumping
+    v_i *=0.9999;      
+//next
+    v_i += E/atom_i.m;;
+    if (gravity==1) v_i.y -= 0.001; //gravity
+    pos_i += v_i;
+    atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
+    
+//limits    
+    limits(pos_i,v_i,atom_i.r); //borders of container
+    
+
     //atom_out.a.xyz = vec3(0.01,0.01,0.01);
-    atom_out.v.xyz = v_i;
-    atom_out.pos.xyz = pos_i;
-    Out.atoms[i] = atom_out;
+    atom_i.v.xyz = v_i;
+    atom_i.pos.xyz = pos_i;
+    Out.atoms[i] = atom_i;
 }

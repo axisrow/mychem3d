@@ -99,10 +99,10 @@ class AppOgl(OpenGLFrame):
                 a_data.append(a.v.z)
                 a_data.append(0.0)
                 # a
-                a_data.append(a.a.x)
-                a_data.append(a.a.y)
-                a_data.append(a.a.z)
-                a_data.append(0.0)
+                #a_data.append(a.a.x)
+                #a_data.append(a.a.y)
+                #a_data.append(a.a.z)
+                #a_data.append(0.0)
                 # type, radius, m
                 a_data.append(a.type)
                 a_data.append(a.r)
@@ -385,7 +385,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1i(mode_loc,self.space.gravity)
 
             #gl.glBindVertexArray(self.atomVAO)
-            for i in range(0,1):
+            for i in range(0,10):
                 gl.glDispatchCompute(100,1,1)        
                 gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
                 self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
