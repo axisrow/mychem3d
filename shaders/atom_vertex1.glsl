@@ -107,7 +107,10 @@ void main()
         nodepos += currentAtom.pos.xyz;
         vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
         gl_Position = projection * view * vposition;
-        ObjectColor = vec3(1,1,1);
+        float q = currentAtom.nodes[nodeindex].pos.w;
+        if (q==0) ObjectColor = vec3(1,1,1);
+        if (q==1) ObjectColor = vec3(255/256.0,95/256.0,160/256.0);
+        if (q==-1) ObjectColor = vec3(12/256.0,252/256.0,252/256.0);
         FragPos = vposition.xyz;
         Normal = normal;
     }

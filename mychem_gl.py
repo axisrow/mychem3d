@@ -385,7 +385,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1i(mode_loc,self.space.gravity)
 
             #gl.glBindVertexArray(self.atomVAO)
-            for i in range(0,10):
+            for i in range(0,1):
                 gl.glDispatchCompute(100,1,1)        
                 gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
                 self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer

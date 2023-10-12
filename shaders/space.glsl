@@ -1,7 +1,7 @@
 #version 430
 
 // Set up our compute groups
-layout(local_size_x=100, local_size_y=1) in;
+layout(local_size_x=50, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
 // Some examples:
@@ -11,9 +11,9 @@ uniform int gravity;
 float BONDR = 4;
 float BOND_KOEFF = 0.2;
 float ATTRACT_KOEFF= 0.5;
-float ROTA_KOEFF = 0.00001;
+float ROTA_KOEFF = 0.000001;
 float REPULSION1 = -3;
-float REPULSION_KOEFF1 = 10;
+float REPULSION_KOEFF1 = 15;
 float REPULSION2 = 5;
 float REPULSION_KOEFF2= 1.5;
 
@@ -118,6 +118,49 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 }
 
 
+int shift_q(in float type1, in float type2, inout float q1, inout float q2){
+    float etable[7]=float[](5,1,4,400,6,3,2);
+    int i1,i2;
+    for(int i=0;i<etable.length();i++){
+        if (etable[i]==type1){
+            i1 = i;
+            break;
+        }
+    }
+    for(int i=0;i<etable.length();i++){
+        if (etable[i]==type2){
+            i2 = i;
+            break;
+        }
+    }
+    if (i1>i2){
+        if (q1== 0 && q2== 0 ){ q1=-1; q2= 1; return 1;}  //1
+        if (q1== 0 && q2==-1 ){ q1=-1; q2= 0; return 0;}  //2
+        if (q1== 0 && q2== 1 ){ q1= 0; q2= 1; return 0;}  //3
+        if (q1==-1 && q2== 0 ){ q1=-1; q2= 0; return 0;}
+        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return 0;}
+        if (q1==-1 && q2== 1 ){ q1=-1; q2= 1; return 1;}
+        if (q1== 1 && q2== 0 ){ q1= 0; q2= 1; return 0;}
+        if (q1== 1 && q2==-1 ){ q1=-1; q2= 1; return 1;}   //8
+        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return 0;}   //9
+    }
+    if (i1==i2){
+        if (q1+q2==0) return 1;
+        else return 0;
+    }
+    if (i1<i2){
+        if (q1== 0 && q2== 0 ){ q1= 1; q2=-1; return 1;}  //1
+        if (q1== 0 && q2==-1 ){ q1= 0; q2=-1; return 0;}  //2
+        if (q1== 0 && q2== 1 ){ q1= 1; q2= 0; return 0;}  //3
+        if (q1==-1 && q2== 0 ){ q1= 0; q2=-1; return 0;}
+        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return 0;}
+        if (q1==-1 && q2== 1 ){ q1= 1; q2=-1; return 1;}
+        if (q1== 1 && q2== 0 ){ q1= 1; q2= 0; return 0;}
+        if (q1== 1 && q2==-1 ){ q1= 1; q2=-1; return 1;}   //8
+        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return 0;}   //9
+    }
+}
+
 
 void main()
 {
@@ -161,7 +204,7 @@ void main()
         float rn;
         vec3 nE,ni_realpos,nj_realpos,ndelta;
         vec3 allnE = vec3(0,0,0);  
-        if (r<60) {
+        if (r<100) {
             for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 nE = vec3(0.0,0.0,0.0);
                 for (int nj = 0; nj<atom_j.ncount; nj++){
@@ -172,11 +215,16 @@ void main()
                     //r2n = ndelta.x*ndelta
                     if (rn == 0) continue;
                     a = 0;
+                    float q1 = atom_i.nodes[ni].pos.w;
+                    float q2 =  atom_j.nodes[nj].pos.w;
                     if (rn<BONDR){
-                        a = -rn*rn*BOND_KOEFF;
+                        int bonded = shift_q(atom_i.type, atom_j.type, q1,q2);
+                        atom_i.nodes[ni].pos.w=q1;
+                        if (bonded==1)
+                            a = -rn*rn*BOND_KOEFF;
                     }
                     else {
-                    //  a = -0.000001;
+                      a = q1*q2*0.1;
                     }
                     nE += ndelta/rn*a;
 
@@ -208,12 +256,14 @@ void main()
 
  // mixer
     if (atom_i.type==100){
+        //if( dot(v_i, v_i) < 0.8) v_i*2;
         if (v_i.x>0) v_i.x=1;
         if (v_i.y>0) v_i.y=1;
         if (v_i.z>0) v_i.z=1;
         if (v_i.x<0) v_i.x=-1;
         if (v_i.y<0) v_i.y=-1;
         if (v_i.z<0) v_i.z=-1;
+        //v_i += a*0.01;
     }
 
 //dumping
