@@ -257,19 +257,24 @@ if __name__ == '__main__':
 #    makemethan(space, 500,500,500)
     #makeethan(space, 500,500,500)
 #    makeclew(space,500,500,500)
-    makealcohol(space,100,400,100,40)
-    makealcohol(space,100,400,400,40)
-    makealcohol(space,400,400,100,40)
-    makealcohol(space,400,400,400,40)
-    makealcohol(space,500,400,500,10)
-    makealcohol(space,600,400,600,10)
-    makealcohol(space,500,500,700,3)
-    space.competitive = False
+#    makealcohol(space,100,400,100,40)
+    #makealcohol(space,100,400,400,40)
+    #makealcohol(space,400,400,100,40)
+    #makealcohol(space,400,400,400,40)
+
+    #makealcohol(space,500,400,500,10)
+    #makealcohol(space,600,400,600,10)
+    #for i in range(0,100):
+        #makealcohol(space,random.randint(100,900),random.randint(100,900),random.randint(100,900),3)
+    #makealcohol(space,500,500,700,3)
+    #space.competitive = False
 #    space.stoptime = 0
     #space.DETRACT_KOEFF1 = 0
     #space.DETRACT_KOEFF2 = 0
     #space.export = True
-    #space.appendmixer(100)
+    space.merge_from_file("examples/alkane/30ane.json",glm.vec3(100,100,100))
+    space.merge_from_file("examples/alkane/30ane.json",glm.vec3(200,200,200))
+    #space.appendmixer(1000)
     #space.export_nodes = True
     #space.competitive =True
     #space.stoptime=5

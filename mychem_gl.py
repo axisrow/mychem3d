@@ -20,7 +20,7 @@ class AppOgl(OpenGLFrame):
     def initgl(self):
         """Initalize gl states when the frame is created"""
         gl.glViewport(0, 0, self.width, self.height)
-        gl.glClearColor(0.2, 0.2, 0.2, 0.0)
+        gl.glClearColor(0.3, 0.3, 0.3, 0.0)
         gl.glEnable(gl.GL_DEPTH_TEST)
         #gl.glEnable(gl.GL_DEBUG_OUTPUT)
         #gl.glEnable(gl.GL_CULL_FACE); 
@@ -84,8 +84,9 @@ class AppOgl(OpenGLFrame):
 
 
     def atoms2ssbo(self,bind_flag=True):
+        self.N = len(self.space.atoms)
         if bind_flag: gl.glBindVertexArray(self.atomVAO )
-        if len(self.space.atoms) >0:
+        if self.N>0:
             a_data = []
             for a in self.space.atoms:
                 #
@@ -386,7 +387,7 @@ class AppOgl(OpenGLFrame):
 
             #gl.glBindVertexArray(self.atomVAO)
             for i in range(0,1):
-                gl.glDispatchCompute(100,1,1)        
+                gl.glDispatchCompute(int(self.N/50)+1,1,1)        
                 gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
                 self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                 gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)

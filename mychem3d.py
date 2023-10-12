@@ -28,7 +28,7 @@ class mychemApp():
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
-        sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
+        #sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -36,6 +36,7 @@ class mychemApp():
         add_menu.add_command(label="C", accelerator="4",command=lambda:self.handle_add_atom(keysym="4"))
         add_menu.add_command(label="P", accelerator="5",command=lambda:self.handle_add_atom(keysym="5"))
         add_menu.add_command(label="S", accelerator="6",command=lambda:self.handle_add_atom(keysym="6"))        
+        add_menu.add_command(label="Mixer", accelerator="0",command=lambda:self.handle_zero())
         self.menu_bar.add_cascade(label="File", menu=file_menu)
         self.menu_bar.add_cascade(label="Simulation", menu=sim_menu)
         self.menu_bar.add_cascade(label="Add", menu=add_menu)
@@ -347,18 +348,11 @@ class mychemApp():
             return
         if self.merge_mode:
             self.merge_mode = False 
-            for a in self.space.merge_atoms:
-                pos = a.pos
-                pos -= self.space.merge_center
-                pos = self.space.merge_rot * pos
-                pos += self.space.merge_center
-                pos += self.space.merge_pos
-                a.pos = pos
-                a.rot = self.space.merge_rot * a.rot
-                self.space.appendatom(a)
-            self.space.merge_atoms = []
+            self.space.merge2atoms()
             self.resetdata = self.space.make_export()
             self.glframe.atoms2ssbo()
+
+
 
     def handle_mouseb1(self,event:tk.Event):
         self.lastX = event.x

@@ -183,9 +183,34 @@ class Space:
          print("center=",center)
          return center
     
-            
-              
 
+    def merge2atoms(self):
+        for a in self.merge_atoms:
+            pos = a.pos
+            pos -= self.merge_center
+            pos = self.merge_rot * pos
+            pos += self.merge_center
+            pos += self.merge_pos
+            a.pos = pos
+            a.rot = self.merge_rot * a.rot
+            self.appendatom(a)
+        self.merge_atoms = []        
+
+    def merge_from_file(self, filename, merge_pos=glm.vec3(0,0,0), merge_rot=glm.quat()):
+        f =  open(filename,"r")		
+        self.merge_atoms = []
+        mergedata = json.loads(f.read())
+        self.load_data(mergedata, merge=True)
+        self.merge_pos = merge_pos
+        self.merge_rot = merge_rot
+        self.merge_center = self.get_mergeobject_center()
+        self.merge2atoms()
+        self.merge_atoms = []
+        self.merge_pos = glm.vec3(0,0,0)
+        self.merge_rot = glm.quat()
+
+
+## not used for now
     def compute(self):
             N = len(self.atoms)
 #            if N==0:
@@ -194,8 +219,6 @@ class Space:
             if self.stoptime!= -1:
                 if self.t>self.stoptime:
                     return 0
-
-
             #Ex=np.zeros(N)
             #Ey=np.zeros(N)
             a = np.zeros((N,N))
