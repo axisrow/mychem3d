@@ -70,14 +70,14 @@ vec3 rotate_vector(vec3 v, vec4 r)
 
 void main()
 {
-    if (mode==0){  //merge atoms and nodes 
+    if (mode==0){  //vbo merge atoms and nodes 
 //        float factor = 0.001;
         gl_Position = projection * view * model * vec4(position, 1.0f);
         ObjectColor = objectColor;
         FragPos = vec3(model * vec4(position, 1.0f));
         Normal = normal;
     }
-    if (mode==1){ //atoms
+    if (mode==1){ //ssbo atoms
         bool bug = false; 
         float factor = 0.001;
         Atom currentAtom = In.atoms[gl_InstanceID];
@@ -110,7 +110,7 @@ void main()
         float q = currentAtom.nodes[nodeindex].pos.w;
         if (q==0) ObjectColor = vec3(1,1,1);
         if (q==1) ObjectColor = vec3(255/256.0,95/256.0,160/256.0);
-        if (q==-1) ObjectColor = vec3(12/256.0,252/256.0,252/256.0);
+        if (q==-1) ObjectColor = vec3(0.0,0,252/256.0);
         FragPos = vposition.xyz;
         Normal = normal;
     }

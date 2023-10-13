@@ -7,6 +7,7 @@ from mychem_atom import Atom
 import glm
 class Space:
     def __init__(self,width=1000,height=1000,depth=1000):
+        self.gpu_compute = True
         self.ucounter = 0
         self.debug = False
         self.WIDTH=width
@@ -30,14 +31,12 @@ class Space:
         self.stoptime = -1
         self.recordtime = 0
         self.atoms = []	
-        self.mixers = []
         self.g = 0.01
         self.newatom = None
         self.createtype=4
         self.createf = 0
         self.standard = True
         self.merge_atoms = []
-        self.merge_mixers = []
         self.merge_pos = glm.vec3(0,0,0)
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
@@ -63,11 +62,10 @@ class Space:
 
     def appendmixer(self,n=1):
         for i in range(0,n):
-            m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),100)
+            m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),100,r=30)
             m.space = self
             m.v = glm.vec3(random.random(),random.random(),random.random())
-            m.m = 40
-            self.mixers.append(m)
+            m.m = 1000
             self.atoms.append(m)
     
     def atoms2numpy(self):
@@ -93,15 +91,15 @@ class Space:
             atom_i = self.atoms[i]
             self.np_r[i]=atom_i.r
             self.np_m[i]=atom_i.m
-            self.np_x[i]=atom_i.x
-            self.np_y[i]=atom_i.y
-            self.np_z[i]=atom_i.z
-            self.np_vx[i]=atom_i.vx
-            self.np_vy[i]=atom_i.vy
-            self.np_vz[i]=atom_i.vz
-            self.np_ax[i]=atom_i.ax
-            self.np_ay[i]=atom_i.ay
-            self.np_az[i]=atom_i.az
+            self.np_x[i]=atom_i.pos.x
+            self.np_y[i]=atom_i.pos.y
+            self.np_z[i]=atom_i.pos.z
+            self.np_vx[i]=atom_i.v.x
+            self.np_vy[i]=atom_i.v.y
+            self.np_vz[i]=atom_i.v.z
+            self.np_ax[i]=atom_i.a.x
+            self.np_ay[i]=atom_i.a.y
+            self.np_az[i]=atom_i.a.z
             self.np_rot[i]=atom_i.rot
             self.np_rotv[i]=atom_i.rotv
             self.np_q[i]=atom_i.q
@@ -180,7 +178,7 @@ class Space:
          for a in self.merge_atoms:
               sum += a.pos
          center = sum/N
-         print("center=",center)
+         #print("center=",center)
          return center
     
 
@@ -219,18 +217,15 @@ class Space:
             if self.stoptime!= -1:
                 if self.t>self.stoptime:
                     return 0
-            #Ex=np.zeros(N)
-            #Ey=np.zeros(N)
             a = np.zeros((N,N))
-            #ones = np.ones((N,N)
             delta_x = np.subtract.outer(self.np_x, self.np_x)
             delta_y = np.subtract.outer(self.np_y, self.np_y)
             delta_z = np.subtract.outer(self.np_z, self.np_z)
             r2 = delta_x*delta_x + delta_y*delta_y + delta_z*delta_z
             r = np.sqrt(r2)
             r_reciproc = np.reciprocal(r,where=r!=0)
-            a[r<self.np_SUMRADIUS_D1] = (r_reciproc*self.REPULSION_KOEFF1)[r<self.np_SUMRADIUS_D1]
             a[r<self.np_SUMRADIUS_D2] = (r_reciproc*self.REPULSION_KOEFF2)[r<self.np_SUMRADIUS_D2]
+            a[r<self.np_SUMRADIUS_D1] = (r_reciproc*self.REPULSION_KOEFF1)[r<self.np_SUMRADIUS_D1]
             if self.competitive:
                         Q = np.outer(self.np_q, self.np_q)
                         if self.linear_field:
@@ -262,15 +257,13 @@ class Space:
                     atom_i = self.atoms[i]
                     atom_j = self.atoms[j]
                     for n1 in atom_i.nodes:
-                        r1 = glm.quat(glm.vec3(0,-n1.f2,n1.f)) * glm.vec3(atom_i.r,0,0)
-                        v1 =  self.np_rot[i] * r1
+                        v1 =  self.np_rot[i] * n1.pos
                         (n1x, n1y, n1z) = v1
                         nEx = 0
                         nEy = 0
                         nEz = 0
                         for n2 in atom_j.nodes:
-                            r2 = glm.quat(glm.vec3(0,-n2.f2,n2.f)) * glm.vec3(atom_j.r,0,0)
-                            v3= (n2x, n2y, n2z)  = self.np_rot[int(j)] * r2
+                            v3= (n2x, n2y, n2z)  = self.np_rot[int(j)] * n2.pos
 
                             delta_x = n1x-n2x + self.np_x[i] - self.np_x[j]
                             delta_y = n1y-n2y + self.np_y[i] - self.np_y[j]
@@ -351,13 +344,13 @@ class Space:
                 self.np_az += self.SHAKE_KOEFF * (np.random.rand(N)-0.5)
 
             #set mixers velocity		
-            if len(self.mixers)>0:
-                self.np_vx[np.logical_and(self.np_type==100,self.np_vx>=0)] = 1
-                self.np_vx[np.logical_and(self.np_type==100,self.np_vx<0)] = -1
-                self.np_vy[np.logical_and(self.np_type==100,self.np_vy>=0)] = 1
-                self.np_vy[np.logical_and(self.np_type==100,self.np_vy<0)] = -1
-                self.np_vz[np.logical_and(self.np_type==100,self.np_vz>=0)] = 1
-                self.np_vz[np.logical_and(self.np_type==100,self.np_vz<0)] = -1
+            #if len(self.mixers)>0:
+                #self.np_vx[np.logical_and(self.np_type==100,self.np_vx>=0)] = 1
+                #self.np_vx[np.logical_and(self.np_type==100,self.np_vx<0)] = -1
+                #elf.np_vy[np.logical_and(self.np_type==100,self.np_vy>=0)] = 1
+                #self.np_vy[np.logical_and(self.np_type==100,self.np_vy<0)] = -1
+                #self.np_vz[np.logical_and(self.np_type==100,self.np_vz>=0)] = 1
+                #self.np_vz[np.logical_and(self.np_type==100,self.np_vz<0)] = -1
 
 
 
@@ -405,7 +398,6 @@ class Space:
     def load_data(self, j, merge=False):
         if not merge: 
             self.atoms = []
-            self.mixers = []
         for a in j["atoms"]:
             type = a["type"]
             if "z" in a:
@@ -418,8 +410,7 @@ class Space:
                 if type==4: type=400
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
-            #aa.v = glm.vec3(a["vx"],a["vy"],vz)
-            aa.v = glm.vec3(0,0,0)
+            aa.v = glm.vec3(a["vx"],a["vy"],vz)
             aa.rot = rot
             aa.q=a["q"]
             aa.m=a["m"]
@@ -428,12 +419,8 @@ class Space:
             if merge:
                 aa.space = self
                 self.merge_atoms.append(aa)
-                if type == 100:
-                    self.merge_mixers.append(aa)
             else:
                 self.appendatom(aa)
-                if type == 100:
-                    self.mixers.append(aa)
         			
 
 

@@ -12,23 +12,31 @@ import time
 from mychem_functions import make_sphere_vert,make_cube2
 from mychem_data import cube_vertices
 from array import array
-
+from mesh import Mesh
 
 class AppOgl(OpenGLFrame):
     def set_space(self,space):
         self.space = space
     def initgl(self):
         """Initalize gl states when the frame is created"""
+        print("init gl")
         gl.glViewport(0, 0, self.width, self.height)
         gl.glClearColor(0.3, 0.3, 0.3, 0.0)
         gl.glEnable(gl.GL_DEPTH_TEST)
+        #gl.glEnable(gl.GL_CULL_FACE);
+        #gl.glCullFace(gl.GL_FRONT); 
+        #gl.glFrontFace(gl.GL_CW) 
         #gl.glEnable(gl.GL_DEBUG_OUTPUT)
         #gl.glEnable(gl.GL_CULL_FACE); 
         #gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
         #gl.glEnable(gl.GL_DEPTH_TEST)
+        #gl.glEnable (gl.GL_LINE_SMOOTH);    
+        #gl.glfwWindowHint(gl.GLFW_SAMPLES, 4);
+        #gl.glEnable(gl.GL_MULTISAMPLE); 
+
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
-        compute_shader = open("shaders/space.glsl","r").read()
+        compute_shader = open("shaders/compute.glsl","r").read()
 #        geom_shader = open("shaders/atom_geom1.glsl","r").read()
 
         self.shader = OpenGL.GL.shaders.compileProgram(
@@ -70,22 +78,21 @@ class AppOgl(OpenGLFrame):
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
+        print("objects created")
+        if self.space.gpu_compute:
+            self.atoms2ssbo()
+        else:
+            self.space.atoms2numpy()
+
         self.start = time.time()
         self.nframes = 0          
+        self.initok = True
 
-
-    def sphere2ssbo(self):  
-        gl.glBindVertexArray(self.atomVAO )
-        sp_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, sp_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 2, sp_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.sphere_vertices.size*4, self.sphere_vertices , gl.GL_STATIC_DRAW);
-        gl.glBindVertexArray(0 )
 
 
     def atoms2ssbo(self,bind_flag=True):
         self.N = len(self.space.atoms)
-        if bind_flag: gl.glBindVertexArray(self.atomVAO )
+        #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
         if self.N>0:
             a_data = []
             for a in self.space.atoms:
@@ -99,11 +106,6 @@ class AppOgl(OpenGLFrame):
                 a_data.append(a.v.y)
                 a_data.append(a.v.z)
                 a_data.append(0.0)
-                # a
-                #a_data.append(a.a.x)
-                #a_data.append(a.a.y)
-                #a_data.append(a.a.z)
-                #a_data.append(0.0)
                 # type, radius, m
                 a_data.append(a.type)
                 a_data.append(a.r)
@@ -145,6 +147,7 @@ class AppOgl(OpenGLFrame):
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
 
+        #todo just empty buffer
         self.atoms_buffer2 = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
@@ -155,41 +158,15 @@ class AppOgl(OpenGLFrame):
 
 
     def create_objects(self):
+        print("create objects start")
         # create atom
         # Create a new VAO (Vertex Array Object) and bind it
-        self.atomVAO = gl.glGenVertexArrays(1)
-        gl.glBindVertexArray(self.atomVAO )
-        self.atoms2ssbo(bind_flag=False)
-
-        # good sphere buffer
-        self.sphere_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,self.sphere_buffer)
-        stride = 4*6
-        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
-        gl.glEnableVertexAttribArray(0)
-        gl.glEnableVertexAttribArray(1)
-        # Send the data over to the buffer
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.sphere_vertices.size, self.sphere_vertices, gl.GL_STATIC_DRAW)
-        gl.glBindVertexArray( 0 )
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0)
-
-        self.nodeVAO = gl.glGenVertexArrays(1)
-        gl.glBindVertexArray(self.nodeVAO )
-        # bad sphere buffer
-        self.sphere_buffer2 = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,self.sphere_buffer2)
-        stride = 4*6
-        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
-        gl.glEnableVertexAttribArray(0)
-        gl.glEnableVertexAttribArray(1)
-        # Send the data over to the buffer
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.sphere_vertices2.size, self.sphere_vertices2, gl.GL_STATIC_DRAW)
-        gl.glBindVertexArray( 0 )
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0)
-
-
+        self.atomMesh = Mesh(self.sphere_vertices)
+        self.atomMesh.setup()
+        self.nodeMesh = Mesh(self.sphere_vertices2)
+        self.nodeMesh.setup()
+        #self.containerMesh = Mesh()
+        #self.atom
         #create container
         self.ContainerVAO = gl.glGenVertexArrays(1)
         gl.glBindVertexArray(self.ContainerVAO )
@@ -216,41 +193,47 @@ class AppOgl(OpenGLFrame):
         line_vertices = np.array([ 0.0, 0.0, 0.0,  0.0,0.0,-1.0, 1.0,0.0,0.0, 0.0,0.0,-1.0 ], dtype=np.float32)
         gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*line_vertices.size, line_vertices, gl.GL_STATIC_DRAW)
         gl.glBindVertexArray(0)
-
-
-#        self.lightVAO = gl.glGenVertexArrays(1)
-#        gl.glBindVertexArray(self.lightVAO )
-#        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,vertex_buffer)
-
-#        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-#        gl.glEnableVertexAttribArray(0)
-#        gl.glBindVertexArray( 0 )
-        
-        # Unbind the VAO first (Important)
-        
-        # Unbind other stuff
-        #gl.glDisableVertexAttribArray(position)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
     
-    
+    def render_numpy(self):
+        #render np_atoms        
+        for i in range(0,self.space.np_x.size):
+             a = self.space.atoms[i]
+             pos = glm.vec3(self.space.np_x[i], self.space.np_y[i], self.space.np_z[i])
+             pos *= self.factor
+             model =  glm.translate(pos)
+             model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
+             self.atomMesh.color = a.color
+             self.atomMesh.modelmatrix = model
+             self.atomMesh.draw(self.shader)
+             #render nodes
+             for n in a.nodes:
+                 #r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
+                 pos = self.space.np_rot[int(i)] * n.pos
+                 pos += glm.vec3(self.space.np_x[i], self.space.np_y[i],self.space.np_z[i])
+                 pos *= self.factor
+                 model =  glm.translate(pos)
+                 model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
+                 if n.bonded:
+                     self.atomMesh.color = (0.0,1.0,0.0) 
+                 else:
+                     self.atomMesh.color = (1.0,1.0,1.0) 
+                 self.nodeMesh.modelmatrix = model
+                 self.nodeMesh.draw(self.shader)
+
+
+
     def render(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
        
         gl.glUseProgram(self.shader)
-        #camX = math.cos(self.nframes/500)*radius
-        #camZ = math.sin(self.nframes/500)*radius
-        #cameraPos = glm.vec3(camX,3, camZ)
         front = ( cos(glm.radians(self.pitch))*cos(glm.radians(self.yaw)),
                  sin(glm.radians(self.pitch)),
                  cos(glm.radians(self.pitch))*sin(glm.radians(self.yaw)),
                 )
-        #self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
         self.cameraFront = glm.normalize(front)
         self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
-        #view = glm.translate(glm.vec3(0,5,-5))
-        #view = view * glm.rotate(glm.radians(-55), glm.vec3(1,0,0)) 
         self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,1000.0)
-        #rmat = rotation_matrix((0,1,1), );
         model_loc = gl.glGetUniformLocation(self.shader, "model")
         view_loc = gl.glGetUniformLocation(self.shader, "view")
         proj_loc = gl.glGetUniformLocation(self.shader, "projection")
@@ -261,7 +244,6 @@ class AppOgl(OpenGLFrame):
         objcol_loc = gl.glGetUniformLocation(self.shader, "objectColor")
         #light_loc = gl.glGetUniformLocation(self.shader, "lightColor")
 
-        gl.glBindVertexArray(self.atomVAO)
         #render merge_atom
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
         for a in self.space.merge_atoms:
@@ -273,13 +255,9 @@ class AppOgl(OpenGLFrame):
             pos *= self.factor
             model =  glm.translate(pos)
             model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
-            gl.glUniform3f(objcol_loc,a.color[0],a.color[1],a.color[2])
-            gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
-            #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
-            #print(a.color)
-             #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
-            gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3))
-
+            self.atomMesh.modelmatrix = model
+            self.atomMesh.color = a.color
+            self.atomMesh.draw(self.shader)
             #render merge atoms nodes
             for n in a.nodes:
                 pos = a.rot * n.pos
@@ -292,57 +270,26 @@ class AppOgl(OpenGLFrame):
                 model =  glm.translate(pos)
                 model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
                 if n.bonded:
-                    gl.glUniform3f(objcol_loc,0.0,1.0,0.0)
+                     self.nodeMesh.color = (0.0,1.0,0.0) 
                 else:
-                    gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
-                gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
-                #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
-                #print(a.color)
-                #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
-                gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3))
+                     self.nodeMesh.color = (1.0,1.0,1.0) 
+                self.nodeMesh.modelmatrix = model
+                self.nodeMesh.draw(self.shader)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        # render computed atoms
-        gl.glUniform1i(mode_loc,1)
-        gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3), len(self.space.atoms))
+        if self.space.gpu_compute:
+            gl.glBindVertexArray(self.atomMesh.VAO )
+            # render computed atoms
+            gl.glUniform1i(mode_loc,1)
+            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3), len(self.space.atoms))
 
-        gl.glUniform1i(mode_loc,2)
-        gl.glBindVertexArray(self.nodeVAO )
-        for i in range(0,5):
-            gl.glUniform1i(nodeindex_loc,i)
-            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/3), len(self.space.atoms))
-        #render_gl()
-        #render np_atoms        
-        # for i in range(0,self.space.np_x.size):
-        #     a = self.space.atoms[i]
-        #     pos = glm.vec3(self.space.np_x[i], self.space.np_y[i], self.space.np_z[i])
-        #     pos *= self.factor
-        #     model =  glm.translate(pos)
-        #     model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
-        #     gl.glUniform3f(objcol_loc,a.color[0],a.color[1],a.color[2])
-        #     gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
-        #     #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
-        #     #print(a.color)
-        #      #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
-        #     gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3))
-
-        #     #render nodes
-        #     for n in a.nodes:
-        #         r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
-        #         pos = self.space.np_rot[int(i)] * r1
-        #         pos += glm.vec3(self.space.np_x[i], self.space.np_y[i],self.space.np_z[i])
-        #         pos *= self.factor
-        #         model =  glm.translate(pos)
-        #         model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
-        #         if n.bonded:
-        #             gl.glUniform3f(objcol_loc,0.0,1.0,0.0)
-        #         else:
-        #             gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
-        #         gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
-        #         #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(a.color)))
-        #         #print(a.color)
-        #         #gl.glUniform3fv(objcol_loc,1,glm.value_ptr(glm.vec3(1,0,0)))
-        #         gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3))
+            gl.glUniform1i(mode_loc,2)
+            gl.glBindVertexArray(self.nodeMesh.VAO )
+            for i in range(0,5):
+                gl.glUniform1i(nodeindex_loc,i)
+                gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/3), len(self.space.atoms))
+        else:
+            self.render_numpy()
 
         gl.glUniform1i(mode_loc,0)
         gl.glBindVertexArray( 0 )
@@ -380,8 +327,8 @@ class AppOgl(OpenGLFrame):
         gl.glUseProgram(0)
 
 
-        # compute atoms
-        if not self.pause:
+        # gpu compute atoms
+        if not self.pause and self.space.gpu_compute:
             gl.glUseProgram(self.gpu_code)
             gl.glUniform1i(mode_loc,self.space.gravity)
 
@@ -393,8 +340,6 @@ class AppOgl(OpenGLFrame):
                 gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
                 gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
             gl.glUseProgram(0)
-        #glfw.swap_buffers(self.);
-        #glfwPollEvents();
 
 
     def do_movement(self):
@@ -413,9 +358,8 @@ class AppOgl(OpenGLFrame):
         """Render a single frame"""
         
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-#        if not self.pause:
-#            for i in range(1,1):
-#                n = self.space.compute()
+        if not self.pause and not self.space.gpu_compute:
+            n = self.space.compute()
         self.render()
         self.curframe_time = time.time()
         self.framedelta = self.curframe_time - self.lastframe_time 

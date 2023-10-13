@@ -86,6 +86,7 @@ class mychemApp():
         #self.root.bind("<FocusIn>"), self.handle_focusin
         self.root.bind("<MouseWheel>", self.handle_scroll)
         self.glframe = AppOgl(self.root, width=1024, height=600)
+        print("glframe created")
         self.pause = False
         self.merge_mode = False
         self.ttype = "mx"
@@ -101,12 +102,13 @@ class mychemApp():
 
     def run(self):
         self.resetdata = self.space.make_export()
-        #self.glframe.atoms2ssbo()
+        #self.atoms2compute()
         self.root.mainloop()
 
+
     def sim_run(self):
-        #self.glframe.atoms2ssbo()
-        #self.glframe.atoms2ssbo()
+        #self.atoms2compute()
+        #self.atoms2compute()
         self.pause = False
         self.glframe.pause = False
         #self.glframe.animate = 1
@@ -168,7 +170,7 @@ class mychemApp():
     def handle_zero(self,event=None):
         #self.space.numpy2atoms()
         self.space.appendmixer(1)
-        self.glframe.atoms2ssbo()
+        self.atoms2compute()
 
 
     def handle_bondlock(self,event=None):
@@ -188,7 +190,7 @@ class mychemApp():
         self.space.merge_atoms = []
         self.space.select_mode = False
         self.merge_mode = False
-        self.glframe.atoms2ssbo()
+        self.atoms2compute()
         self.status_bar.set("New file")
 
     def file_open(self,event=None):
@@ -199,7 +201,7 @@ class mychemApp():
         f =  open(fileName,"r")		
         self.resetdata = json.loads(f.read())
         self.space.load_data(self.resetdata)
-        self.glframe.atoms2ssbo()
+        self.atoms2compute()
         self.status_bar.set("File loaded")
 
     def file_merge(self,event=None, path=None):
@@ -220,7 +222,7 @@ class mychemApp():
         self.space.select_mode = False
         self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
-        #self.glframe.atoms2ssbo()
+        #self.atoms2compute()
         #self.canvas.configure(cursor="hand2")
         self.status_bar.set("Merging mode")
 
@@ -232,7 +234,7 @@ class mychemApp():
         self.merge_atoms = []
         self.merge_mode=True
         self.space.load_data(self.recentdata, merge=True)
-        #self.glframe.atoms2ssbo()
+        #self.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
 
@@ -268,7 +270,7 @@ class mychemApp():
             return
         self.file_new()
         self.space.load_data(self.resetdata)
-        self.glframe.atoms2ssbo()
+        self.atoms2compute()
         self.status_bar.set("Reset to previos loaded")
     
     def handle_add_atom2(self,event=None):
@@ -344,13 +346,13 @@ class mychemApp():
             self.merge_mode = True
             
             self.space.select_mode = False
-            self.glframe.atoms2ssbo()
+            self.atoms2compute()
             return
         if self.merge_mode:
             self.merge_mode = False 
             self.space.merge2atoms()
             self.resetdata = self.space.make_export()
-            self.glframe.atoms2ssbo()
+            self.atoms2compute()
 
 
 
@@ -431,6 +433,14 @@ class mychemApp():
                 self.glframe.cameraPos += cameraSpeed * self.glframe.cameraFront
             else:
                 self.glframe.cameraPos -= cameraSpeed * self.glframe.cameraFront   
+
+    def atoms2compute(self):
+        print("atoms2compute")
+        if self.space.gpu_compute:
+            self.glframe.atoms2ssbo()
+        else:
+            self.space.atoms2numpy()
+
 
     def create_json_menu(self,menu, lpath):
         files_last = []

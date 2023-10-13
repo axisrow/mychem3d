@@ -1,7 +1,7 @@
 #version 430
 
 // Set up our compute groups
-layout(local_size_x=50, local_size_y=1,local_size_z=1) in;
+layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
 // Some examples:
@@ -9,12 +9,13 @@ layout(local_size_x=50, local_size_y=1,local_size_z=1) in;
 uniform int gravity;
 //uniform float frame_time;
 float BONDR = 4;
-float BOND_KOEFF = 0.2;
+float BOND_KOEFF = 0.08;
 float ATTRACT_KOEFF= 0.5;
-float ROTA_KOEFF = 0.000001;
+float INTERACT_KOEFF= 5;
+float ROTA_KOEFF = 0.000005;
 float REPULSION1 = -3;
-float REPULSION_KOEFF1 = 15;
-float REPULSION2 = 5;
+float REPULSION_KOEFF1 = 50;
+float REPULSION2 = 6;
 float REPULSION_KOEFF2= 1.5;
 
 
@@ -194,9 +195,9 @@ void main()
         a = 0;
         if (r!=0){
             if (r<(sumradius+REPULSION1))
-                a = 1/r * REPULSION_KOEFF1;
-            if (r<(sumradius+REPULSION2))
-                a = 1/r * REPULSION_KOEFF2;
+                a = 1/r*  REPULSION_KOEFF1;
+            else if (r<(sumradius+REPULSION2))
+                a = 1/r* REPULSION_KOEFF2;
 
             //a += -0.0005;
             E += delta/r*a;   //
@@ -224,7 +225,7 @@ void main()
                             a = -rn*rn*BOND_KOEFF;
                     }
                     else {
-                      a = q1*q2*0.1;
+                      a = q1*q2*INTERACT_KOEFF/rn;
                     }
                     nE += ndelta/rn*a;
 
@@ -252,18 +253,18 @@ void main()
     
     //totalrot = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));    
     //atom_i.rotv = normalize(qmul(totalrot, atom_i.rotv));
-    atom_i.rotv = totalrot;
+    //atom_i.rotv = totalrot;
 
  // mixer
     if (atom_i.type==100){
         //if( dot(v_i, v_i) < 0.8) v_i*2;
-        if (v_i.x>0) v_i.x=1;
-        if (v_i.y>0) v_i.y=1;
-        if (v_i.z>0) v_i.z=1;
-        if (v_i.x<0) v_i.x=-1;
-        if (v_i.y<0) v_i.y=-1;
-        if (v_i.z<0) v_i.z=-1;
-        //v_i += a*0.01;
+        /*if (v_i.x>0) v_i.x=0.6;
+        if (v_i.y>0) v_i.y=0.6;
+        if (v_i.z>0) v_i.z=0.6;
+        if (v_i.x<0) v_i.x=-0.6;
+        if (v_i.y<0) v_i.y=-0.6;
+        if (v_i.z<0) v_i.z=-0.6;
+        //v_i += a*0.01;*/
     }
 
 //dumping
