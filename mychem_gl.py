@@ -328,8 +328,18 @@ class AppOgl(OpenGLFrame):
             gl.glUseProgram(self.gpu_code)
             gravity_loc = gl.glGetUniformLocation(self.gpu_code, "gravity")
             redox_loc = gl.glGetUniformLocation(self.gpu_code, "redox")
+            bk_loc = gl.glGetUniformLocation(self.gpu_code, "BOND_KOEFF")
+            ik_loc = gl.glGetUniformLocation(self.gpu_code, "INTERACT_KOEFF")
+            rk1_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1")
+            rk2_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2")
+            rotk_loc = gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF")
             gl.glUniform1i(gravity_loc,self.space.gravity)
             gl.glUniform1i(redox_loc,self.space.redox)
+            gl.glUniform1f(bk_loc,self.space.BOND_KOEFF)
+            gl.glUniform1f(ik_loc,self.space.INTERACT_KOEFF)
+            gl.glUniform1f(rk1_loc,self.space.REPULSION_KOEFF1)
+            gl.glUniform1f(rk2_loc,self.space.REPULSION_KOEFF2)
+            gl.glUniform1f(rotk_loc,self.space.ROTA_KOEFF)
 
             #gl.glBindVertexArray(self.atomVAO)
             for i in range(0,self.space.update_delta):

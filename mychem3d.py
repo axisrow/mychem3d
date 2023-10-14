@@ -2,7 +2,7 @@
 import tkinter as tk
 import tkinter.filedialog as filedialog
 import time
-from math import sin,cos
+from math import sin,cos,log
 import os
 import json
 from json import encoder
@@ -171,6 +171,7 @@ class mychemApp():
     def handle_zero(self,event=None):
         #self.compute2atoms()
         self.space.appendmixer(1)
+        self.resetdata = self.space.make_export()
         self.atoms2compute()
 
 
@@ -511,34 +512,60 @@ class OptionsFrame():
         a = tk.Toplevel()
         a.title("Options")
         a.resizable(0, 0)
-        a.geometry('400x250')
+        a.geometry('420x300')
         #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
         #self.frame.pack()
         self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
-        self.update_slider = tk.Scale(a, from_=1, to=500, length=300, orient=tk.HORIZONTAL,variable=self.space.update_delta,command=self.set_delta)
+        self.update_slider = tk.Scale(a, from_=1, to=500, length=300, orient=tk.HORIZONTAL,command=self.set_delta)
         self.update_slider.grid(row=0,column=1)
-        self.label1 = tk.Label(a, text= "Attract koeff").grid(row=1,column=0)
-        self.attract_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,variable=self.space.attract_k,command=self.set_attract)
-        self.attract_slider.grid(row=1,column=1)
+        self.update_slider.set(self.space.update_delta)
+
+        self.label1 = tk.Label(a, text= "Interact koeff").grid(row=1,column=0)
+        self.interact_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
+        self.interact_slider.grid(row=1,column=1)
+        self.interact_slider.set(int(self.space.INTERACT_KOEFF*100))
+
         self.label2 = tk.Label(a, text= "Repulsion koeff1").grid(row=2,column=0)
-        self.repulsek1_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,variable=self.space.repulse_k1,command=self.set_repulsek1)
+        self.repulsek1_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,command=self.set_repulsek1)
         self.repulsek1_slider.grid(row=2,column=1)
+        self.repulsek1_slider.set(int(self.space.REPULSION_KOEFF1))
+
         self.label3 = tk.Label(a, text= "Repulsion koeff2").grid(row=3,column=0)
-        self.repulsek2_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,variable=self.space.repulse_k2,command=self.set_repulsek2)
+        self.repulsek2_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_repulsek2)
         self.repulsek2_slider.grid(row=3,column=1)
+        self.repulsek2_slider.set(self.space.REPULSION_KOEFF2*100)
+        
+        self.label4 = tk.Label(a, text= "Bond koeff").grid(row=4,column=0)
+        self.bondk_slider = tk.Scale(a, from_=1, to=100, length=100,orient=tk.HORIZONTAL,command=self.set_bondk)
+        self.bondk_slider.grid(row=4,column=1)
+        self.bondk_slider.set(self.space.BOND_KOEFF*100)
+        
+        self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
+        self.rotk_slider = tk.Scale(a, from_=1, to=100, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
+        self.rotk_slider.grid(row=5,column=1)
+        self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
+
+
         #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
 
     def set_delta(self,value):
         self.space.update_delta = int(value)
-    def set_attract(self,value):
-        self.space.ATTRACT_KOEFF=self.space.attract_k.get()/100.0
+
+    def set_interk(self,value):
+        self.space.INTERACT_KOEFF=float(value)/100.0
 
     def set_repulsek1(self,value):
-        self.space.REPULSION_KOEFF1 =self.space.repulse_k1.get()
+        self.space.REPULSION_KOEFF1 =float(value)
 
     def set_repulsek2(self,value):
-        self.space.REPULSION_KOEFF2 =self.space.repulse_k2.get()/10.0
+        self.space.REPULSION_KOEFF2 =float(value)/10
 
+    def set_bondk(self,value):
+        self.space.BOND_KOEFF =float(value)/100
+
+    def set_rotk(self,value):
+        self.space.ROTA_KOEFF =pow(10,-float(value))
+#        print("rota =",self.space.ROTA_KOEFF)
 
 
 

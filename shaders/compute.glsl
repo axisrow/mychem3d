@@ -11,14 +11,14 @@ uniform int redox;
 
 //uniform float frame_time;
 float BONDR = 4;
-float BOND_KOEFF = 0.5;
-float ATTRACT_KOEFF= 0.5;
-float INTERACT_KOEFF= 1.6;
-float ROTA_KOEFF = 0.005;
+uniform float BOND_KOEFF = 0.5;
+uniform float ATTRACT_KOEFF= 0.5;
+uniform float INTERACT_KOEFF= 1.6;
+uniform float ROTA_KOEFF = 0.005;
 float REPULSION1 = -3;
-float REPULSION_KOEFF1 = 50;
+uniform float REPULSION_KOEFF1 = 50;
 float REPULSION2 = 6;
-float REPULSION_KOEFF2= 1;
+uniform float REPULSION_KOEFF2= 1;
 
 
 
