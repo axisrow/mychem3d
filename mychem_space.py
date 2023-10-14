@@ -112,15 +112,11 @@ class Space:
         N = len(self.atoms)
         for i in range(0,N):
             atom_i = self.atoms[i]
-            atom_i.x=self.np_x[i]
-            atom_i.y=self.np_y[i]
-            atom_i.z=self.np_z[i]
-            atom_i.vx=self.np_vx[i]
-            atom_i.vy=self.np_vy[i]
-            atom_i.vz=self.np_vz[i]
-            atom_i.ax=self.np_ax[i]
-            atom_i.ay=self.np_ay[i]
-            atom_i.az=self.np_az[i]
+            atom_i.pos = glm.vec3(self.np_x[i],self.np_y[i],self.np_z[i])
+            atom_i.v = glm.vec3(self.np_vx[i],self.np_vy[i],self.np_vz[i])
+            #atom_i.ax=self.np_ax[i]
+            #atom_i.ay=self.np_ay[i]
+            #atom_i.az=self.np_az[i]
             atom_i.q=self.np_q[i]
             atom_i.rot = self.np_rot[i]
             atom_i.rotv = self.np_rotv[i]
@@ -194,12 +190,12 @@ class Space:
             self.appendatom(a)
         self.merge_atoms = []        
 
-    def merge_from_file(self, filename, merge_pos=glm.vec3(0,0,0), merge_rot=glm.quat()):
+    def merge_from_file(self, filename, x=0,y=0,z=0, merge_rot=glm.quat()):
         f =  open(filename,"r")		
         self.merge_atoms = []
         mergedata = json.loads(f.read())
         self.load_data(mergedata, merge=True)
-        self.merge_pos = merge_pos
+        self.merge_pos = glm.vec3(x,y,z)
         self.merge_rot = merge_rot
         self.merge_center = self.get_mergeobject_center()
         self.merge2atoms()
@@ -208,7 +204,6 @@ class Space:
         self.merge_rot = glm.quat()
 
 
-## not used for now
     def compute(self):
             N = len(self.atoms)
 #            if N==0:
@@ -310,9 +305,9 @@ class Space:
                                     if v1!=v2:
                                         axis = glm.normalize(glm.cross(v1,v2))
                                         angle = acos(dt)
-                                        angle_a=angle*self.ROTA_KOEFF/100
+                                        angle_a=angle*rn*self.ROTA_KOEFF
                                         rot = glm.quat(cos(angle_a/2), sin(angle_a/2)*glm.vec3(axis))
-                                        totalrotv = rot * totalrotv
+                                        totalrotv = glm.normalize(rot * totalrotv)
                                     #naf2=0
                                         if self.debug: print(f"axis={axis} angle={angle} dt={dt}")
                             nEx += delta_x/rn * a
@@ -323,7 +318,7 @@ class Space:
                         allnEy = allnEy + nEy
                         allnEz = allnEz + nEz
                         
-                self.np_rotv[i] = totalrotv * self.np_rotv[i]
+                self.np_rotv[i] = totalrotv #* self.np_rotv[i]
                 
                 Ex[i] += allnEx
                 Ey[i] += allnEy
@@ -345,12 +340,12 @@ class Space:
 
             #set mixers velocity		
             #if len(self.mixers)>0:
-                #self.np_vx[np.logical_and(self.np_type==100,self.np_vx>=0)] = 1
-                #self.np_vx[np.logical_and(self.np_type==100,self.np_vx<0)] = -1
-                #elf.np_vy[np.logical_and(self.np_type==100,self.np_vy>=0)] = 1
-                #self.np_vy[np.logical_and(self.np_type==100,self.np_vy<0)] = -1
-                #self.np_vz[np.logical_and(self.np_type==100,self.np_vz>=0)] = 1
-                #self.np_vz[np.logical_and(self.np_type==100,self.np_vz<0)] = -1
+            #self.np_vx[np.logical_and(self.np_type==100,self.np_vx>=0)] = 1
+            #self.np_vx[np.logical_and(self.np_type==100,self.np_vx<0)] = -1
+            #self.np_vy[np.logical_and(self.np_type==100,self.np_vy>=0)] = 1
+            #self.np_vy[np.logical_and(self.np_type==100,self.np_vy<0)] = -1
+            #self.np_vz[np.logical_and(self.np_type==100,self.np_vz>=0)] = 1
+            #self.np_vz[np.logical_and(self.np_type==100,self.np_vz<0)] = -1
 
 
 

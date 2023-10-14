@@ -7,16 +7,18 @@ layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
 // Some examples:
 //uniform vec2 screen_size;
 uniform int gravity;
+uniform int redox;
+
 //uniform float frame_time;
 float BONDR = 4;
-float BOND_KOEFF = 0.08;
+float BOND_KOEFF = 0.5;
 float ATTRACT_KOEFF= 0.5;
-float INTERACT_KOEFF= 5;
-float ROTA_KOEFF = 0.000005;
+float INTERACT_KOEFF= 1.6;
+float ROTA_KOEFF = 0.005;
 float REPULSION1 = -3;
 float REPULSION_KOEFF1 = 50;
 float REPULSION2 = 6;
-float REPULSION_KOEFF2= 1.5;
+float REPULSION_KOEFF2= 1;
 
 
 
@@ -146,7 +148,7 @@ int shift_q(in float type1, in float type2, inout float q1, inout float q2){
         if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return 0;}   //9
     }
     if (i1==i2){
-        if (q1+q2==0) return 1;
+        if (q1+q2==0) { q1=0; q2=0; return 1;}
         else return 0;
     }
     if (i1<i2){
@@ -205,9 +207,14 @@ void main()
         float rn;
         vec3 nE,ni_realpos,nj_realpos,ndelta;
         vec3 allnE = vec3(0,0,0);  
+        if (redox==1){
+            if (rand(v_i.xy)>=0.99981) atom_i.nodes[0].pos.w = -1;
+            if (rand(v_i.xy+1)>=0.99981) atom_i.nodes[0].pos.w = 1;
+        }
         if (r<100) {
             for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 nE = vec3(0.0,0.0,0.0);
+                //random redox 
                 for (int nj = 0; nj<atom_j.ncount; nj++){
                     ni_realpos = rotate_vector(atom_i.nodes[ni].pos.xyz, atom_i.rot);
                     nj_realpos = rotate_vector(atom_j.nodes[nj].pos.xyz, atom_j.rot);
@@ -229,19 +236,21 @@ void main()
                     }
                     nE += ndelta/rn*a;
 
-                    vec3 target_direction = nj_realpos + pos_j - pos_i;
-                    vec3 v1 = normalize(ni_realpos);
-                    vec3 v2 = normalize(target_direction);
-                    float dt = dot(v1,v2);
-                    if(dt>1) dt=1;
-                    if(dt<-1) dt=-1;
-                    if (v1!=v2){
-                        vec3 axis = cross(v1,v2);
-                        float angle = acos(dt);
-                        angle = angle * ROTA_KOEFF *100;
-                        vec4 rot = vec4(sin(angle/2)* axis,cos(angle/2) ); // quat
-                        totalrot = normalize(qmul(rot, totalrot));
-                    }
+                    if (rn<6) {
+                        vec3 target_direction = nj_realpos + pos_j - pos_i;
+                        vec3 v1 = normalize(ni_realpos);
+                        vec3 v2 = normalize(target_direction);
+                        float dt = dot(v1,v2);
+                        if(dt>1) dt=1;
+                        if(dt<-1) dt=-1;
+                        if (v1!=v2){
+                            vec3 axis = cross(v1,v2);
+                            float angle = acos(dt);
+                            angle = angle/rn/atom_i.m * ROTA_KOEFF;
+                            vec4 rot = vec4(sin(angle/2)* axis,cos(angle/2) ); // quat
+                            totalrot = normalize(qmul(rot, totalrot));
+                        }
+                    }    
 
                 }
                 allnE += nE;
@@ -253,17 +262,19 @@ void main()
     
     //totalrot = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));    
     //atom_i.rotv = normalize(qmul(totalrot, atom_i.rotv));
-    //atom_i.rotv = totalrot;
+    atom_i.rotv = totalrot;
+
+    
 
  // mixer
     if (atom_i.type==100){
         //if( dot(v_i, v_i) < 0.8) v_i*2;
-        /*if (v_i.x>0) v_i.x=0.6;
-        if (v_i.y>0) v_i.y=0.6;
-        if (v_i.z>0) v_i.z=0.6;
-        if (v_i.x<0) v_i.x=-0.6;
-        if (v_i.y<0) v_i.y=-0.6;
-        if (v_i.z<0) v_i.z=-0.6;
+        if (v_i.x>0) v_i.x=1;
+        if (v_i.y>0) v_i.y=1;
+        if (v_i.z>0) v_i.z=1;
+        if (v_i.x<0) v_i.x=-1;
+        if (v_i.y<0) v_i.y=-1;
+        if (v_i.z<0) v_i.z=-1;
         //v_i += a*0.01;*/
     }
 

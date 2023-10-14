@@ -28,7 +28,7 @@ class mychemApp():
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
-        #sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
+        sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -40,6 +40,7 @@ class mychemApp():
         self.menu_bar.add_cascade(label="File", menu=file_menu)
         self.menu_bar.add_cascade(label="Simulation", menu=sim_menu)
         self.menu_bar.add_cascade(label="Add", menu=add_menu)
+        self.menu_bar.add_command(label="Options", command=self.options_window)
         examples_menu = tk.Menu(self.menu_bar, tearoff=False)
         self.create_json_menu(examples_menu,"examples/")
         self.menu_bar.add_cascade(label="Examples", menu=examples_menu)
@@ -115,7 +116,7 @@ class mychemApp():
         self.status_bar.set("Running")
 
     def sim_pause(self):
-        #self.space.numpy2atoms()
+        self.compute2atoms()
         self.pause = True
         self.glframe.pause = True
         #self.glframe.animate = 0
@@ -168,7 +169,7 @@ class mychemApp():
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity))
 
     def handle_zero(self,event=None):
-        #self.space.numpy2atoms()
+        #self.compute2atoms()
         self.space.appendmixer(1)
         self.atoms2compute()
 
@@ -441,6 +442,14 @@ class mychemApp():
         else:
             self.space.atoms2numpy()
 
+    def compute2atoms(self):
+        if self.space.gpu_compute:
+            #self.glframe.atoms2ssbo()
+            pass
+        else:
+            self.space.numpy2atoms()
+
+
 
     def create_json_menu(self,menu, lpath):
         files_last = []
@@ -454,7 +463,21 @@ class mychemApp():
                 files_last.append((filename,filepath))
         for (f,p) in files_last:				
             menu.add_command(label=f, command=lambda p2=p: self.file_merge(path=p2))
-    
+
+    def options_window(self):
+        o = OptionsFrame(self.space)
+        
+    def about_window(self):
+        
+        a = tk.Toplevel()
+        a.geometry('200x150')
+        a['bg'] = 'grey'
+        a.overrideredirect(True)
+        tk.Label(a, text="About this")\
+            .pack(expand=1)
+        a.after(5000, lambda: a.destroy())
+
+
 
 class StatusBar(tk.Frame):
     def __init__(self, parent):
@@ -481,7 +504,43 @@ class StatusBar(tk.Frame):
     def clear(self):
         self.label.config(text='')
 
-     
+
+class OptionsFrame():
+    def __init__(self,space):
+        self.space = space
+        a = tk.Toplevel()
+        a.title("Options")
+        a.resizable(0, 0)
+        a.geometry('400x250')
+        #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
+        #self.frame.pack()
+        self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
+        self.update_slider = tk.Scale(a, from_=1, to=500, length=300, orient=tk.HORIZONTAL,variable=self.space.update_delta,command=self.set_delta)
+        self.update_slider.grid(row=0,column=1)
+        self.label1 = tk.Label(a, text= "Attract koeff").grid(row=1,column=0)
+        self.attract_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,variable=self.space.attract_k,command=self.set_attract)
+        self.attract_slider.grid(row=1,column=1)
+        self.label2 = tk.Label(a, text= "Repulsion koeff1").grid(row=2,column=0)
+        self.repulsek1_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,variable=self.space.repulse_k1,command=self.set_repulsek1)
+        self.repulsek1_slider.grid(row=2,column=1)
+        self.label3 = tk.Label(a, text= "Repulsion koeff2").grid(row=3,column=0)
+        self.repulsek2_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,variable=self.space.repulse_k2,command=self.set_repulsek2)
+        self.repulsek2_slider.grid(row=3,column=1)
+        #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
+
+    def set_delta(self,value):
+        self.space.update_delta = int(value)
+    def set_attract(self,value):
+        self.space.ATTRACT_KOEFF=self.space.attract_k.get()/100.0
+
+    def set_repulsek1(self,value):
+        self.space.REPULSION_KOEFF1 =self.space.repulse_k1.get()
+
+    def set_repulsek2(self,value):
+        self.space.REPULSION_KOEFF2 =self.space.repulse_k2.get()/10.0
+
+
+
 
 if __name__ == '__main__':
     mychemApp().run()

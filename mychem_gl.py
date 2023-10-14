@@ -310,30 +310,29 @@ class AppOgl(OpenGLFrame):
 
         #render selector
         if self.space.select_mode:
-            gl.glBindVertexArray(self.atomVAO)
-            gl.glUniform3f(objcol_loc,1.0,0.0,0.0)
             if len(self.space.np_x)>0:
                 model =  glm.mat4()
                 pos = glm.vec3(self.space.np_x[self.space.select_i],self.space.np_y[self.space.select_i],self.space.np_z[self.space.select_i])
                 model =  glm.translate(model, pos * self.factor  )
                 model =  glm.scale(model, glm.vec3(0.01,0.01,0.01))
-                gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+                self.atomMesh.color = (1,0,0)
+                self.atomMesh.modelmatrix = model
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
-                gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3))
+                self.atomMesh.draw(self.shader)
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
-
-                # Нарисовать линию между двумя точками
-                #    gl.glDrawArrays(gl.GL_LINES, 0, 2)
         gl.glUseProgram(0)
 
 
         # gpu compute atoms
         if not self.pause and self.space.gpu_compute:
             gl.glUseProgram(self.gpu_code)
-            gl.glUniform1i(mode_loc,self.space.gravity)
+            gravity_loc = gl.glGetUniformLocation(self.gpu_code, "gravity")
+            redox_loc = gl.glGetUniformLocation(self.gpu_code, "redox")
+            gl.glUniform1i(gravity_loc,self.space.gravity)
+            gl.glUniform1i(redox_loc,self.space.redox)
 
             #gl.glBindVertexArray(self.atomVAO)
-            for i in range(0,1):
+            for i in range(0,self.space.update_delta):
                 gl.glDispatchCompute(int(self.N/50)+1,1,1)        
                 gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
                 self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
@@ -359,7 +358,8 @@ class AppOgl(OpenGLFrame):
         
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         if not self.pause and not self.space.gpu_compute:
-            n = self.space.compute()
+            for i in range(0,self.space.update_delta):
+                n = self.space.compute()
         self.render()
         self.curframe_time = time.time()
         self.framedelta = self.curframe_time - self.lastframe_time 
