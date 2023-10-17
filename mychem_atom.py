@@ -9,6 +9,7 @@ class Node:
 		self.bonded2 = False
 		self.pair = None
 		self.parent = parent
+		self.q = 0 
 		self.pos = glm.vec3(0,0,0)
 
 	def shift_q(self, n):
@@ -105,7 +106,7 @@ class Atom:
 		self.BONDEDCOLOR = "orange"
 		if self.type==1:
 			self.color = (0.0,0.0,1.0)
-		if self.type==2:
+		if self.type==2 or self.type==200:
 			self.color = (1.0,0.0,0.0)
 		if self.type==3:
 			self.color = (0.5,0.5,0.5)
@@ -134,6 +135,15 @@ class Atom:
 				self.nodes.append(n)
 				ep = ElectronPairing()
 				self.el_pairs.append(ep)
+		elif type==200: # 
+			(n1,n2) = (Node(self),Node(self))
+			n1.f = 0
+			n1.f2 = 0
+			n2.f= glm.radians(180)
+			n2.f2= 0
+			self.nodes.extend([n1,n2])
+			(ep1,ep2) = (ElectronPairing(), ElectronPairing())
+			self.el_pairs.extend([ep1,ep2])
 		elif self.type == 2:
 			(n1,n2) = (Node(self),Node(self))
 			n1.f = 0

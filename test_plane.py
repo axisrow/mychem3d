@@ -28,10 +28,10 @@ if __name__ == '__main__':
 
     a = Atom(500,700,500,100,m=100,r=50)
     a.v = glm.vec3(0,-1,0)
-    #space.appendatom(a)
+    space.appendatom(a)
     space.gpu_compute = True
     
-    space.appendmixer(2)
+    #space.appendmixer(2)
     #space.export_nodes = True
     #space.competitive =True
     #space.stoptime=5

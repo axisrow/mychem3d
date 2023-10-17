@@ -33,6 +33,7 @@ class AppOgl(OpenGLFrame):
         #gl.glEnable (gl.GL_LINE_SMOOTH);    
         #gl.glfwWindowHint(gl.GLFW_SAMPLES, 4);
         #gl.glEnable(gl.GL_MULTISAMPLE); 
+        
 
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
@@ -58,6 +59,7 @@ class AppOgl(OpenGLFrame):
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
         self.cameraPos = glm.vec3(0.5,0.5,1)
+        #self.cameraPos = glm.vec3(0.5,0.5,0.5)
         self.cameraTarget = glm.vec3(0.5,0.5,0.5)
 
         #self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
@@ -121,22 +123,31 @@ class AppOgl(OpenGLFrame):
                 a_data.append(a.rotv.y)
                 a_data.append(a.rotv.z)
                 a_data.append(a.rotv.w)
-                #color
-                a_data.append(a.color[0])
-                a_data.append(a.color[1])
-                a_data.append(a.color[2])
-                a_data.append(1.0)
                 for n in a.nodes:
                     a_data.append(n.pos.x)
                     a_data.append(n.pos.y)
                     a_data.append(n.pos.z)
+                    a_data.append(0.0)
+                    a_data.append(n.q)
+                    a_data.append(n.bonded)
+                    a_data.append(-1)
                     a_data.append(0.0)
                 for i in range(0,5-len(a.nodes)):
                     a_data.append(0.0)
                     a_data.append(0.0)
                     a_data.append(0.0)
                     a_data.append(0.0)
-                    
+                    a_data.append(0.0)
+                    a_data.append(0.0)
+                    a_data.append(0.0)
+                    a_data.append(0.0)
+                #color
+                a_data.append(a.color[0])
+                a_data.append(a.color[1])
+                a_data.append(a.color[2])
+                a_data.append(1.0)
+
+
             a_data = np.array(a_data, dtype=np.float32)
         else:
             a_data = np.array([], dtype=np.float32)
@@ -214,10 +225,12 @@ class AppOgl(OpenGLFrame):
                  pos *= self.factor
                  model =  glm.translate(pos)
                  model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
-                 if n.bonded:
-                     self.atomMesh.color = (0.0,1.0,0.0) 
-                 else:
-                     self.atomMesh.color = (1.0,1.0,1.0) 
+                 if n.q>0:
+                     self.nodeMesh.color = (1.0,0.0,0.0) 
+                 elif n.q==0:
+                     self.nodeMesh.color = (1.0,1.0,1.0) 
+                 elif n.q<0:
+                      self.nodeMesh.color = (0.0,0.0,1.0) 
                  self.nodeMesh.modelmatrix = model
                  self.nodeMesh.draw(self.shader)
 
@@ -322,10 +335,10 @@ class AppOgl(OpenGLFrame):
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
         gl.glUseProgram(0)
 
-
         # gpu compute atoms
         if not self.pause and self.space.gpu_compute:
             gl.glUseProgram(self.gpu_code)
+            frame_loc = gl.glGetUniformLocation(self.gpu_code, "nframes")
             gravity_loc = gl.glGetUniformLocation(self.gpu_code, "gravity")
             redox_loc = gl.glGetUniformLocation(self.gpu_code, "redox")
             bk_loc = gl.glGetUniformLocation(self.gpu_code, "BOND_KOEFF")
@@ -333,6 +346,7 @@ class AppOgl(OpenGLFrame):
             rk1_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1")
             rk2_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2")
             rotk_loc = gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF")
+            gl.glUniform1i(frame_loc,self.nframes)
             gl.glUniform1i(gravity_loc,self.space.gravity)
             gl.glUniform1i(redox_loc,self.space.redox)
             gl.glUniform1f(bk_loc,self.space.BOND_KOEFF)
@@ -341,7 +355,6 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(rk2_loc,self.space.REPULSION_KOEFF2)
             gl.glUniform1f(rotk_loc,self.space.ROTA_KOEFF)
 
-            #gl.glBindVertexArray(self.atomVAO)
             for i in range(0,self.space.update_delta):
                 gl.glDispatchCompute(int(self.N/50)+1,1,1)        
                 gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
@@ -371,6 +384,16 @@ class AppOgl(OpenGLFrame):
             for i in range(0,self.space.update_delta):
                 n = self.space.compute()
         self.render()
+        if self.space.recording:
+            pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+            img = Image.frombytes("RGB", (self.width,self.height), pix)
+            img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
+            img2.save("output/frame"+str(self.nframes)+".png")
+
+#        if self.nframes%50==0:
+           
+           
+                            
         self.curframe_time = time.time()
         self.framedelta = self.curframe_time - self.lastframe_time 
    #     self.do_movement()

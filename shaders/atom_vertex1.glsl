@@ -2,6 +2,10 @@
 
 struct Node {
     vec4 pos;
+    float q;
+    float bonded;
+    float pair;
+    float noname;
 };
 
 struct Atom
@@ -15,8 +19,8 @@ struct Atom
     float ncount;
     vec4 rot;
     vec4 rotv;
-    vec4 color;
     Node nodes[5];
+    vec4 color;
 };
 
 
@@ -107,10 +111,13 @@ void main()
         nodepos += currentAtom.pos.xyz;
         vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
         gl_Position = projection * view * vposition;
-        float q = currentAtom.nodes[nodeindex].pos.w;
+        float q = currentAtom.nodes[nodeindex].q;
+        float bonded = currentAtom.nodes[nodeindex].bonded;
         if (q==0) ObjectColor = vec3(1,1,1);
-        if (q==1) ObjectColor = vec3(255/256.0,95/256.0,160/256.0);
+        if (q==1) ObjectColor = vec3(1,0,0); //vec3(255/256.0,95/256.0,160/256.0);
         if (q==-1) ObjectColor = vec3(0.0,0,252/256.0);
+        //if (bonded==1) ObjectColor = vec3(0,1,0);
+        //else ObjectColor = vec3(1,1,1);
         FragPos = vposition.xyz;
         Normal = normal;
     }

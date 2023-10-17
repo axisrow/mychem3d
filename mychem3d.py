@@ -28,7 +28,7 @@ class mychemApp():
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
-        sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
+        sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -100,7 +100,6 @@ class mychemApp():
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
         self.status_bar.set('Ready')
 
-
     def run(self):
         self.resetdata = self.space.make_export()
         #self.atoms2compute()
@@ -161,7 +160,7 @@ class mychemApp():
 
     def handle_redox(self,event=None):
         self.space.redox = not self.space.redox
-        self.status_bar.set("Random redox is "+ OnOff(self.space.redox))
+        self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox))
 
     def handle_g(self,event=None):
         if event:
@@ -526,7 +525,7 @@ class OptionsFrame():
         self.interact_slider.set(int(self.space.INTERACT_KOEFF*100))
 
         self.label2 = tk.Label(a, text= "Repulsion koeff1").grid(row=2,column=0)
-        self.repulsek1_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,command=self.set_repulsek1)
+        self.repulsek1_slider = tk.Scale(a, from_=1, to=500, length=200,orient=tk.HORIZONTAL,command=self.set_repulsek1)
         self.repulsek1_slider.grid(row=2,column=1)
         self.repulsek1_slider.set(int(self.space.REPULSION_KOEFF1))
 
@@ -536,12 +535,12 @@ class OptionsFrame():
         self.repulsek2_slider.set(self.space.REPULSION_KOEFF2*100)
         
         self.label4 = tk.Label(a, text= "Bond koeff").grid(row=4,column=0)
-        self.bondk_slider = tk.Scale(a, from_=1, to=100, length=100,orient=tk.HORIZONTAL,command=self.set_bondk)
+        self.bondk_slider = tk.Scale(a, from_=1, to=300, length=300,orient=tk.HORIZONTAL,command=self.set_bondk)
         self.bondk_slider.grid(row=4,column=1)
         self.bondk_slider.set(self.space.BOND_KOEFF*100)
         
         self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
-        self.rotk_slider = tk.Scale(a, from_=1, to=100, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
+        self.rotk_slider = tk.Scale(a, from_=1, to=10, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
         self.rotk_slider.grid(row=5,column=1)
         self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
 
@@ -558,7 +557,7 @@ class OptionsFrame():
         self.space.REPULSION_KOEFF1 =float(value)
 
     def set_repulsek2(self,value):
-        self.space.REPULSION_KOEFF2 =float(value)/10
+        self.space.REPULSION_KOEFF2=float(value)/100
 
     def set_bondk(self,value):
         self.space.BOND_KOEFF =float(value)/100

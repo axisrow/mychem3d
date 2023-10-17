@@ -6,25 +6,30 @@ layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
 // Input uniforms go here if you need them.
 // Some examples:
 //uniform vec2 screen_size;
+uniform int nframes;
 uniform int gravity;
 uniform int redox;
 
 //uniform float frame_time;
-float BONDR = 4;
-uniform float BOND_KOEFF = 0.5;
-uniform float ATTRACT_KOEFF= 0.5;
-uniform float INTERACT_KOEFF= 1.6;
-uniform float ROTA_KOEFF = 0.005;
+float BONDR = 4.0;
+uniform float BOND_KOEFF;
+uniform float ATTRACT_KOEFF;
+uniform float INTERACT_KOEFF;
+uniform float ROTA_KOEFF;
 float REPULSION1 = -3;
-uniform float REPULSION_KOEFF1 = 50;
+uniform float REPULSION_KOEFF1;
 float REPULSION2 = 6;
-uniform float REPULSION_KOEFF2= 1;
+uniform float REPULSION_KOEFF2;
 
 
 
 // Structure of the ball data
 struct Node {
     vec4 pos;
+    float q;
+    float bonded;
+    float pair;
+    float noname;
 };
 
 struct Atom
@@ -38,8 +43,9 @@ struct Atom
     float ncount;
     vec4 rot;
     vec4 rotv;
-    vec4 color;
     Node nodes[5];
+    vec4 color;
+
 };
 // Input buffer
 layout(std430, binding=0) buffer atoms_in
@@ -167,6 +173,7 @@ int shift_q(in float type1, in float type2, inout float q1, inout float q2){
 
 void main()
 {
+    //if (nframes>30) return; 
     Atom atom_i, atom_j;
     vec3 pos_i,pos_j, v_i, v_j;
     
@@ -175,8 +182,6 @@ void main()
     pos_i= atom_i.pos.xyz;
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
-
-
 
     float sum = 0;
     float r;   //distance between atoms
@@ -195,67 +200,99 @@ void main()
         sumradius = atom_i.r + atom_j.r;
         r = distance(pos_i, pos_j);
         a = 0;
-        if (r!=0){
-            if (r<(sumradius+REPULSION1))
-                a = 1/r*  REPULSION_KOEFF1;
-            else if (r<(sumradius+REPULSION2))
-                a = 1/r* REPULSION_KOEFF2;
+        if (r==0) continue;
+        if (r<(sumradius+REPULSION1))
+           a = 1/r*  REPULSION_KOEFF1;
+        else if (r<(sumradius+REPULSION2))
+            a = 1/r* REPULSION_KOEFF2;
+
+            //float qi=0, qj=0;
+            //for (int ni = 0; ni<atom_i.ncount; ni++ ) qi+=atom_i.nodes[ni].pos.w;
+            //for (int nj = 0; nj<atom_j.ncount; nj++ ) qj+=atom_j.nodes[nj].pos.w;
+            //if(r>sumradius+REPULSION2)
+                //a+= qi*qj*INTERACT_KOEFF/r;
 
             //a += -0.0005;
-            E += delta/r*a;   //
-        }
-        float rn;
-        vec3 nE,ni_realpos,nj_realpos,ndelta;
-        vec3 allnE = vec3(0,0,0);  
+        E += delta/r*a;   //
+        //random redox 
         if (redox==1){
-            if (rand(v_i.xy)>=0.99981) atom_i.nodes[0].pos.w = -1;
-            if (rand(v_i.xy+1)>=0.99981) atom_i.nodes[0].pos.w = 1;
+            if (pos_i.x<100){
+                if (rand(v_i.xy)>=0.9997) {atom_i.nodes[0].q = -1;
+                //atom_i.color = vec4(1,0,0,1)    ;
+                }
+            }
+            if (pos_i.x>900)
+                if (rand(v_i.xy+1)>=0.9997) atom_i.nodes[0].q = 1;
         }
+        
+        //
         if (r<100) {
-            for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+             float rn;
+             vec3 nE,ni_realpos,nj_realpos,ndelta;
+             vec3 allnE = vec3(0,0,0);  
+             for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+                ni_realpos = rotate_vector(atom_i.nodes[ni].pos.xyz, atom_i.rot);
+                float q1=atom_i.nodes[ni].q;
                 nE = vec3(0.0,0.0,0.0);
-                //random redox 
                 for (int nj = 0; nj<atom_j.ncount; nj++){
-                    ni_realpos = rotate_vector(atom_i.nodes[ni].pos.xyz, atom_i.rot);
                     nj_realpos = rotate_vector(atom_j.nodes[nj].pos.xyz, atom_j.rot);
                     ndelta =  ni_realpos - nj_realpos + delta;
                     rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                     //r2n = ndelta.x*ndelta
-                    if (rn == 0) continue;
+                    float q2=atom_j.nodes[nj].q;
+                    //if (rn == 0) continue;
                     a = 0;
-                    float q1 = atom_i.nodes[ni].pos.w;
-                    float q2 =  atom_j.nodes[nj].pos.w;
-                    if (rn<BONDR){
-                        int bonded = shift_q(atom_i.type, atom_j.type, q1,q2);
-                        atom_i.nodes[ni].pos.w=q1;
-                        if (bonded==1)
-                            a = -rn*rn*BOND_KOEFF;
-                    }
-                    else {
-                      a = q1*q2*INTERACT_KOEFF/rn;
-                    }
-                    nE += ndelta/rn*a;
-
-                    if (rn<6) {
-                        vec3 target_direction = nj_realpos + pos_j - pos_i;
-                        vec3 v1 = normalize(ni_realpos);
-                        vec3 v2 = normalize(target_direction);
-                        float dt = dot(v1,v2);
-                        if(dt>1) dt=1;
-                        if(dt<-1) dt=-1;
-                        if (v1!=v2){
-                            vec3 axis = cross(v1,v2);
-                            float angle = acos(dt);
-                            angle = angle/rn/atom_i.m * ROTA_KOEFF;
-                            vec4 rot = vec4(sin(angle/2)* axis,cos(angle/2) ); // quat
-                            totalrot = normalize(qmul(rot, totalrot));
+                    //bonds update 
+                    
+                    if (rn<=BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0 ){
+                        int canbond = shift_q(atom_i.type, atom_j.type, q1,q2);
+                        if (canbond==1){
+                            atom_i.nodes[ni].q=q1;
+                            atom_i.nodes[ni].bonded=1;
+                            if (atom_i.nodes[ni].bonded==0.0) atom_i.color = vec4(0,1,0,1);
+                            atom_i.nodes[ni].pair=(j+1)*(nj+1);
                         }
-                    }    
+                    }                            
 
+                    //if (rn>BONDR && rn<BONDR+3 && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1){
+                    if (rn>BONDR && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1 && In.atoms[i].nodes[ni].pair == (j+1)*(nj+1) && In.atoms[j].nodes[nj].pair == (i+1)*(ni+1)){
+                        atom_i.nodes[ni].bonded=0;
+                        atom_i.nodes[ni].pair=-1;
+                    }                            
+                    
+                    //node interact
+                    //if (rn<=BONDR && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1){
+                    if (rn<=BONDR && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1 && In.atoms[i].nodes[ni].pair == (j+1)*(nj+1) && In.atoms[j].nodes[nj].pair == (i+1)*(ni+1) ){
+                            a = -rn*BOND_KOEFF;
+                            if (In.atoms[i].nodes[ni].q + In.atoms[j].nodes[nj].q !=0){
+                                atom_i.nodes[ni].bonded=0;
+                                atom_i.nodes[ni].pair=-1;
+                            }
+                    }
+                    if ( rn>BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0 && nframes>2){
+                            if (rn!=0) a= q1*q2*INTERACT_KOEFF/rn;
+                    }
+
+                            vec3 target_direction = nj_realpos + pos_j - pos_i;
+                            vec3 v1 = normalize(ni_realpos);
+                            vec3 v2 = normalize(target_direction);
+                            float dt = dot(v1,v2);
+                            if(dt>1) dt=1;
+                            if(dt<-1) dt=-1;
+                            if (v1!=v2){
+                                    vec3 axis = cross(v1,v2);
+                                    float angle = acos(dt);
+                                    angle = -angle* a * ROTA_KOEFF;
+                                    vec4 rot = vec4(sin(angle/2.0)* axis,cos(angle/2.0) ); // quat
+                                    totalrot = normalize(qmul(rot, totalrot));
+                            }
+
+
+                    if (rn!=0) nE += ndelta/rn*a;
                 }
                 allnE += nE;
             }
-
+            
             E += allnE;
         }
     }
@@ -268,20 +305,13 @@ void main()
 
  // mixer
     if (atom_i.type==100){
-        //if( dot(v_i, v_i) < 0.8) v_i*2;
-        if (v_i.x>0) v_i.x=1;
-        if (v_i.y>0) v_i.y=1;
-        if (v_i.z>0) v_i.z=1;
-        if (v_i.x<0) v_i.x=-1;
-        if (v_i.y<0) v_i.y=-1;
-        if (v_i.z<0) v_i.z=-1;
-        //v_i += a*0.01;*/
+        v_i = normalize(v_i);
     }
 
 //dumping
     v_i *=0.9999;      
 //next
-    v_i += E/atom_i.m;;
+    v_i += E/(atom_i.m);
     if (gravity==1) v_i.y -= 0.001; //gravity
     pos_i += v_i;
     atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));

@@ -6,7 +6,7 @@ import glm
 class Mesh():
     def __init__(self,vertices):
         self.vertices = vertices
-        self.color = (1,1,1)
+        #self.color = (1,1,1)
         
     def setup(self):
         self.VAO = gl.glGenVertexArrays(1)
