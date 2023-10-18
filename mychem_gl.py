@@ -123,6 +123,11 @@ class AppOgl(OpenGLFrame):
                 a_data.append(a.rotv.y)
                 a_data.append(a.rotv.z)
                 a_data.append(a.rotv.w)
+                # q
+                a_data.append(0)
+                a_data.append(0)
+                a_data.append(0)
+                a_data.append(0)
                 for n in a.nodes:
                     a_data.append(n.pos.x)
                     a_data.append(n.pos.y)
@@ -339,6 +344,7 @@ class AppOgl(OpenGLFrame):
         if not self.pause and self.space.gpu_compute:
             gl.glUseProgram(self.gpu_code)
             frame_loc = gl.glGetUniformLocation(self.gpu_code, "nframes")
+            bondloc_loc = gl.glGetUniformLocation(self.gpu_code, "bondlock")
             gravity_loc = gl.glGetUniformLocation(self.gpu_code, "gravity")
             redox_loc = gl.glGetUniformLocation(self.gpu_code, "redox")
             bk_loc = gl.glGetUniformLocation(self.gpu_code, "BOND_KOEFF")
@@ -346,6 +352,7 @@ class AppOgl(OpenGLFrame):
             rk1_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1")
             rk2_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2")
             rotk_loc = gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF")
+            gl.glUniform1i(frame_loc,self.space.bondlock)
             gl.glUniform1i(frame_loc,self.nframes)
             gl.glUniform1i(gravity_loc,self.space.gravity)
             gl.glUniform1i(redox_loc,self.space.redox)
@@ -384,7 +391,7 @@ class AppOgl(OpenGLFrame):
             for i in range(0,self.space.update_delta):
                 n = self.space.compute()
         self.render()
-        if self.space.recording:
+        if self.space.recording and not self.pause:
             pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
             img = Image.frombytes("RGB", (self.width,self.height), pix)
             img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)

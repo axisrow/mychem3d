@@ -15,13 +15,13 @@ class Space:
         self.HEIGHT=height
         self.DEPTH=depth
         self.ATOMRADIUS = 10
-        self.BOND_KOEFF = 0.4
+        self.BOND_KOEFF = 0.3
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 0.4
         #self.ATTRACTR = 5*self.ATOMRADIUS
         self.ROTA_KOEFF = 1
         self.REPULSION1 = -3
-        self.REPULSION_KOEFF1 = 50
+        self.REPULSION_KOEFF1 = 15
         self.REPULSION2 = 6
         self.REPULSION_KOEFF2= 0.4
         self.MAXVELOCITY = 1
@@ -64,7 +64,7 @@ class Space:
             m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),100,r=30)
             m.space = self
             m.v = glm.vec3(random.random(),random.random(),random.random())
-            m.m = 1000
+            m.m = 100
             self.atoms.append(m)
     
     def atoms2numpy(self):
@@ -194,7 +194,6 @@ class Space:
         self.merge_atoms = []
         mergedata = json.loads(f.read())
         self.load_data(mergedata, merge=True)
-        print(f"{x}, {y} {z}")
         self.merge_pos = glm.vec3(x,y,z)
         self.merge_rot = merge_rot
         self.merge_center = self.get_mergeobject_center()
@@ -283,24 +282,25 @@ class Space:
                         for nj in atom_j.nodes:
                             nj_realpos =  self.np_rot[int(j)] * nj.pos
                             ndelta = ni_realpos - nj_realpos + glm.vec3(self.np_x[i] - self.np_x[j], self.np_y[i] - self.np_y[j], self.np_z[i] - self.np_z[j] )
-                            #v2 = glm.vec3(delta_x, delta_y, delta_z)
                             rn = glm.length(ndelta)
-                            if rn==0: continue
+                            #if rn==0: continue
                             a = 0
-                            if rn<self.BONDR and not ni.bonded and not ni.bonded:
+                            if rn<=self.BONDR and not ni.bonded and not nj.bonded:
                                     if self.debug: print("bond")
                                     bonded,ni.q,nj.q = self.shift_q(atom_i.type, atom_j.type, ni.q,nj.q)
                                     if bonded:
-                                        ni.bonded = 1
-
-                                                                    
+                                        ni.bond(nj)
+                            if rn>self.BONDR and ni.bonded and nj.bonded and ni.pair==nj:
+                                 ni.unbond()
+                            
+                            if rn<=self.BONDR and ni.bonded and  ni.pair==nj:
                                         a = -rn*self.BOND_KOEFF  #atom's bond force
-                            else:
-                                    
-                                    a= ni.q*nj.q*self.INTERACT_KOEFF/rn/rn
+                            elif rn>self.BONDR and not ni.bonded and not nj.bonded and not ni.pair==nj:
+                                    if rn!=0: a= ni.q*nj.q*self.INTERACT_KOEFF/rn
                                     if self.debug: print(a)
-                            if i==0 and ni==atom_i.nodes[0]:
-                                self.fdata.write(f"t = {self.t} {a:0.5f} rn={rn:0.4f} v={self.np_vx[i]:0.2f} {self.np_vy[i]:0.2f} {self.np_vz[i]:0.2f} \n")
+
+                            #if i==0 and ni==atom_i.nodes[0]:
+                            #    self.fdata.write(f"t = {self.t} {a:0.5f} rn={rn:0.4f} v={self.np_vx[i]:0.2f} {self.np_vy[i]:0.2f} {self.np_vz[i]:0.2f} \n")
  
                             target_direction = nj_realpos - glm.vec3(self.np_x[i] - self.np_x[j], self.np_y[i] - self.np_y[j], self.np_z[i] - self.np_z[j] )
                             v1 = glm.normalize(ni_realpos)
@@ -314,10 +314,10 @@ class Space:
                                 angle = acos(dt)
                                 angle_a= -angle*a*self.ROTA_KOEFF
                                 rot = glm.quat(cos(angle_a/2), sin(angle_a/2)*glm.vec3(axis))
-                                totalrotv = glm.normalize(rot * totalrotv)
+                                #totalrotv = glm.normalize(rot * totalrotv)
                                 #naf2=0
                                 if self.debug: print(f"axis={axis} angle={angle} dt={dt}")
-                            nE+= ndelta/rn*a
+                            if rn!=0: nE+= ndelta/rn*a
                         allnE = allnE + nE
                 self.np_rotv[i] = totalrotv #* self.np_rotv[i]
                 Ex[i] += allnE.x

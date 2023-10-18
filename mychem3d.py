@@ -119,7 +119,7 @@ class mychemApp():
         self.pause = True
         self.glframe.pause = True
         #self.glframe.animate = 0
-        self.status_bar.settime(self.space.t)
+        self.status_bar.settime(self.glframe.nframes)
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
 
@@ -285,33 +285,6 @@ class mychemApp():
         if keysym in ["1","2","3","4","5","6"]:
             createtype = int(keysym)
             a = Atom(500,500,500,createtype)
-            if createtype==1:
-                    r = 6
-                    m = 1
-                    q = 0
-            elif createtype==2:
-                    r = 8
-                    m = 16
-                    q = 0
-            elif createtype==3:
-                    r = 9
-                    m = 14
-                    q = 0
-            elif createtype==4:
-                    m = 12
-                    r = 10
-                    q = 0
-            elif createtype==5:
-                    m = 31
-                    r = 12
-                    q = 0
-            elif createtype==6:
-                    m = 32
-                    r = 12
-                    q = 0            
-            a.m = m
-            a.r = r
-            a.q = q
         self.space.merge_atoms = [a]
         self.space.merge_center = self.space.get_mergeobject_center()    
         
