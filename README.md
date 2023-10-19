@@ -14,4 +14,4 @@ Be careful. This application may create misconceptions about chemical interactio
 
 Some examples:
 
-!["demopic 1](images/demo1.PNG?raw=true )
+!["demopic 1](images/demo2.JPG?raw=true )
