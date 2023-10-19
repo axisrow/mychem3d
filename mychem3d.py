@@ -29,6 +29,7 @@ class mychemApp():
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
         sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
+        sim_menu.add_checkbutton(label="Recording",variable=self.space.recording, command=self.handle_recording)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -44,7 +45,6 @@ class mychemApp():
         examples_menu = tk.Menu(self.menu_bar, tearoff=False)
         self.create_json_menu(examples_menu,"examples/")
         self.menu_bar.add_cascade(label="Examples", menu=examples_menu)
-
         self.root.config(menu=self.menu_bar)
 
     def __init__(self):
@@ -98,6 +98,9 @@ class mychemApp():
         #app.after(100, app.printContext)
         self.status_bar = StatusBar(self.root)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        if not os.path.exists('output'):
+            os.makedirs('output')
+
         self.status_bar.set('Ready')
 
     def run(self):
@@ -123,6 +126,10 @@ class mychemApp():
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
 
+    def handle_recording(self):
+        self.space.recording = not self.space.recording
+        self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
+        
     def handle_space(self,event=None):
         if self.pause:
             self.sim_run()

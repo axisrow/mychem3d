@@ -1,6 +1,6 @@
 import OpenGL.GL as gl
 import OpenGL.GL.shaders
-import glfw
+#import glfw
 import ctypes
 from pyopengltk import OpenGLFrame
 import numpy as np
@@ -10,7 +10,7 @@ from PIL import Image
 from math import sin,cos,sqrt,pi
 import time
 from mychem_functions import make_sphere_vert,make_cube2
-from mychem_data import cube_vertices
+#from mychem_data import cube_vertices
 from array import array
 from mesh import Mesh
 
@@ -300,13 +300,13 @@ class AppOgl(OpenGLFrame):
             gl.glBindVertexArray(self.atomMesh.VAO )
             # render computed atoms
             gl.glUniform1i(mode_loc,1)
-            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/3), len(self.space.atoms))
+            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
 
             gl.glUniform1i(mode_loc,2)
             gl.glBindVertexArray(self.nodeMesh.VAO )
             for i in range(0,5):
                 gl.glUniform1i(nodeindex_loc,i)
-                gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/3), len(self.space.atoms))
+                gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
         else:
             self.render_numpy()
 
@@ -323,7 +323,7 @@ class AppOgl(OpenGLFrame):
         #model =  glm.scale(model,glm.vec3(1))
         gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
-        gl.glDrawArrays(gl.GL_QUADS, 0, int(self.cube_vertices.size))
+        gl.glDrawArrays(gl.GL_QUADS, 0, int(self.cube_vertices.size/3))
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
         gl.glBindVertexArray( 0 )
 
