@@ -2,7 +2,7 @@
 import tkinter as tk
 import tkinter.filedialog as filedialog
 import time
-from math import sin,cos
+from math import sin,cos,log
 import os
 import json
 from json import encoder
@@ -28,7 +28,8 @@ class mychemApp():
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
-        sim_menu.add_checkbutton(label="Random redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
+        sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
+        sim_menu.add_checkbutton(label="Recording",variable=self.space.recording, command=self.handle_recording)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -36,13 +37,14 @@ class mychemApp():
         add_menu.add_command(label="C", accelerator="4",command=lambda:self.handle_add_atom(keysym="4"))
         add_menu.add_command(label="P", accelerator="5",command=lambda:self.handle_add_atom(keysym="5"))
         add_menu.add_command(label="S", accelerator="6",command=lambda:self.handle_add_atom(keysym="6"))        
+        add_menu.add_command(label="Mixer", accelerator="0",command=lambda:self.handle_zero())
         self.menu_bar.add_cascade(label="File", menu=file_menu)
         self.menu_bar.add_cascade(label="Simulation", menu=sim_menu)
         self.menu_bar.add_cascade(label="Add", menu=add_menu)
+        self.menu_bar.add_command(label="Options", command=self.options_window)
         examples_menu = tk.Menu(self.menu_bar, tearoff=False)
         self.create_json_menu(examples_menu,"examples/")
         self.menu_bar.add_cascade(label="Examples", menu=examples_menu)
-
         self.root.config(menu=self.menu_bar)
 
     def __init__(self):
@@ -85,6 +87,7 @@ class mychemApp():
         #self.root.bind("<FocusIn>"), self.handle_focusin
         self.root.bind("<MouseWheel>", self.handle_scroll)
         self.glframe = AppOgl(self.root, width=1024, height=600)
+        print("glframe created")
         self.pause = False
         self.merge_mode = False
         self.ttype = "mx"
@@ -95,28 +98,38 @@ class mychemApp():
         #app.after(100, app.printContext)
         self.status_bar = StatusBar(self.root)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-        self.status_bar.set('Ready')
+        if not os.path.exists('output'):
+            os.makedirs('output')
 
+        self.status_bar.set('Ready')
 
     def run(self):
         self.resetdata = self.space.make_export()
-        self.space.atoms2numpy()
+        #self.atoms2compute()
         self.root.mainloop()
 
+
     def sim_run(self):
-        self.space.atoms2numpy()
+        #self.atoms2compute()
+        #self.atoms2compute()
         self.pause = False
         self.glframe.pause = False
+        #self.glframe.animate = 1
         self.status_bar.set("Running")
 
     def sim_pause(self):
-        self.space.numpy2atoms()
+        self.compute2atoms()
         self.pause = True
         self.glframe.pause = True
-        self.status_bar.settime(self.space.t)
+        #self.glframe.animate = 0
+        self.status_bar.settime(self.glframe.nframes)
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
 
+    def handle_recording(self):
+        self.space.recording = not self.space.recording
+        self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
+        
     def handle_space(self,event=None):
         if self.pause:
             self.sim_run()
@@ -154,7 +167,7 @@ class mychemApp():
 
     def handle_redox(self,event=None):
         self.space.redox = not self.space.redox
-        self.status_bar.set("Random redox is "+ OnOff(self.space.redox))
+        self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox))
 
     def handle_g(self,event=None):
         if event:
@@ -162,9 +175,10 @@ class mychemApp():
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity))
 
     def handle_zero(self,event=None):
-        self.space.numpy2atoms()
+        #self.compute2atoms()
         self.space.appendmixer(1)
-        self.space.atoms2numpy()
+        self.resetdata = self.space.make_export()
+        self.atoms2compute()
 
 
     def handle_bondlock(self,event=None):
@@ -184,7 +198,7 @@ class mychemApp():
         self.space.merge_atoms = []
         self.space.select_mode = False
         self.merge_mode = False
-        self.space.atoms2numpy()
+        self.atoms2compute()
         self.status_bar.set("New file")
 
     def file_open(self,event=None):
@@ -195,6 +209,7 @@ class mychemApp():
         f =  open(fileName,"r")		
         self.resetdata = json.loads(f.read())
         self.space.load_data(self.resetdata)
+        self.atoms2compute()
         self.status_bar.set("File loaded")
 
     def file_merge(self,event=None, path=None):
@@ -210,13 +225,14 @@ class mychemApp():
         self.space.merge_atoms = []
         mergedata = json.loads(f.read())
         self.recentdata = mergedata
-        self.resetdata = mergedata 
+        #self.resetdata = mergedata 
         self.merge_mode=True
         self.space.select_mode = False
         self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
+        #self.atoms2compute()
         #self.canvas.configure(cursor="hand2")
-        #self.status_bar.set("Merging mode")
+        self.status_bar.set("Merging mode")
 
 
     def file_merge_recent(self,event=None):
@@ -226,6 +242,7 @@ class mychemApp():
         self.merge_atoms = []
         self.merge_mode=True
         self.space.load_data(self.recentdata, merge=True)
+        #self.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
 
@@ -261,7 +278,7 @@ class mychemApp():
             return
         self.file_new()
         self.space.load_data(self.resetdata)
-        self.space.atoms2numpy()
+        self.atoms2compute()
         self.status_bar.set("Reset to previos loaded")
     
     def handle_add_atom2(self,event=None):
@@ -275,33 +292,6 @@ class mychemApp():
         if keysym in ["1","2","3","4","5","6"]:
             createtype = int(keysym)
             a = Atom(500,500,500,createtype)
-            if createtype==1:
-                    r = 6
-                    m = 1
-                    q = 0
-            elif createtype==2:
-                    r = 8
-                    m = 16
-                    q = 0
-            elif createtype==3:
-                    r = 9
-                    m = 14
-                    q = 0
-            elif createtype==4:
-                    m = 12
-                    r = 10
-                    q = 0
-            elif createtype==5:
-                    m = 31
-                    r = 12
-                    q = 0
-            elif createtype==6:
-                    m = 32
-                    r = 12
-                    q = 0            
-            a.m = m
-            a.r = r
-            a.q = q
         self.space.merge_atoms = [a]
         self.space.merge_center = self.space.get_mergeobject_center()    
         
@@ -337,22 +327,15 @@ class mychemApp():
             self.merge_mode = True
             
             self.space.select_mode = False
-            self.space.atoms2numpy()
+            self.atoms2compute()
             return
         if self.merge_mode:
             self.merge_mode = False 
-            for a in self.space.merge_atoms:
-                pos = glm.vec3(a.x, a.y, a.z)
-                pos -= self.space.merge_center
-                pos = self.space.merge_rot * pos
-                pos += self.space.merge_center
-                pos += self.space.merge_pos
-                (a.x,a.y,a.z) = pos
-                a.rot = self.space.merge_rot * a.rot
-                self.space.appendatom(a)
-            self.space.merge_atoms = []
+            self.space.merge2atoms()
             self.resetdata = self.space.make_export()
-            self.space.atoms2numpy()
+            self.atoms2compute()
+
+
 
     def handle_mouseb1(self,event:tk.Event):
         self.lastX = event.x
@@ -432,6 +415,22 @@ class mychemApp():
             else:
                 self.glframe.cameraPos -= cameraSpeed * self.glframe.cameraFront   
 
+    def atoms2compute(self):
+        print("atoms2compute")
+        if self.space.gpu_compute:
+            self.glframe.atoms2ssbo()
+        else:
+            self.space.atoms2numpy()
+
+    def compute2atoms(self):
+        if self.space.gpu_compute:
+            #self.glframe.atoms2ssbo()
+            pass
+        else:
+            self.space.numpy2atoms()
+
+
+
     def create_json_menu(self,menu, lpath):
         files_last = []
         for filename in os.listdir(lpath):
@@ -444,7 +443,21 @@ class mychemApp():
                 files_last.append((filename,filepath))
         for (f,p) in files_last:				
             menu.add_command(label=f, command=lambda p2=p: self.file_merge(path=p2))
-    
+
+    def options_window(self):
+        o = OptionsFrame(self.space)
+        
+    def about_window(self):
+        
+        a = tk.Toplevel()
+        a.geometry('200x150')
+        a['bg'] = 'grey'
+        a.overrideredirect(True)
+        tk.Label(a, text="About this")\
+            .pack(expand=1)
+        a.after(5000, lambda: a.destroy())
+
+
 
 class StatusBar(tk.Frame):
     def __init__(self, parent):
@@ -471,7 +484,69 @@ class StatusBar(tk.Frame):
     def clear(self):
         self.label.config(text='')
 
-     
+
+class OptionsFrame():
+    def __init__(self,space):
+        self.space = space
+        a = tk.Toplevel()
+        a.title("Options")
+        a.resizable(0, 0)
+        a.geometry('420x300')
+        #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
+        #self.frame.pack()
+        self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
+        self.update_slider = tk.Scale(a, from_=1, to=500, length=300, orient=tk.HORIZONTAL,command=self.set_delta)
+        self.update_slider.grid(row=0,column=1)
+        self.update_slider.set(self.space.update_delta)
+
+        self.label1 = tk.Label(a, text= "Interact koeff").grid(row=1,column=0)
+        self.interact_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
+        self.interact_slider.grid(row=1,column=1)
+        self.interact_slider.set(int(self.space.INTERACT_KOEFF*100))
+
+        self.label2 = tk.Label(a, text= "Repulsion koeff1").grid(row=2,column=0)
+        self.repulsek1_slider = tk.Scale(a, from_=1, to=500, length=200,orient=tk.HORIZONTAL,command=self.set_repulsek1)
+        self.repulsek1_slider.grid(row=2,column=1)
+        self.repulsek1_slider.set(int(self.space.REPULSION_KOEFF1))
+
+        self.label3 = tk.Label(a, text= "Repulsion koeff2").grid(row=3,column=0)
+        self.repulsek2_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_repulsek2)
+        self.repulsek2_slider.grid(row=3,column=1)
+        self.repulsek2_slider.set(self.space.REPULSION_KOEFF2*100)
+        
+        self.label4 = tk.Label(a, text= "Bond koeff").grid(row=4,column=0)
+        self.bondk_slider = tk.Scale(a, from_=1, to=300, length=300,orient=tk.HORIZONTAL,command=self.set_bondk)
+        self.bondk_slider.grid(row=4,column=1)
+        self.bondk_slider.set(self.space.BOND_KOEFF*100)
+        
+        self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
+        self.rotk_slider = tk.Scale(a, from_=1, to=10, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
+        self.rotk_slider.grid(row=5,column=1)
+        self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
+
+
+        #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
+
+    def set_delta(self,value):
+        self.space.update_delta = int(value)
+
+    def set_interk(self,value):
+        self.space.INTERACT_KOEFF=float(value)/100.0
+
+    def set_repulsek1(self,value):
+        self.space.REPULSION_KOEFF1 =float(value)
+
+    def set_repulsek2(self,value):
+        self.space.REPULSION_KOEFF2=float(value)/100
+
+    def set_bondk(self,value):
+        self.space.BOND_KOEFF =float(value)/100
+
+    def set_rotk(self,value):
+        self.space.ROTA_KOEFF =pow(10,-float(value))
+#        print("rota =",self.space.ROTA_KOEFF)
+
+
 
 if __name__ == '__main__':
     mychemApp().run()
