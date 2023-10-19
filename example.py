@@ -326,8 +326,8 @@ if __name__ == '__main__':
     #makeethan(space, 500,500,500)
 #    makeclew(space,500,500,500)
 #    makealcohol(space,500,300,500,40)
-    #makealcohol(space,50,400,400,40)
-    #makealcohol(space,950,400,100,40)
+    makealcohol(space,500,400,400,40)
+    makealcohol(space,550,400,500,40)
     #makealcohol(space,400,400,400,20)
     #makeplane(space,300)
     #makeplane(space,400)
@@ -344,13 +344,12 @@ if __name__ == '__main__':
     #a.v = glm.vec3(0,-1,0)
     #space.appendatom(a)
     #space.gpu_compute = False
-    for i in range(0,100):
+    #for i in range(0,50):
             #makealcohol(space,random.randint(100,900),random.randint(100,900),random.randint(100,900),3)
-        space.merge_from_file("examples/simple/NH3.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
-        space.merge_from_file("examples/simple/H2O.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
-        space.merge_from_file("examples/alkene/etylen.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
-
-    #space.merge_from_file("examples/alkane/decane.json",0,0,0)
+        #space.merge_from_file("examples/simple/NH3.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
+        #space.merge_from_file("examples/simple/H2O.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
+        #space.merge_from_file("examples/alkene/etylen.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
+        #space.merge_from_file("examples/alkane/decane.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
     #space.merge_from_file("examples/alkane/methane.json",50,50,0)
     #space.merge_from_file("examples/aldehyde/formaldehyde.json", 50,200,0)
     #makealcohol(space,500,500,700,3)
@@ -360,7 +359,7 @@ if __name__ == '__main__':
     #space.DETRACT_KOEFF2 = 0
     #space.export = True
     #space.merge_from_file("examples/alkane/30ane.json",glm.vec3(100,100,100))
-    space.update_delta = 10   
+    space.update_delta = 5  
      #space.recording = True
     #space.appendmixer(1)
     space.redox = True
