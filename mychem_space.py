@@ -5,10 +5,12 @@ import numpy as np
 import random
 from mychem_atom import Atom
 import glm
+import tkinter as tk
 
 class Space:
     def __init__(self,width=1000,height=1000,depth=1000):
-        self.gpu_compute = True
+        self.gpu_compute =tk.BooleanVar()
+        self.gpu_compute.set(True)
         self.ucounter = 0
         self.debug = False
         self.WIDTH=width
@@ -28,7 +30,8 @@ class Space:
         self.t = -1
         self.stoptime = -1
         self.recordtime = 0
-        self.recording = False
+        self.recording = tk.BooleanVar()
+        self.recording.set(False)
         self.atoms = []	
         self.g = 0.01
         self.newatom = None
@@ -41,16 +44,19 @@ class Space:
         self.merge_center = glm.vec3(0,0,0)
         self.select_mode = False
         self.select_i = 0 
-        self.gravity = False
+        self.gravity = tk.BooleanVar()
+        self.gravity.set(False)
         self.shake = False
         self.SHAKE_KOEFF = 0.5
         self.competitive = True
-        self.redox = False
+        self.redox = tk.BooleanVar()
+        self.redox.set(False)
         self.redox_rate = 1
         self.segmented_redox = True
-        self.bondlock = False
+        self.bondlock =tk.BooleanVar()
+        self.bondlock.set(False)
         self.linear_field = False
-        self.update_delta= 1
+        self.update_delta= 5
         self.show_q = False
         self.action = None
         self.fdata = open('data.txt',"w")
@@ -330,7 +336,7 @@ class Space:
             #print(self.np_az)
 
 
-            if self.gravity:
+            if self.gravity.get():
                 self.np_ay -= self.g
 
             if self.shake:

@@ -126,8 +126,9 @@ class mychemApp():
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
 
-    def handle_recording(self):
-        self.space.recording = not self.space.recording
+    def handle_recording(self,event=None):
+        if event:
+            self.space.recording.set(not self.space.recording.get())
         self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
         
     def handle_space(self,event=None):
@@ -166,13 +167,15 @@ class mychemApp():
         self.status_bar.set("Random shake is "+ OnOff(self.space.shake))
 
     def handle_redox(self,event=None):
-        self.space.redox = not self.space.redox
-        self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox))
+        if event:
+            self.space.redox.set(not self.space.redox.get())
+        print(self.space.redox.get())
+        self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox.get()))
 
     def handle_g(self,event=None):
         if event:
-            self.space.gravity = not self.space.gravity
-        self.status_bar.set("Gravity is "+ OnOff(self.space.gravity))
+            self.space.gravity.set(not self.space.gravity.get())
+        self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
 
     def handle_zero(self,event=None):
         #self.compute2atoms()
@@ -183,8 +186,8 @@ class mychemApp():
 
     def handle_bondlock(self,event=None):
         if event:
-            self.space.bondlock = not self.space.bondlock
-        self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock))
+            self.space.bondlock.set(not self.space.bondlock.get())
+        self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock.set()))
 
 
     def file_new(self,event=None):
@@ -417,13 +420,13 @@ class mychemApp():
 
     def atoms2compute(self):
         print("atoms2compute")
-        if self.space.gpu_compute:
+        if self.space.gpu_compute.get():
             self.glframe.atoms2ssbo()
         else:
             self.space.atoms2numpy()
 
     def compute2atoms(self):
-        if self.space.gpu_compute:
+        if self.space.gpu_compute.get():
             #self.glframe.atoms2ssbo()
             pass
         else:
@@ -520,12 +523,25 @@ class OptionsFrame():
         self.bondk_slider.set(self.space.BOND_KOEFF*100)
         
         self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
-        self.rotk_slider = tk.Scale(a, from_=1, to=10, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
+        self.rotk_slider = tk.Scale(a, from_=1, to=100, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
         self.rotk_slider.grid(row=5,column=1)
-        self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
+        #self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
+        self.rotk_slider.set(self.space.ROTA_KOEFF*10)
 
+        self.checkbox = tk.Checkbutton(a, text="GPU Compute", variable=self.space.gpu_compute,command=self.on_checkbox).grid(row=6,column=0)
 
         #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
+
+    def on_checkbox(self):
+        print('on checkbox')
+        if self.space.gpu_compute.get():
+            self.glframe.atoms2ssbo()
+        else:
+            if len(self.space.atoms)>300:
+                print("Too much atoms!")
+                self.space.gpu_compute.set(True) 
+            else:
+                self.space.atoms2numpy()
 
     def set_delta(self,value):
         self.space.update_delta = int(value)
@@ -543,7 +559,8 @@ class OptionsFrame():
         self.space.BOND_KOEFF =float(value)/100
 
     def set_rotk(self,value):
-        self.space.ROTA_KOEFF =pow(10,-float(value))
+
+        self.space.ROTA_KOEFF = float(value)/10.0
 #        print("rota =",self.space.ROTA_KOEFF)
 
 

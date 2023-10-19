@@ -81,7 +81,7 @@ class AppOgl(OpenGLFrame):
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
         print("objects created")
-        if self.space.gpu_compute:
+        if self.space.gpu_compute.get():
             self.atoms2ssbo()
         else:
             self.space.atoms2numpy()
@@ -296,7 +296,7 @@ class AppOgl(OpenGLFrame):
                 self.nodeMesh.draw(self.shader)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        if self.space.gpu_compute:
+        if self.space.gpu_compute.get():
             gl.glBindVertexArray(self.atomMesh.VAO )
             # render computed atoms
             gl.glUniform1i(mode_loc,1)
@@ -342,7 +342,7 @@ class AppOgl(OpenGLFrame):
         gl.glUseProgram(0)
 
         # gpu compute atoms
-        if not self.pause and self.space.gpu_compute:
+        if not self.pause and self.space.gpu_compute.get():
             gl.glUseProgram(self.gpu_code)
             frame_loc = gl.glGetUniformLocation(self.gpu_code, "nframes")
             bondloc_loc = gl.glGetUniformLocation(self.gpu_code, "bondlock")
@@ -353,10 +353,10 @@ class AppOgl(OpenGLFrame):
             rk1_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1")
             rk2_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2")
             rotk_loc = gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF")
-            gl.glUniform1i(frame_loc,self.space.bondlock)
+            gl.glUniform1i(bondloc_loc,self.space.bondlock.get())
             gl.glUniform1i(frame_loc,self.nframes)
-            gl.glUniform1i(gravity_loc,self.space.gravity)
-            gl.glUniform1i(redox_loc,self.space.redox)
+            gl.glUniform1i(gravity_loc,self.space.gravity.get())
+            gl.glUniform1i(redox_loc,self.space.redox.get())
             gl.glUniform1f(bk_loc,self.space.BOND_KOEFF)
             gl.glUniform1f(ik_loc,self.space.INTERACT_KOEFF)
             gl.glUniform1f(rk1_loc,self.space.REPULSION_KOEFF1)
@@ -388,11 +388,11 @@ class AppOgl(OpenGLFrame):
         """Render a single frame"""
         
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        if not self.pause and not self.space.gpu_compute:
+        if not self.pause and not self.space.gpu_compute.get():
             for i in range(0,self.space.update_delta):
                 n = self.space.compute()
         self.render()
-        if self.space.recording and not self.pause:
+        if self.space.recording.get() and not self.pause:
             pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
             img = Image.frombytes("RGB", (self.width,self.height), pix)
             img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
