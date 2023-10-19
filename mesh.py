@@ -30,6 +30,6 @@ class Mesh():
         model_loc = gl.glGetUniformLocation(shader, "model")
         gl.glUniform3f(objcol_loc,self.color[0],self.color[1],self.color[2])
         gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
-        gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/3))
+        gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/6))
     
     

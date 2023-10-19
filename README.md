@@ -1,10 +1,14 @@
 Pseudochemical 3d simulator
 - python tkinter used
-- opengl with compute shader used
+- opengl 4.3 with compute shader used
 - not release by now
 
 for use install libraries:
 - python -m pip install pillow numpy pyglm pyopengl pyopengltk
+
+Tested on:
+- integrated Intel Iris Xe Graphics
+
 
 Be careful. This application may create misconceptions about chemical interactions
 

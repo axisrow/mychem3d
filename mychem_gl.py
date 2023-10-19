@@ -88,6 +88,7 @@ class AppOgl(OpenGLFrame):
 
         self.start = time.time()
         self.nframes = 0          
+        self.rframes = 0
         self.initok = True
 
 
@@ -395,7 +396,9 @@ class AppOgl(OpenGLFrame):
             pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
             img = Image.frombytes("RGB", (self.width,self.height), pix)
             img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
-            img2.save("output/frame"+str(self.nframes)+".png")
+            img2.save("output/frame"+str(self.rframes)+".png")
+            self.rframes+=1
+
 
 #        if self.nframes%50==0:
            
