@@ -187,7 +187,7 @@ class mychemApp():
     def handle_bondlock(self,event=None):
         if event:
             self.space.bondlock.set(not self.space.bondlock.get())
-        self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock.set()))
+        self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock.get()))
 
 
     def file_new(self,event=None):
