@@ -173,6 +173,7 @@ class AppOgl(OpenGLFrame):
 
     def numpy2ssbo(self):
         self.N = len(self.space.atoms)
+        if self.N==0: return
         #print(f"numpy2ssbo N={self.N}")
         space = self.space
         asize = 68
@@ -297,19 +298,19 @@ class AppOgl(OpenGLFrame):
         for i in range(0,self.N):
             #
             a = self.space.atoms[i]
-            a.pos.x = a_data[offset] 
+            a.pos.x = float(a_data[offset]) 
             offset +=1
-            a.pos.y = a_data[offset] 
+            a.pos.y = float(a_data[offset])
             offset +=1
-            a.pos.z = a_data[offset]
+            a.pos.z = float(a_data[offset])
             offset +=1
             offset +=1
             # v
-            a.v.x = a_data[offset]
+            a.v.x = float(a_data[offset])
             offset +=1
-            a.v.y = a_data[offset]
+            a.v.y = float(a_data[offset])
             offset +=1
-            a.v.z = a_data[offset]
+            a.v.z = float(a_data[offset])
             offset +=1
             offset +=1
             # type, radius, m
@@ -322,22 +323,22 @@ class AppOgl(OpenGLFrame):
             #a_data[offset]=len(a.nodes)
             offset +=1
             #rot 
-            a.rot.x = a_data[offset]
+            a.rot.x = float(a_data[offset])
             offset +=1
-            a.rot.y = a_data[offset]
+            a.rot.y = float(a_data[offset])
             offset +=1
-            a.rot.z = a_data[offset]
+            a.rot.z = float(a_data[offset])
             offset +=1
-            a.rot.w = a_data[offset]
+            a.rot.w = float(a_data[offset])
             offset +=1
             #rotv 
-            a.rotv.x = a_data[offset]
+            a.rotv.x = float(a_data[offset])
             offset +=1
-            a.rotv.y = a_data[offset]
+            a.rotv.y = float(a_data[offset])
             offset +=1
-            a.rotv.z = a_data[offset]
+            a.rotv.z = float(a_data[offset])
             offset +=1
-            a.rotv.w = a_data[offset]
+            a.rotv.w = float(a_data[offset])
             offset +=1
             # anim
             #a_data[offset] =0.0
@@ -357,11 +358,11 @@ class AppOgl(OpenGLFrame):
                 offset +=1
                 #a_data[offset] = 0.0
                 offset +=1
-                n.q = a_data[offset]
+                n.q = float(a_data[offset])
                 offset +=1
-                n.bonded = a_data[offset] 
+                n.bonded = bool(a_data[offset])
                 offset +=1
-                n.pair = a_data[offset] 
+                n.pair = float(a_data[offset])
                 offset +=1
                 #a_data[offset] = 0.0
                 offset +=1
