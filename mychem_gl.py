@@ -135,7 +135,7 @@ class AppOgl(OpenGLFrame):
                     a_data.append(0.0)
                     a_data.append(n.q)
                     a_data.append(n.bonded)
-                    a_data.append(-1)
+                    a_data.append(n.pair)
                     a_data.append(0.0)
                 for i in range(0,5-len(a.nodes)):
                     a_data.append(0.0)
@@ -280,6 +280,103 @@ class AppOgl(OpenGLFrame):
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
         gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, a_data.size*4, a_data )
+
+    def ssbo2atoms(self):
+        self.N = len(self.space.atoms)
+        print(f"ssbo2atoms N={self.N}")
+        space = self.space
+        asize = 68
+        #a_data = np.empty([self.N*asize],dtype=np.float32)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
+        a_data8 = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, self.N*asize*4)
+        a_data = a_data8.view('<f4')
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
+
+        offset = 0
+        for i in range(0,self.N):
+            #
+            a = self.space.atoms[i]
+            a.pos.x = a_data[offset] 
+            offset +=1
+            a.pos.y = a_data[offset] 
+            offset +=1
+            a.pos.z = a_data[offset]
+            offset +=1
+            offset +=1
+            # v
+            a.v.x = a_data[offset]
+            offset +=1
+            a.v.y = a_data[offset]
+            offset +=1
+            a.v.z = a_data[offset]
+            offset +=1
+            offset +=1
+            # type, radius, m
+            #a_data[offset]=a.type
+            offset +=1
+            #a_data[offset]=a.r
+            offset +=1
+            #a_data[offset]=a.m
+            offset +=1
+            #a_data[offset]=len(a.nodes)
+            offset +=1
+            #rot 
+            a.rot.x = a_data[offset]
+            offset +=1
+            a.rot.y = a_data[offset]
+            offset +=1
+            a.rot.z = a_data[offset]
+            offset +=1
+            a.rot.w = a_data[offset]
+            offset +=1
+            #rotv 
+            a.rotv.x = a_data[offset]
+            offset +=1
+            a.rotv.y = a_data[offset]
+            offset +=1
+            a.rotv.z = a_data[offset]
+            offset +=1
+            a.rotv.w = a_data[offset]
+            offset +=1
+            # anim
+            #a_data[offset] =0.0
+            offset +=1
+            #a_data[offset] =0.0
+            offset +=1
+            #a_data[offset] =0.0
+            offset +=1
+            #a_data[offset] =0.0
+            offset +=1
+            for n in a.nodes:
+                #a_data[offset]   = n.pos.x
+                offset +=1
+                #a_data[offset] = n.pos.y
+                offset +=1
+                #a_data[offset] = n.pos.z
+                offset +=1
+                #a_data[offset] = 0.0
+                offset +=1
+                n.q = a_data[offset]
+                offset +=1
+                n.bonded = a_data[offset] 
+                offset +=1
+                n.pair = a_data[offset] 
+                offset +=1
+                #a_data[offset] = 0.0
+                offset +=1
+            for i in range(0,5-len(a.nodes)):
+                offset +=8
+            #color 
+            #a_data[offset]=a.color[0]
+            offset +=1
+            #a_data[offset]=a.color[1]
+            offset +=1
+            #a_data[offset]=a.color[2]
+            offset +=1
+            #a_data[offset]=1.0
+            offset +=1
+
 
     def create_objects(self):
         print("create objects start")

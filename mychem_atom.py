@@ -42,36 +42,7 @@ class Node:
             if i1==i2:
                 (ep1.ecount, ep2.ecount) = (1,1)
         return canbond
-
-    def bond(self,n):
-        #canbond = self.shift_q(n)
-        #if canbond:
-        n.pair = self
-        n.bonded = True
-        self.pair = n
-        self.bonded = True
-        #return canbond
     
-    def unbond(self):
-        if self.bonded:
-            #
-            #if self.assigned_ep.ecount == 1 and self.pair.assigned_ep.ecount == 1:
-            #	if random.choice([False,True]):
-            #		self.assigned_ep.ecount = 0
-            #		self.pair.assigned_ep.ecount = 2
-            #	else:
-            #		self.assigned_ep.ecount = 2
-            #		self.pair.assigned_ep.ecount = 0
-            #self.pair.assigned_ep.assigned = False
-            #self.pair.assigned_ep = None
-            #self.assigned_ep.assigned = False
-            #self.assigned_ep = None
-
-            self.pair.pair = None
-            self.pair.bonded = False
-            #self.pair.parent.bonded-=1
-            self.pair = None
-            self.bonded = False
 
 
 class ElectronPairing():

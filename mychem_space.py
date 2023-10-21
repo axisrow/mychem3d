@@ -193,9 +193,10 @@ class Space:
     
     def compute2atoms(self):
         if self.gpu_compute.get():
-            #self.glframe.atoms2ssbo()
-            pass
+            print("compute2atoms gpu")
+            self.glframe.ssbo2atoms()
         else:
+            print("compute2atoms numpy")
             self.numpy2atoms()
 
     def merge2atoms(self):
@@ -294,33 +295,50 @@ class Space:
                 totalrotv = glm.quat()
                 jj = np.where(np.logical_and(r[i]>0,r[i]<100))
                 #print("jj=", jj)
+                
                 allnE = glm.vec3(0,0,0)
                 for j in jj[0]:
                     if j==i: continue
                     atom_i = self.atoms[i]
                     atom_j = self.atoms[j]
-                    for ni in atom_i.nodes:
-                        ni_realpos =  self.np_rot[i] * ni.pos
+                    for ni in range (0,len(atom_i.nodes)):
+                        node_i = atom_i.nodes[ni]
+                        ni_index= (i+1)*(ni+1)
+                        ni_realpos =  self.np_rot[i] * node_i.pos
                         nE = glm.vec3(0,0,0)
-                        for nj in atom_j.nodes:
-                            nj_realpos =  self.np_rot[int(j)] * nj.pos
+                        for nj in range(0, len(atom_j.nodes)):
+                            node_j = atom_j.nodes[nj]
+                            nj_realpos =  self.np_rot[int(j)] * node_j.pos
+                            nj_index = (j+1)*(nj+1)
                             ndelta = ni_realpos - nj_realpos + glm.vec3(self.np_x[i] - self.np_x[j], self.np_y[i] - self.np_y[j], self.np_z[i] - self.np_z[j] )
                             rn = glm.length(ndelta)
                             #if rn==0: continue
                             a = 0
-                            if rn<=self.BONDR and not ni.bonded and not nj.bonded:
+                            if rn<=self.BONDR and not node_i.bonded and not node_j.bonded:
                                     if self.debug: print("bond")
-                                    bonded,ni.q,nj.q = self.shift_q(atom_i.type, atom_j.type, ni.q,nj.q)
+                                    bonded,node_i.q,node_j.q = self.shift_q(atom_i.type, atom_j.type, node_i.q,node_j.q)
                                     if bonded:
-                                        ni.bond(nj)
-                            if rn>self.BONDR and ni.bonded and nj.bonded and ni.pair==nj:
-                                 ni.unbond()
+                                        node_i.bonded = True
+                                        node_i.pair = nj_index
+                                        node_j.bonded = True
+                                        node_j.pair = ni_index
+                            if rn>self.BONDR and node_i.bonded and node_j.bonded and node_i.pair==nj_index and node_j.pair==ni_index:
+                                 if self.debug: print("unbond")
+                                 node_i.bonded = False
+                                 node_i.pair = -1
+                                 node_j.bonded = False
+                                 node_j.pair = -1
                             
-                            if rn<=self.BONDR and ni.bonded and  ni.pair==nj:
+                            if rn<=self.BONDR and node_i.bonded and node_j.bonded and  node_i.pair==nj_index and node_j.pair==ni_index:
                                         a = -rn*self.BOND_KOEFF  #atom's bond force
-                            elif rn>self.BONDR and not ni.bonded and not nj.bonded and not ni.pair==nj:
-                                    if rn!=0: a= ni.q*nj.q*self.INTERACT_KOEFF/rn
-                                    if self.debug: print(a)
+                                        if node_i.q+node_j.q !=0 and not self.bondlock.get():
+                                             if self.debug: print("unbond2")
+                                             node_i.bonded = False
+                                             node_i.pair = -1
+                            elif rn>self.BONDR and not node_i.bonded and not node_j.bonded and self.t>1:
+                                    if rn!=0: a= node_i.q*node_j.q*self.INTERACT_KOEFF/rn
+                                    #if self.debug: print(a)
+                                    pass
 
                             #if i==0 and ni==atom_i.nodes[0]:
                             #    self.fdata.write(f"t = {self.t} {a:0.5f} rn={rn:0.4f} v={self.np_vx[i]:0.2f} {self.np_vy[i]:0.2f} {self.np_vz[i]:0.2f} \n")
@@ -338,14 +356,14 @@ class Space:
                                 rot = glm.quat(cos(angle_a/2), sin(angle_a/2)*glm.vec3(axis))
                                 totalrotv = glm.normalize(rot * totalrotv)
                                 #naf2=0
-                                if self.debug: print(f"axis={axis} angle={angle} dt={dt}")
+                                #if self.debug: print(f"axis={axis} angle={angle} dt={dt}")
                             if rn!=0: nE+= ndelta/rn*a
                         allnE = allnE + nE
                 self.np_rotv[i] = totalrotv #* self.np_rotv[i]
                 Ex[i] += allnE.x
                 Ey[i] += allnE.y
                 Ez[i] += allnE.z
-                if self.debug: print("##")
+                #if self.debug: print("##")
             self.np_ax= Ex/self.np_m
             self.np_ay= Ey/self.np_m
             self.np_az= Ez/self.np_m
