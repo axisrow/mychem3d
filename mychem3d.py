@@ -216,6 +216,7 @@ class mychemApp():
         self.space.load_data(self.resetdata)
         self.space.atoms2compute()
         self.status_bar.set("File loaded")
+        f.close()
 
     def file_merge(self,event=None, path=None):
         self.sim_pause()
@@ -238,6 +239,7 @@ class mychemApp():
         #self.space.atoms2compute()
         #self.canvas.configure(cursor="hand2")
         self.status_bar.set("Merging mode")
+        f.close()
 
 
     def file_merge_recent(self,event=None):
@@ -250,6 +252,7 @@ class mychemApp():
         #self.space.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
+        
 
     def file_save(self,event=None):
         self.sim_pause()

@@ -55,3 +55,27 @@ def OnOff(b):
 #def molecule_extend(space, a1, nn1, type, nn2=1):
 
 #    node1=a1.nodes[nn1]
+
+
+
+def bond_atoms(a1, a2, ni1=0, ni2=0):
+    bi1 = 0
+    bi2 = 0
+    if ni1==0:
+        for i in range(0, len(a1.nodes)):
+            if not a1.nodes[i].bonded and a1.nodes[i].q==0 :
+                bi1 = i
+                break
+        else: return
+    else:
+       bi1 = ni1
+    if ni2==0:
+        for i in range(0, len(a2.nodes)):
+            if not a2.nodes[i].bonded and a2.nodes[i].q==0:
+                bi2 = i
+                break
+        else: return
+    else:
+       bi2 = ni2
+    a1.nodes[bi1].q = -1
+    a2.nodes[bi2].q = 1
