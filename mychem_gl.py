@@ -10,7 +10,7 @@ from PIL import Image
 from math import sin,cos,sqrt,pi
 import time
 from mychem_functions import make_sphere_vert,make_cube2
-#from mychem_data import cube_vertices
+from mychem_data import cube_vertices
 from array import array
 from mesh import Mesh
 
@@ -77,6 +77,7 @@ class AppOgl(OpenGLFrame):
         self.sphere_vertices = np.array(make_sphere_vert(1,20), dtype=np.float32)
         self.sphere_vertices2 = np.array(make_sphere_vert(1,5), dtype=np.float32)
         self.cube_vertices = np.array(make_cube2(), dtype=np.float32)
+        #np.array(make_cube2(), dtype=np.float32)
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
@@ -177,157 +178,123 @@ class AppOgl(OpenGLFrame):
         self.N = len(self.space.atoms)
         space = self.space
         #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
-        if self.N>0:
-            asize = 68
-            a_data = np.empty([self.N*asize],dtype=np.float32)
-            offset = 0
-            for i in range(0,self.N):
-                #
-                a_data[offset]   = space.np_x[i]
+        asize = 68
+        a_data = np.empty([self.N*asize],dtype=np.float32)
+        offset = 0
+        for i in range(0,self.N):
+            #
+            a_data[offset]   = space.np_x[i]
+            offset +=1
+            a_data[offset] = space.np_y[i]
+            offset +=1
+            a_data[offset] = space.np_z[i]
+            offset +=1
+            a_data[offset] = 0.0
+            offset +=1
+            # v
+            a_data[offset]=space.np_vx[i]
+            offset +=1
+            a_data[offset]=space.np_vy[i]
+            offset +=1
+            a_data[offset]=space.np_vz[i]
+            offset +=1
+            a_data[offset]=0.0
+            offset +=1
+            # type, radius, m
+            a_data[offset]=space.atoms[i].type
+            offset +=1
+            a_data[offset]=space.atoms[i].r
+            offset +=1
+            a_data[offset]=space.atoms[i].m
+            offset +=1
+            a_data[offset]=len(space.atoms[i].nodes)
+            offset +=1
+            #rot 
+            a_data[offset]=space.np_rot[i].x
+            offset +=1
+            a_data[offset]=space.np_rot[i].y
+            offset +=1
+            a_data[offset]=space.np_rot[i].z
+            offset +=1
+            a_data[offset]=space.np_rot[i].w
+            offset +=1
+            #rotv 
+            a_data[offset]=space.np_rotv[i].x
+            offset +=1
+            a_data[offset]=space.np_rotv[i].y
+            offset +=1
+            a_data[offset]=space.np_rotv[i].z
+            offset +=1
+            a_data[offset]=space.np_rotv[i].w
+            offset +=1
+            # anim
+            a_data[offset] =0
+            offset +=1
+            a_data[offset] =0
+            offset +=1
+            a_data[offset] =0
+            offset +=1
+            a_data[offset] =0
+            offset +=1
+            for n in space.atoms[i].nodes:
+                a_data[offset]   = n.pos.x
                 offset +=1
-                a_data[offset] = space.np_y[i]
+                a_data[offset] = n.pos.y
                 offset +=1
-                a_data[offset] = space.np_z[i]
+                a_data[offset] = n.pos.z
                 offset +=1
                 a_data[offset] = 0.0
                 offset +=1
-                # v
-                a_data[offset]=space.np_vx[i]
+                a_data[offset] = n.q
                 offset +=1
-                a_data[offset]=space.np_vy[i]
+                a_data[offset] = n.bonded
                 offset +=1
-                a_data[offset]=space.np_vz[i]
+                a_data[offset] = -1
                 offset +=1
-                a_data[offset]=0.0
+                a_data[offset] = 0.0
                 offset +=1
-                # type, radius, m
-                a_data[offset]=space.atoms[i].type
+            for i in range(0,5-len(space.atoms[i].nodes)):
+                a_data[offset]   = 0.0
                 offset +=1
-                a_data[offset]=space.atoms[i].r
+                a_data[offset] = 0.0
                 offset +=1
-                a_data[offset]=space.atoms[i].m
+                a_data[offset] = 0.0
                 offset +=1
-                a_data[offset]=len(space.atoms[i].nodes)
+                a_data[offset] = 0.0
                 offset +=1
-                #rot 
-                a_data[offset]=space.np_rot[i].x
+                a_data[offset] = 0.0
                 offset +=1
-                a_data[offset]=space.np_rot[i].y
+                a_data[offset] = 0.0
                 offset +=1
-                a_data[offset]=space.np_rot[i].z
+                a_data[offset] = 0.0
                 offset +=1
-                a_data[offset]=space.np_rot[i].w
+                a_data[offset] = 0.0
                 offset +=1
-                #rotv 
-                a_data[offset]=space.np_rotv[i].x
-                offset +=1
-                a_data[offset]=space.np_rotv[i].y
-                offset +=1
-                a_data[offset]=space.np_rotv[i].z
-                offset +=1
-                a_data[offset]=space.np_rotv[i].w
-                offset +=1
-                # anim
-                a_data[offset] =0
-                offset +=1
-                a_data[offset] =0
-                offset +=1
-                a_data[offset] =0
-                offset +=1
-                a_data[offset] =0
-                offset +=1
-                for n in space.atoms[i].nodes:
-                    a_data[offset]   = n.pos.x
-                    offset +=1
-                    a_data[offset] = n.pos.y
-                    offset +=1
-                    a_data[offset] = n.pos.z
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = n.q
-                    offset +=1
-                    a_data[offset] = n.bonded
-                    offset +=1
-                    a_data[offset] = -1
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                for i in range(0,5-len(space.atoms[i].nodes)):
-                    a_data[offset]   = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                    a_data[offset] = 0.0
-                    offset +=1
-                #color 
-                a_data[offset]=space.atoms[i].color[0]
-                offset +=1
-                a_data[offset]=space.atoms[i].color[1]
-                offset +=1
-                a_data[offset]=space.atoms[i].color[2]
-                offset +=1
-                a_data[offset]=1.0
-                offset +=1
-        else:
-            a_data = np.array([], dtype=np.float32)
-        #print(a_data)
+            #color 
+            a_data[offset]=space.atoms[i].color[0]
+            offset +=1
+            a_data[offset]=space.atoms[i].color[1]
+            offset +=1
+            a_data[offset]=space.atoms[i].color[2]
+            offset +=1
+            a_data[offset]=1.0
+            offset +=1
         print(len(a_data))
         #self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
         #gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
         gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, a_data.size*4, a_data )
-
         if bind_flag: gl.glBindVertexArray(0)
+
     def create_objects(self):
         print("create objects start")
-        # create atom
-        # Create a new VAO (Vertex Array Object) and bind it
         self.atomMesh = Mesh(self.sphere_vertices)
         self.atomMesh.setup()
         self.nodeMesh = Mesh(self.sphere_vertices2)
         self.nodeMesh.setup()
-        #self.containerMesh = Mesh()
-        #self.atom
-        #create container
-        self.ContainerVAO = gl.glGenVertexArrays(1)
-        gl.glBindVertexArray(self.ContainerVAO )
-        container_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER,container_buffer)
-        stride = 4*3
-        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-        #gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
-        gl.glEnableVertexAttribArray(0)
-        #gl.glEnableVertexAttribArray(1)
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.cube_vertices.size, self.cube_vertices, gl.GL_STATIC_DRAW)
-        gl.glBindVertexArray(0)
-
-        #create line
-        self.lineVAO = gl.glGenVertexArrays(1)
-        gl.glBindVertexArray(self.lineVAO )
-        line_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, line_buffer)
-        stride=4*6
-        gl.glVertexAttribPointer(0, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(0))
-        gl.glVertexAttribPointer(1, 3, gl.GL_FLOAT, False, stride, ctypes.c_void_p(4*3))
-        gl.glEnableVertexAttribArray(0)
-        gl.glEnableVertexAttribArray(1)
-        line_vertices = np.array([ 0.0, 0.0, 0.0,  0.0,0.0,-1.0, 1.0,0.0,0.0, 0.0,0.0,-1.0 ], dtype=np.float32)
-        gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*line_vertices.size, line_vertices, gl.GL_STATIC_DRAW)
-        gl.glBindVertexArray(0)
-        gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
-    
+        self.containerMesh = Mesh(self.cube_vertices)
+        self.containerMesh.setup()
 
     def render(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
@@ -399,19 +366,16 @@ class AppOgl(OpenGLFrame):
         gl.glBindVertexArray( 0 )
 
         # draw container            
-        gl.glBindVertexArray(self.ContainerVAO)
-        gl.glUniform3f(objcol_loc,1.0,1.0,1.0)
-        #model =  glm.translate()
         model =  glm.mat4()
         model =  glm.translate(model, glm.vec3(0.5, 0.5,0.5))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
-        #model =  glm.scale(model,glm.vec3(1))
-        gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(model))
+        model =  glm.scale(model,glm.vec3(1))
+        self.containerMesh.color = (1,1,1)
+        self.containerMesh.modelmatrix = model
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
-        gl.glDrawArrays(gl.GL_QUADS, 0, int(self.cube_vertices.size/3))
+        self.containerMesh.drawQuads(self.shader)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
-        gl.glBindVertexArray( 0 )
-
+        
         #render selector
         if self.space.select_mode:
             if len(self.space.np_x)>0:

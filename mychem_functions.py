@@ -42,6 +42,7 @@ def make_cube2():
      for s in cube2_surfaces:
         for s2 in s:
             vertices.extend(list(cube2_vertices[s2]))
+            vertices.extend([0,0,-1])
      return vertices
 
 

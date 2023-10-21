@@ -6,6 +6,7 @@ import glm
 class Mesh():
     def __init__(self,vertices):
         self.vertices = vertices
+        self.modelmatrix = glm.mat4()
         #self.color = (1,1,1)
         
     def setup(self):
@@ -32,4 +33,11 @@ class Mesh():
         gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/6))
     
-    
+    def drawQuads(self, shader):
+        gl.glBindVertexArray(self.VAO)
+        objcol_loc = gl.glGetUniformLocation(shader, "objectColor")
+        model_loc = gl.glGetUniformLocation(shader, "model")
+        gl.glUniform3f(objcol_loc,self.color[0],self.color[1],self.color[2])
+        gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
+        gl.glDrawArrays(gl.GL_QUADS, 0, int(self.vertices.size/6))
+

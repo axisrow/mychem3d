@@ -1,6 +1,6 @@
 Pseudochemical 3d simulator
 - python tkinter used
-- opengl 4.3 with compute shader used
+- opengl 4.3 with compute shader used for parallel computation
 - not release by now
 
 for use install libraries:
