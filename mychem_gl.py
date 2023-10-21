@@ -84,6 +84,7 @@ class AppOgl(OpenGLFrame):
         if self.space.gpu_compute.get():
             self.atoms2ssbo()
         else:
+            self.atoms2ssbo()
             self.space.atoms2numpy()
 
         self.start = time.time()
@@ -172,8 +173,123 @@ class AppOgl(OpenGLFrame):
         if bind_flag: gl.glBindVertexArray(0)
 
 
+    def numpy2ssbo(self,bind_flag=True):
+        self.N = len(self.space.atoms)
+        space = self.space
+        #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
+        if self.N>0:
+            asize = 68
+            a_data = np.empty([self.N*asize],dtype=np.float32)
+            offset = 0
+            for i in range(0,self.N):
+                #
+                a_data[offset]   = space.np_x[i]
+                offset +=1
+                a_data[offset] = space.np_y[i]
+                offset +=1
+                a_data[offset] = space.np_z[i]
+                offset +=1
+                a_data[offset] = 0.0
+                offset +=1
+                # v
+                a_data[offset]=space.np_vx[i]
+                offset +=1
+                a_data[offset]=space.np_vy[i]
+                offset +=1
+                a_data[offset]=space.np_vz[i]
+                offset +=1
+                a_data[offset]=0.0
+                offset +=1
+                # type, radius, m
+                a_data[offset]=space.atoms[i].type
+                offset +=1
+                a_data[offset]=space.atoms[i].r
+                offset +=1
+                a_data[offset]=space.atoms[i].m
+                offset +=1
+                a_data[offset]=len(space.atoms[i].nodes)
+                offset +=1
+                #rot 
+                a_data[offset]=space.np_rot[i].x
+                offset +=1
+                a_data[offset]=space.np_rot[i].y
+                offset +=1
+                a_data[offset]=space.np_rot[i].z
+                offset +=1
+                a_data[offset]=space.np_rot[i].w
+                offset +=1
+                #rotv 
+                a_data[offset]=space.np_rotv[i].x
+                offset +=1
+                a_data[offset]=space.np_rotv[i].y
+                offset +=1
+                a_data[offset]=space.np_rotv[i].z
+                offset +=1
+                a_data[offset]=space.np_rotv[i].w
+                offset +=1
+                # anim
+                a_data[offset] =0
+                offset +=1
+                a_data[offset] =0
+                offset +=1
+                a_data[offset] =0
+                offset +=1
+                a_data[offset] =0
+                offset +=1
+                for n in space.atoms[i].nodes:
+                    a_data[offset]   = n.pos.x
+                    offset +=1
+                    a_data[offset] = n.pos.y
+                    offset +=1
+                    a_data[offset] = n.pos.z
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = n.q
+                    offset +=1
+                    a_data[offset] = n.bonded
+                    offset +=1
+                    a_data[offset] = -1
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                for i in range(0,5-len(space.atoms[i].nodes)):
+                    a_data[offset]   = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                    a_data[offset] = 0.0
+                    offset +=1
+                #color 
+                a_data[offset]=space.atoms[i].color[0]
+                offset +=1
+                a_data[offset]=space.atoms[i].color[1]
+                offset +=1
+                a_data[offset]=space.atoms[i].color[2]
+                offset +=1
+                a_data[offset]=1.0
+                offset +=1
+        else:
+            a_data = np.array([], dtype=np.float32)
+        #print(a_data)
+        print(len(a_data))
+        #self.atoms_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
+        #gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
+        gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, a_data.size*4, a_data )
 
-
+        if bind_flag: gl.glBindVertexArray(0)
     def create_objects(self):
         print("create objects start")
         # create atom
@@ -212,35 +328,6 @@ class AppOgl(OpenGLFrame):
         gl.glBindVertexArray(0)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, 0)
     
-    def render_numpy(self):
-        #render np_atoms        
-        for i in range(0,self.space.np_x.size):
-             a = self.space.atoms[i]
-             pos = glm.vec3(self.space.np_x[i], self.space.np_y[i], self.space.np_z[i])
-             pos *= self.factor
-             model =  glm.translate(pos)
-             model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
-             self.atomMesh.color = a.color
-             self.atomMesh.modelmatrix = model
-             self.atomMesh.draw(self.shader)
-             #render nodes
-             for n in a.nodes:
-                 #r1 = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(a.r,0,0)
-                 pos = self.space.np_rot[int(i)] * n.pos
-                 pos += glm.vec3(self.space.np_x[i], self.space.np_y[i],self.space.np_z[i])
-                 pos *= self.factor
-                 model =  glm.translate(pos)
-                 model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
-                 if n.q>0:
-                     self.nodeMesh.color = (1.0,0.0,0.0) 
-                 elif n.q==0:
-                     self.nodeMesh.color = (1.0,1.0,1.0) 
-                 elif n.q<0:
-                      self.nodeMesh.color = (0.0,0.0,1.0) 
-                 self.nodeMesh.modelmatrix = model
-                 self.nodeMesh.draw(self.shader)
-
-
 
     def render(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
@@ -296,19 +383,17 @@ class AppOgl(OpenGLFrame):
                 self.nodeMesh.draw(self.shader)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        if self.space.gpu_compute.get():
-            gl.glBindVertexArray(self.atomMesh.VAO )
-            # render computed atoms
-            gl.glUniform1i(mode_loc,1)
-            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+        #if self.space.gpu_compute.get():
+        gl.glBindVertexArray(self.atomMesh.VAO )
+        # render computed atoms
+        gl.glUniform1i(mode_loc,1)
+        gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
 
-            gl.glUniform1i(mode_loc,2)
-            gl.glBindVertexArray(self.nodeMesh.VAO )
-            for i in range(0,5):
+        gl.glUniform1i(mode_loc,2)
+        gl.glBindVertexArray(self.nodeMesh.VAO )
+        for i in range(0,5):
                 gl.glUniform1i(nodeindex_loc,i)
                 gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
-        else:
-            self.render_numpy()
 
         gl.glUniform1i(mode_loc,0)
         gl.glBindVertexArray( 0 )
@@ -391,6 +476,7 @@ class AppOgl(OpenGLFrame):
         if not self.pause and not self.space.gpu_compute.get():
             for i in range(0,self.space.update_delta):
                 n = self.space.compute()
+                self.numpy2ssbo()
         self.render()
         if self.space.recording.get() and not self.pause:
             pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
