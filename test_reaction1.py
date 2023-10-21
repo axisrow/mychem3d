@@ -17,22 +17,14 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
 #
-    for i in range(0,100):
-            #makealcohol(space,random.randint(100,900),random.randint(100,900),random.randint(100,900),3)
+    for i in range(0,300):
         space.merge_from_file("examples/simple/NH3.json",random.randint(-500,500),random.randint(-500,500),random.randint(-500,500))
-        #space.merge_from_file("examples/simple/H2O.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
-        #space.merge_from_file("examples/alkene/etylen.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
-        #space.merge_from_file("examples/alkane/decane.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
         space.merge_from_file("examples/aldehyde/glycolaldehyde.json",random.randint(-500,500),random.randint(-500,500),random.randint(-500,500))
-    #space.export = True
-    #space.merge_from_file("examples/alkane/30ane.json",glm.vec3(100,100,100))
     space.update_delta = 5  
      #space.recording = True
     space.appendmixer(1)
-    space.redox = True
-    #space.export_nodes = True
-    #space.competitive =True
-    #space.stoptime=5
+    space.redox.set(True)
     App.run()
 #
 #
+#300 - 9 fps

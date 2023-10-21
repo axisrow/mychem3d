@@ -82,11 +82,7 @@ class AppOgl(OpenGLFrame):
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
         print("objects created")
-        if self.space.gpu_compute.get():
-            self.atoms2ssbo()
-        else:
-            self.atoms2ssbo()
-            self.space.atoms2numpy()
+        self.space.atoms2compute()
 
         self.start = time.time()
         self.nframes = 0          
@@ -97,6 +93,7 @@ class AppOgl(OpenGLFrame):
 
     def atoms2ssbo(self,bind_flag=True):
         self.N = len(self.space.atoms)
+        print(f"Atoms2ssbo N={self.N}")
         #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
         if self.N>0:
             a_data = []
@@ -160,7 +157,7 @@ class AppOgl(OpenGLFrame):
         else:
             a_data = np.array([], dtype=np.float32)
         #print(a_data)
-        print(len(a_data))
+        print(f"atoms buffer len={len(a_data)}")
         self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
@@ -176,13 +173,14 @@ class AppOgl(OpenGLFrame):
 
     def numpy2ssbo(self):
         self.N = len(self.space.atoms)
+        #print(f"numpy2ssbo N={self.N}")
         space = self.space
-        #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
         asize = 68
         a_data = np.empty([self.N*asize],dtype=np.float32)
         offset = 0
         for i in range(0,self.N):
             #
+            a = self.space.atoms[i]
             a_data[offset]   = space.np_x[i]
             offset +=1
             a_data[offset] = space.np_y[i]
@@ -201,13 +199,13 @@ class AppOgl(OpenGLFrame):
             a_data[offset]=0.0
             offset +=1
             # type, radius, m
-            a_data[offset]=space.atoms[i].type
+            a_data[offset]=a.type
             offset +=1
-            a_data[offset]=space.atoms[i].r
+            a_data[offset]=a.r
             offset +=1
-            a_data[offset]=space.atoms[i].m
+            a_data[offset]=a.m
             offset +=1
-            a_data[offset]=len(space.atoms[i].nodes)
+            a_data[offset]=len(a.nodes)
             offset +=1
             #rot 
             a_data[offset]=space.np_rot[i].x
@@ -228,15 +226,15 @@ class AppOgl(OpenGLFrame):
             a_data[offset]=space.np_rotv[i].w
             offset +=1
             # anim
-            a_data[offset] =0
+            a_data[offset] =0.0
             offset +=1
-            a_data[offset] =0
+            a_data[offset] =0.0
             offset +=1
-            a_data[offset] =0
+            a_data[offset] =0.0
             offset +=1
-            a_data[offset] =0
+            a_data[offset] =0.0
             offset +=1
-            for n in space.atoms[i].nodes:
+            for n in a.nodes:
                 a_data[offset]   = n.pos.x
                 offset +=1
                 a_data[offset] = n.pos.y
@@ -249,11 +247,11 @@ class AppOgl(OpenGLFrame):
                 offset +=1
                 a_data[offset] = n.bonded
                 offset +=1
-                a_data[offset] = -1
+                a_data[offset] = -1.0
                 offset +=1
                 a_data[offset] = 0.0
                 offset +=1
-            for i in range(0,5-len(space.atoms[i].nodes)):
+            for i in range(0,5-len(a.nodes)):
                 a_data[offset]   = 0.0
                 offset +=1
                 a_data[offset] = 0.0
@@ -271,11 +269,11 @@ class AppOgl(OpenGLFrame):
                 a_data[offset] = 0.0
                 offset +=1
             #color 
-            a_data[offset]=space.atoms[i].color[0]
+            a_data[offset]=a.color[0]
             offset +=1
-            a_data[offset]=space.atoms[i].color[1]
+            a_data[offset]=a.color[1]
             offset +=1
-            a_data[offset]=space.atoms[i].color[2]
+            a_data[offset]=a.color[2]
             offset +=1
             a_data[offset]=1.0
             offset +=1
@@ -463,4 +461,5 @@ class AppOgl(OpenGLFrame):
                 
 #        print("fps",self.nframes / tm, end="\r" )
         if self.nframes%10 == 0:
-            self.status_bar.setFPS(self.nframes / tm)
+            if self.framedelta!=0:
+                self.status_bar.setFPS(1/self.framedelta)

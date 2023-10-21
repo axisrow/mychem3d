@@ -278,7 +278,7 @@ def maketube(space,y,n):
             i+=1
 
 
-def makecircle(space,y,n):
+def makecircle2(space,y,n):
           f = 0
           l = 16*n
           r = 16*n/(2*pi)
@@ -292,9 +292,47 @@ def makecircle(space,y,n):
             space.appendatom(a)
             f +=df
 
+
+def makecircle4(space,y,n):
+          f = 0
+          l = 20*n
+          r = 20*n/(2*pi)
+          while(f<2*pi):
+            dx = r* cos(f)
+            dz = r* sin(f)
+            #c
+            a = Atom(500+dx,y,500+dz,4,m=16,r=8)
+            df = 2*pi/n
+            a.rot = glm.quat(cos(-f/2.0), glm.vec3(0,1,0)* sin(-f/2.0))*glm.quat(cos(pi/2.0/2.0), glm.vec3(1,0,0)* sin(pi/2.0/2.0)) 
+            a.calc_node_positions()
+            space.appendatom(a)
+            # h up
+            dx = (r+15)* cos(f)
+            dz = (r+15)* sin(f)
+            a = Atom(500+dx,y+5,500+dz,1,m=16,r=8)
+            a.rot = glm.quat(cos(-f/2.0), glm.vec3(0,1,0)* sin(-f/2.0))*glm.quat(cos(pi/2.0/2.0), glm.vec3(1,0,0)* sin(pi/2.0/2.0))*glm.quat(cos(pi/2.0), glm.vec3(0,0,1)* sin(pi/2.0))  
+            a.calc_node_positions()
+            space.appendatom(a)
+            # o down
+            dx = r* cos(f)
+            dz = r* sin(f)
+            a = Atom(500+dx,y-16,500+dz,2,m=16,r=8)
+            a.rot = glm.quat(cos(-f/2.0), glm.vec3(0,1,0)* sin(-f/2.0)) #* glm.quat(cos(pi/2.0/2.0), glm.vec3(1,0,0)* sin(pi/2.0/2.0))
+            a.calc_node_positions()
+            space.appendatom(a)
+            # h
+            dx = (r+15)* cos(f)
+            dz = (r+15)* sin(f)
+            a = Atom(500+dx,y-15,500+dz,1,m=16,r=8)
+            a.rot = glm.quat(cos(-f/2.0), glm.vec3(0,1,0)* sin(-f/2.0))*glm.quat(cos(pi/2.0/2.0), glm.vec3(1,0,0)* sin(pi/2.0/2.0))*glm.quat(cos(pi/2.0), glm.vec3(0,0,1)* sin(pi/2.0))  
+            a.calc_node_positions()
+            space.appendatom(a)
+            f +=df
+
+
 def makecircleplane(space,y):
      for i in range(10,180,9):
-          makecircle(space,y,i)
+          makecircle2(space,y,i)
 
 #            
 # #
@@ -319,15 +357,16 @@ if __name__ == '__main__':
 #        makemethan_old(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
 #    space.appendmixer(20)
     #makeethan_old(space,500,500,500)
-    #for i in range(0,50):
+    makecircle4(space,500,20)
+    #makecircle4(space,500,60)
+    #makecircle4(space,500,40)
         #makemethan(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
-
 #    makemethan(space, 500,500,500)
     #makeethan(space, 500,500,500)
 #    makeclew(space,500,500,500)
 #    makealcohol(space,500,300,500,40)
-    makealcohol(space,500,400,400,40)
-    makealcohol(space,550,400,500,40)
+    #makealcohol(space,500,400,400,40)
+    #makealcohol(space,550,400,500,40)
     #makealcohol(space,400,400,400,20)
     #makeplane(space,300)
     #makeplane(space,400)
@@ -338,7 +377,7 @@ if __name__ == '__main__':
     #makealcohol(space,600,100,600,30)
     #makeplane(space,700)
     #makeplane2(space,200)
-    #makecircleplane(space,500)
+    
 
     #a = Atom(500,700,500,100,m=100,r=50)
     #a.v = glm.vec3(0,-1,0)
@@ -362,7 +401,7 @@ if __name__ == '__main__':
     space.update_delta = 5  
      #space.recording = True
     #space.appendmixer(1)
-    space.redox = True
+    #space.redox.set(True)
     #space.export_nodes = True
     #space.competitive =True
     #space.stoptime=5

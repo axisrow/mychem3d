@@ -92,8 +92,9 @@ class mychemApp():
         self.merge_mode = False
         self.ttype = "mx"
         self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
-        self.glframe.animate = 1  
+        self.glframe.animate = 10  
         self.glframe.set_space(self.space)
+        self.space.glframe = self.glframe
         #   app.config(cursor="none")
         #app.after(100, app.printContext)
         self.status_bar = StatusBar(self.root)
@@ -106,20 +107,20 @@ class mychemApp():
 
     def run(self):
         self.resetdata = self.space.make_export()
-        #self.atoms2compute()
+        #self.space.atoms2compute()
         self.root.mainloop()
 
 
     def sim_run(self):
-        #self.atoms2compute()
-        #self.atoms2compute()
+        #self.space.atoms2compute()
+        #self.space.atoms2compute()
         self.pause = False
         self.glframe.pause = False
         #self.glframe.animate = 1
         self.status_bar.set("Running")
 
     def sim_pause(self):
-        self.compute2atoms()
+        self.space.compute2atoms()
         self.pause = True
         self.glframe.pause = True
         #self.glframe.animate = 0
@@ -179,10 +180,10 @@ class mychemApp():
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
 
     def handle_zero(self,event=None):
-        #self.compute2atoms()
+        self.space.compute2atoms()
         self.space.appendmixer(1)
         self.resetdata = self.space.make_export()
-        self.atoms2compute()
+        self.space.atoms2compute()
 
 
     def handle_bondlock(self,event=None):
@@ -202,7 +203,7 @@ class mychemApp():
         self.space.merge_atoms = []
         self.space.select_mode = False
         self.merge_mode = False
-        self.atoms2compute()
+        self.space.atoms2compute()
         self.status_bar.set("New file")
 
     def file_open(self,event=None):
@@ -213,7 +214,7 @@ class mychemApp():
         f =  open(fileName,"r")		
         self.resetdata = json.loads(f.read())
         self.space.load_data(self.resetdata)
-        self.atoms2compute()
+        self.space.atoms2compute()
         self.status_bar.set("File loaded")
 
     def file_merge(self,event=None, path=None):
@@ -234,7 +235,7 @@ class mychemApp():
         self.space.select_mode = False
         self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
-        #self.atoms2compute()
+        #self.space.atoms2compute()
         #self.canvas.configure(cursor="hand2")
         self.status_bar.set("Merging mode")
 
@@ -246,7 +247,7 @@ class mychemApp():
         self.merge_atoms = []
         self.merge_mode=True
         self.space.load_data(self.recentdata, merge=True)
-        #self.atoms2compute()
+        #self.space.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
 
@@ -282,7 +283,7 @@ class mychemApp():
             return
         self.file_new()
         self.space.load_data(self.resetdata)
-        self.atoms2compute()
+        self.space.atoms2compute()
         self.status_bar.set("Reset to previos loaded")
     
     def handle_add_atom2(self,event=None):
@@ -331,13 +332,14 @@ class mychemApp():
             self.merge_mode = True
             
             self.space.select_mode = False
-            self.atoms2compute()
+            self.space.atoms2compute()
             return
         if self.merge_mode:
             self.merge_mode = False 
+            self.space.compute2atoms()
             self.space.merge2atoms()
+            self.space.atoms2compute()
             self.resetdata = self.space.make_export()
-            self.atoms2compute()
 
 
 
@@ -419,19 +421,8 @@ class mychemApp():
             else:
                 self.glframe.cameraPos -= cameraSpeed * self.glframe.cameraFront   
 
-    def atoms2compute(self):
-        print("atoms2compute")
-        if self.space.gpu_compute.get():
-            self.glframe.atoms2ssbo()
-        else:
-            self.space.atoms2numpy()
 
-    def compute2atoms(self):
-        if self.space.gpu_compute.get():
-            #self.glframe.atoms2ssbo()
-            pass
-        else:
-            self.space.numpy2atoms()
+
 
 
 
@@ -449,7 +440,7 @@ class mychemApp():
             menu.add_command(label=f, command=lambda p2=p: self.file_merge(path=p2))
 
     def options_window(self):
-        o = OptionsFrame(self.space)
+        o = OptionsFrame(self)
         
     def about_window(self):
         
@@ -496,8 +487,9 @@ class StatusBar(tk.Frame):
 
 
 class OptionsFrame():
-    def __init__(self,space):
-        self.space = space
+    def __init__(self, app):
+        self.space = app.space
+        self.glframe = app.glframe
         a = tk.Toplevel()
         a.title("Options")
         a.resizable(0, 0)
@@ -542,6 +534,7 @@ class OptionsFrame():
     def on_checkbox(self):
         print('on checkbox')
         if self.space.gpu_compute.get():
+            #self.space.numpy2atoms()
             self.glframe.atoms2ssbo()
         else:
             if len(self.space.atoms)>300:

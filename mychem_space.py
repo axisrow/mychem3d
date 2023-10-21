@@ -122,7 +122,7 @@ class Space:
             #atom_i.ax=self.np_ax[i]
             #atom_i.ay=self.np_ay[i]
             #atom_i.az=self.np_az[i]
-            atom_i.q=self.np_q[i]
+            #atom_i.q=self.np_q[i]
             atom_i.rot = self.np_rot[i]
             atom_i.rotv = self.np_rotv[i]
 
@@ -182,8 +182,24 @@ class Space:
          #print("center=",center)
          return center
     
+    def atoms2compute(self):
+        if self.gpu_compute.get():
+            print("atoms2compute gpu")
+            self.glframe.atoms2ssbo()
+        else:
+            print("atoms2compute numpy")
+            self.glframe.atoms2ssbo()
+            self.atoms2numpy()
+    
+    def compute2atoms(self):
+        if self.gpu_compute.get():
+            #self.glframe.atoms2ssbo()
+            pass
+        else:
+            self.numpy2atoms()
 
     def merge2atoms(self):
+        #self.compute2atoms()
         for a in self.merge_atoms:
             pos = a.pos
             pos -= self.merge_center
@@ -193,7 +209,9 @@ class Space:
             a.pos = pos
             a.rot = self.merge_rot * a.rot
             self.appendatom(a)
-        self.merge_atoms = []        
+        self.merge_atoms = []
+        #self.atoms2compute()
+
 
     def merge_from_file(self, filename, x=0,y=0,z=0, merge_rot=glm.quat()):
         f =  open(filename,"r")		
@@ -204,7 +222,6 @@ class Space:
         self.merge_rot = merge_rot
         self.merge_center = self.get_mergeobject_center()
         self.merge2atoms()
-        self.merge_atoms = []
         self.merge_pos = glm.vec3(0,0,0)
         self.merge_rot = glm.quat()
 
@@ -275,7 +292,7 @@ class Space:
             Ez = a_z.sum(axis=1)
             for i in range(0,N):
                 totalrotv = glm.quat()
-                jj = np.where(np.logical_and(r[i]>0,r[i]<60))
+                jj = np.where(np.logical_and(r[i]>0,r[i]<100))
                 #print("jj=", jj)
                 allnE = glm.vec3(0,0,0)
                 for j in jj[0]:
@@ -314,13 +331,12 @@ class Space:
                             dt = glm.dot(v1,v2)
                             if dt>1: dt=1
                             if dt<-1: dt=-1
-                                    #print(dt)
                             if v1!=v2:
-                                axis = glm.normalize(glm.cross(v1,v2))
+                                axis = glm.cross(v1,v2)
                                 angle = acos(dt)
                                 angle_a= -angle*a*self.ROTA_KOEFF
                                 rot = glm.quat(cos(angle_a/2), sin(angle_a/2)*glm.vec3(axis))
-                                #totalrotv = glm.normalize(rot * totalrotv)
+                                totalrotv = glm.normalize(rot * totalrotv)
                                 #naf2=0
                                 if self.debug: print(f"axis={axis} angle={angle} dt={dt}")
                             if rn!=0: nE+= ndelta/rn*a
