@@ -98,6 +98,7 @@ class mychemApp():
         #app.after(100, app.printContext)
         self.status_bar = StatusBar(self.root)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.glframe.status_bar = self.status_bar
         if not os.path.exists('output'):
             os.makedirs('output')
 
@@ -469,6 +470,8 @@ class StatusBar(tk.Frame):
         status_frame.pack(side=tk.BOTTOM, fill=tk.X)
         self.label = tk.Label(status_frame, text= "Status")
         self.label.pack(side=tk.LEFT)
+        self.fpslabel = tk.Label(status_frame, text="FPS")
+        self.fpslabel.pack(side=tk.RIGHT)
         self.timelabel = tk.Label(status_frame, text="Time")
         self.timelabel.pack(side=tk.RIGHT)
         self.info = tk.Label(status_frame, text="Info")
@@ -480,6 +483,10 @@ class StatusBar(tk.Frame):
 
     def settime(self,t):
         self.timelabel.config(text="Time:"+str(t))
+
+    def setFPS(self,f):
+        self.fpslabel.config(text=f"FPS:{f:3.2f}")
+
 
     def setinfo(self,info):
         self.info.config(text=info)

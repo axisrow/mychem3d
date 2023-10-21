@@ -174,7 +174,7 @@ class AppOgl(OpenGLFrame):
         if bind_flag: gl.glBindVertexArray(0)
 
 
-    def numpy2ssbo(self,bind_flag=True):
+    def numpy2ssbo(self):
         self.N = len(self.space.atoms)
         space = self.space
         #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
@@ -279,13 +279,9 @@ class AppOgl(OpenGLFrame):
             offset +=1
             a_data[offset]=1.0
             offset +=1
-        print(len(a_data))
-        #self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
-        #gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
         gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, a_data.size*4, a_data )
-        if bind_flag: gl.glBindVertexArray(0)
 
     def create_objects(self):
         print("create objects start")
@@ -464,4 +460,7 @@ class AppOgl(OpenGLFrame):
         if throttle>0:
             time.sleep(throttle)
         self.nframes += 1
-        print("fps",self.nframes / tm, end="\r" )
+                
+#        print("fps",self.nframes / tm, end="\r" )
+        if self.nframes%10 == 0:
+            self.status_bar.setFPS(self.nframes / tm)
