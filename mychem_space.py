@@ -181,7 +181,33 @@ class Space:
          center = sum/N
          #print("center=",center)
          return center
-    
+
+
+    def get_atoms_center(self):
+         sum = glm.vec3(0,0,0)
+         N = len(self.atoms)
+         for a in self.atoms:
+              sum += a.pos
+         center = sum/N
+         #print("center=",center)
+         return center
+
+
+    def get_atoms_distant(self):
+         center = self.get_atoms_center()
+         distant = glm.vec3(0,0,0)
+         N = len(self.atoms)
+         for a in self.atoms:
+              if abs(a.pos.x-center.x) > distant.x:
+                   distant.x = a.pos.x-center.x
+              if abs(a.pos.y-center.y) > distant.y:
+                   distant.y = a.pos.y-center.y
+              if abs(a.pos.z-center.z) > distant.z:
+                   distant.z = a.pos.z-center.z
+         return (center,distant)
+
+
+
     def atoms2compute(self):
         if self.gpu_compute.get():
             print("atoms2compute gpu")
@@ -201,6 +227,7 @@ class Space:
 
     def merge2atoms(self):
         #self.compute2atoms()
+        N = len(self.atoms)
         for a in self.merge_atoms:
             pos = a.pos
             pos -= self.merge_center
@@ -211,6 +238,7 @@ class Space:
             a.rot = self.merge_rot * a.rot
             self.appendatom(a)
         self.merge_atoms = []
+        return N
         #self.atoms2compute()
 
 
@@ -222,9 +250,10 @@ class Space:
         self.merge_pos = glm.vec3(x,y,z)
         self.merge_rot = merge_rot
         self.merge_center = self.get_mergeobject_center()
-        self.merge2atoms()
+        first = self.merge2atoms()
         self.merge_pos = glm.vec3(0,0,0)
         self.merge_rot = glm.quat()
+        return first
 
     def shift_q(self,type1,type2, q1, q2):
         etable=[5,1,4,400,6,3,2]
@@ -303,13 +332,13 @@ class Space:
                     atom_j = self.atoms[j]
                     for ni in range (0,len(atom_i.nodes)):
                         node_i = atom_i.nodes[ni]
-                        ni_index= (i+1)*(ni+1)
+                        ni_index= i*5+ni
                         ni_realpos =  self.np_rot[i] * node_i.pos
                         nE = glm.vec3(0,0,0)
                         for nj in range(0, len(atom_j.nodes)):
                             node_j = atom_j.nodes[nj]
                             nj_realpos =  self.np_rot[int(j)] * node_j.pos
-                            nj_index = (j+1)*(nj+1)
+                            nj_index = j*5+nj
                             ndelta = ni_realpos - nj_realpos + glm.vec3(self.np_x[i] - self.np_x[j], self.np_y[i] - self.np_y[j], self.np_z[i] - self.np_z[j] )
                             rn = glm.length(ndelta)
                             #if rn==0: continue
@@ -436,7 +465,7 @@ class Space:
             frame["atoms"].append(atom)
         return frame
 
-    def load_data(self, j, merge=False):
+    def load_data(self, j, merge=False, zerospeed=True):
         if not merge: 
             self.atoms = []
         for a in j["atoms"]:
@@ -452,7 +481,10 @@ class Space:
                 if type==2: type=200
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
-            aa.v = glm.vec3(a["vx"],a["vy"],vz)
+            if zerospeed:
+                aa.v= glm.vec3(0,0,0) 
+            else:
+                aa.v = glm.vec3(a["vx"],a["vy"],vz)
             aa.rot = rot
             aa.q=a["q"]
             aa.m=a["m"]

@@ -58,24 +58,25 @@ def OnOff(b):
 
 
 
-def bond_atoms(a1, a2, ni1=0, ni2=0):
+def bond_atoms(a1, a2, ni1=-1, ni2=-1):
     bi1 = 0
     bi2 = 0
-    if ni1==0:
+    if ni1==-1:
         for i in range(0, len(a1.nodes)):
             if not a1.nodes[i].bonded and a1.nodes[i].q==0 :
                 bi1 = i
                 break
-        else: return
+        else: return False
     else:
        bi1 = ni1
-    if ni2==0:
+    if ni2==-1:
         for i in range(0, len(a2.nodes)):
             if not a2.nodes[i].bonded and a2.nodes[i].q==0:
                 bi2 = i
                 break
-        else: return
+        else: return False
     else:
        bi2 = ni2
     a1.nodes[bi1].q = -1
     a2.nodes[bi2].q = 1
+    return True

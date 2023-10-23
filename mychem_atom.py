@@ -16,7 +16,7 @@ class Node:
         #PHCSNO
         type1 = self.parent.type
         type2 = n.parent.type
-        table=[5,1,4,400,6,3,2]
+        table=[5,1,4,400,6,3,2,200]
         i1 = table.index(type1)
         i2 = table.index(type2)
         canbond = False

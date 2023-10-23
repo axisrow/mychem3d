@@ -10,29 +10,35 @@ from math import *
 import glm
 
 
-
 def action1(space):
     (x,y,z)=(500,500,500)
-    if space.t==1:    
-        print("action50")
-       #space.compute2atoms()
-        space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
-        a1 = Atom(x+10,y,z+50,1, f=pi)
+    if space.t==1:    #C + H
+        a0 = Atom(x,y,z,4,r=10,m=12)
+        space.appendatom(a0)
+        a1 = Atom(x+50,y,z,1, f=pi)
         space.appendatom(a1)
-        bond_atoms(space.atoms[0],a1)
-        #bond_atoms(space.atoms[0],space.atoms[1])
+        bond_atoms(a0,a1)
         space.atoms2compute()
 
-    if space.t==500: # C+H
+
+
+    if space.t==500: #C+C+C
         space.compute2atoms()
-        a1 = Atom(x+10,y,z-20,1,f2=pi/2)
-        space.appendatom(a1)
-        bond_atoms(a1, space.atoms[0],)
+        a2 = Atom(x,y,z-50,1)
+        space.appendatom(a2)
+        bond_atoms(space.atoms[0],a2)
         space.atoms2compute()
-        
 
-    if space.t==1500:
-        #space.INTERACT_KOEFF = 0.2
+    if space.t==1200:  # cycle
+        space.compute2atoms()
+        a3 = Atom(x,y+50,z,1,f2= -pi/2 )
+        space.appendatom(a3)
+        bond_atoms(space.atoms[0],a3)
+        
+        space.atoms2compute()
+
+
+    if space.t==50:
         pass
 
 if __name__ == '__main__':
@@ -41,11 +47,10 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    space.BOND_KOEFF = 0.4
     space.INTERACT_KOEFF = 0.1
     space.update_delta = 15
     #space.gpu_compute.set(False)
-    #space.bondlock.set(True)
+    space.bondlock.set(True)
     App.run()
 #
 #

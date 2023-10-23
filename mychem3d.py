@@ -124,7 +124,7 @@ class mychemApp():
         self.pause = True
         self.glframe.pause = True
         #self.glframe.animate = 0
-        self.status_bar.settime(self.glframe.nframes)
+        self.status_bar.settime(self.space.t)
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
         self.status_bar.set("Paused")
 

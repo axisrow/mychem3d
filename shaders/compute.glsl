@@ -245,7 +245,7 @@ void main()
                 }
             }    
         }
-        if (r<200) {
+        if (r<600) {
              float rn;
              vec3 nE,ni_realpos,nj_realpos,ndelta;
              vec3 allnE = vec3(0,0,0);  
