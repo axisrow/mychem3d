@@ -92,7 +92,7 @@ class mychemApp():
         self.merge_mode = False
         self.ttype = "mx"
         self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
-        self.glframe.animate = 10  
+        self.glframe.animate = 1
         self.glframe.set_space(self.space)
         self.space.glframe = self.glframe
         #   app.config(cursor="none")
@@ -194,6 +194,7 @@ class mychemApp():
 
     def file_new(self,event=None):
         self.space.t = -1
+        self.glframe.nframes = 0
 #        self.recordtime = 0
         self.sim_pause()
         self.space.atoms = []	
@@ -494,7 +495,7 @@ class OptionsFrame():
         self.space = app.space
         self.glframe = app.glframe
         a = tk.Toplevel()
-        a.title("Options")
+        a.title("Fine tuning (options)")
         a.resizable(0, 0)
         a.geometry('420x300')
         #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)

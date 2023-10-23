@@ -188,12 +188,10 @@ void main()
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
-    float sum = 0;
     float r;   //distance between atoms
     float a;   //acceleration
     float sumradius;   
     vec3 delta;  //coordinates delta
-    vec3 sum_a = vec3(0.0,0.0,0.0);
     vec3 E = vec3(0.0,0.0,0.0);
     vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
 
@@ -223,7 +221,7 @@ void main()
         float atom_jq = 0;
         for (int nj = 0; nj<atom_j.ncount; nj++ )  atom_jq+= atom_j.nodes[nj].q;
 
-        a+= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
+        //a+= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
         
             //float qi=0, qj=0;
             //for (int ni = 0; ni<atom_i.ncount; ni++ ) qi+=atom_i.nodes[ni].pos.w;
@@ -293,7 +291,7 @@ void main()
                                 atom_i.nodes[ni].pair=-1;
                             }
                     }
-                    if ( rn>BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0 && nframes>1){
+                    if ( rn>BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0){
                             if (rn!=0) a= ni_q*nj_q*INTERACT_KOEFF/rn;
                     }
 

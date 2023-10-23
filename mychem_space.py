@@ -185,7 +185,7 @@ class Space:
     def atoms2compute(self):
         if self.gpu_compute.get():
             print("atoms2compute gpu")
-            self.glframe.atoms2ssbo()
+            self.glframe.atoms2ssbo(bind_flag=True)
         else:
             print("atoms2compute numpy")
             self.glframe.atoms2ssbo()

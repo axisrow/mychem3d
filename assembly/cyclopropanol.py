@@ -79,7 +79,7 @@ def action1(space):
 
     if space.t==6300: # O+H
         space.compute2atoms()
-        a = Atom(x-20,y,z,1)
+        a = Atom(x-20,y+20,z+20,1)
         space.appendatom(a)
         bond_atoms(space.atoms[8],a)
         space.atoms2compute()
@@ -98,8 +98,8 @@ if __name__ == '__main__':
     space = App.space
     space.action = action1
     space.INTERACT_KOEFF = 0.1
-    space.update_delta = 15
-    space.gpu_compute.set(False)
+    space.update_delta = 25
+    #space.gpu_compute.set(False)
     space.bondlock.set(True)
     App.run()
 #

@@ -161,13 +161,14 @@ class AppOgl(OpenGLFrame):
         self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
+        
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
-
-        #todo just empty buffer
+        
         self.atoms_buffer2 = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
+        zero = np.zeros(a_data.size)
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, zero.size*4, zero , gl.GL_DYNAMIC_DRAW);
         if bind_flag: gl.glBindVertexArray(0)
 
 
@@ -289,9 +290,10 @@ class AppOgl(OpenGLFrame):
         asize = 68
         #a_data = np.empty([self.N*asize],dtype=np.float32)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
+        #gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
         a_data8 = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, self.N*asize*4)
         a_data = a_data8.view('<f4')
+        #self.space.fdata.write(np.array2string(a_data)+" " + str(self.space.t)+"\n")
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
 
         offset = 0
@@ -483,6 +485,7 @@ class AppOgl(OpenGLFrame):
         gl.glUseProgram(0)
 
         # gpu compute atoms
+        gl.glBindVertexArray(self.atomMesh.VAO )
         if not self.pause and self.space.gpu_compute.get():
             gl.glUseProgram(self.gpu_code)
             frame_loc = gl.glGetUniformLocation(self.gpu_code, "nframes")
@@ -505,11 +508,15 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(rotk_loc,self.space.ROTA_KOEFF)
 
             for i in range(0,self.space.update_delta):
-                gl.glDispatchCompute(int(self.N/50)+1,1,1)        
-                gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT);
+                gl.glDispatchCompute(int(len(self.space.atoms)/50)+1,1,1)        
+                gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                 self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                 gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
                 gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
+                if self.space.action:
+                    self.space.t+=1
+                    self.space.action(self.space)   
+
             gl.glUseProgram(0)
 
 
