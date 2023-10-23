@@ -221,7 +221,7 @@ void main()
         float atom_jq = 0;
         for (int nj = 0; nj<atom_j.ncount; nj++ )  atom_jq+= atom_j.nodes[nj].q;
 
-        //a+= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
+        a+= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
         
             //float qi=0, qj=0;
             //for (int ni = 0; ni<atom_i.ncount; ni++ ) qi+=atom_i.nodes[ni].pos.w;
@@ -245,19 +245,19 @@ void main()
                 }
             }    
         }
-        if (r<100) {
+        if (r<200) {
              float rn;
              vec3 nE,ni_realpos,nj_realpos,ndelta;
              vec3 allnE = vec3(0,0,0);  
              for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 ni_realpos = rotate_vector(atom_i.nodes[ni].pos.xyz, atom_i.rot);
-                float ni_index= (i+1)*(ni+1);
+                float ni_index= i*5+ni;
                 float ni_q=atom_i.nodes[ni].q;
                 nE = vec3(0.0,0.0,0.0);
                 for (int nj = 0; nj<atom_j.ncount; nj++){
                     nj_realpos = rotate_vector(atom_j.nodes[nj].pos.xyz, atom_j.rot);
                     ndelta =  ni_realpos - nj_realpos + delta;
-                    float nj_index = (j+1)*(nj+1);
+                    float nj_index = j*5+nj;
                     rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                     //r2n = ndelta.x*ndelta
                     float nj_q=atom_j.nodes[nj].q;
