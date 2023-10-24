@@ -92,10 +92,11 @@ def makealcohol(space,x,y,z,n):
          space.appendatom(Atom(x+dx,y+i*15,z+dz,4,f2=f2,r=10,m=12))
          if i%2 == 0:
              space.appendatom(Atom(x,y+i*15,z+17,2,f2=-pi/2,r=6,m=16))
-             space.appendatom(Atom(x,y+i*15+5,z+26,1,f2=-pi/2,r=6,m=1))
+             space.appendatom(Atom(x,y+i*15+15,z+20,1,f=3*pi/2,r=6,m=1))
              space.appendatom(Atom(x+17,y+i*15,z-5,1,f=pi,f2=0,r=6,m=1))
          else:
-             space.appendatom(Atom(x+dx,y+i*15,z+dz-17,1,f2=pi/2,r=6,m=1))
+             space.appendatom(Atom(x+dx,y+i*15,z+dz-17,2,f2=pi/2,r=6,m=1))
+             space.appendatom(Atom(x+dx,y+i*15+15,z+dz-20,1,f=3*pi/2,r=6,m=1))
              space.appendatom(Atom(x+dx-15,y+i*15,z+dz+5,1,f=0,f2=0,r=6,m=1))
      space.appendatom(Atom(x-5,y+n*15,z,1,f=3*pi/2,r=6,m=1))
 
@@ -193,37 +194,6 @@ def makeCO2(space,x,y,z):
 
 #
 
-
-def makeriboza(space,x,y,z):
-    D=20
-    D2 = 17
-    D3 = 19
-    a1= Atom(x-D2, y, z,1,2*pi)
-    a1.r=6
-    space.appendatom(a1)
-    for i in range(0,5):
-        a1= Atom(x+i*D, y,z, 4)
-        a1.m=12
-        space.appendatom(a1)
-        if i<4:
-            a1= Atom(x+i*D, y-D2,z, 1,3/2*pi)
-            a1.r=6
-            space.appendatom(a1)
-            a1= Atom(x+i*D, y+D3,z, 2,pi/2)
-            a1.r=8
-            a1.m=16
-            space.appendatom(a1)
-            a1= Atom(x+i*D, y+D2+D3,z, 1,pi/2)
-            a1.r=6
-            space.appendatom(a1)
-        else:
-            a1= Atom(x+i*D, y+D2,z, 1,1/2*pi)
-            a1.r=6
-            space.appendatom(a1)
-            a1= Atom(x+i*D+6, y-6,z, 2,pi/4+pi/2)
-            a1.m=16
-            a1.r=8
-            space.appendatom(a1)
 
     
 def makeplane2(space,y):
@@ -357,7 +327,7 @@ if __name__ == '__main__':
 #        makemethan_old(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
 #    space.appendmixer(20)
     #makeethan_old(space,500,500,500)
-    makecircle4(space,500,20)
+    #makecircle4(space,500,20)
     #makecircle4(space,500,60)
     #makecircle4(space,500,40)
         #makemethan(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
@@ -367,7 +337,7 @@ if __name__ == '__main__':
 #    makealcohol(space,500,300,500,40)
     #makealcohol(space,500,400,400,40)
     #makealcohol(space,550,400,500,40)
-    #makealcohol(space,400,400,400,20)
+    makealcohol(space,500,500,500,4)
     #makeplane(space,300)
     #makeplane(space,400)
     #makeplane(space,500)

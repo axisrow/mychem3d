@@ -20,26 +20,14 @@ def action1(space):
         tp = 0
         g1=space.merge_from_file("examples/aminoacids/glycine.json",0,0,-400)
         space.atoms2compute()
-        nexttime = 10
         counter = 0
 
     if space.t==counter*timeout: #C
-        nexttime+=500
-        tp+=1
-        if tp>=len(formula): tp=0
         space.compute2atoms()
-        N = len(space.atoms)
-        (c,d) = space.get_atoms_distant()
-        p = c+d*0.8
-        #del space.atoms[g1+3]
         space.atoms[g1].nodes[0].q=0  #remove OH
         pos = space.atoms[g1].pos
         g2=space.merge_from_file("examples/aminoacids/glycine.json",pos.x-500,pos.y-500,pos.z-500)
-        #a1 = Atom(p.x+60,p.y,p.z,random.randint(1,4))
         curindex = 0
-        #while  curindex == space.atoms.index(a1) or not bond_atoms(space.atoms[curindex],a1) :
-#            curindex+=1
-            #if curindex>N: break
         space.atoms2compute()
 
     if space.t==counter*timeout+20:  #remove H
@@ -52,9 +40,10 @@ def action1(space):
             space.compute2atoms()
             space.atoms[g1].nodes[0].q=-1
             space.atoms[g2+7].nodes[0].q=1
-            g1 = g2
-            space.atoms2compute()
-            counter+=1
+            g1 = g2  #next
+            space.atoms2compute() 
+            if counter<15: 
+                 counter+=1
 
 
 
@@ -64,9 +53,9 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    #space.INTERACT_KOEFF = 1
-    #space.BOND_KOEFF = 0.2
-    space.update_delta = 15
+    #space.INTERACT_KOEFF = 0.5
+    space.BOND_KOEFF = 0.2
+    space.update_delta = 35
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
     App.run()

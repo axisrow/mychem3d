@@ -441,6 +441,7 @@ class Space:
         frame["atoms"] = []
         N = len(self.atoms)
         for i in range(0,N):
+            if self.atoms[i].color == (0,0,0): continue    #spec color for remove atoms on save
             atom = {}
             atom["id"] = self.atoms[i].id
             atom["type"] = self.atoms[i].type
