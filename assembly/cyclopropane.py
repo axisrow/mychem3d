@@ -95,7 +95,7 @@ if __name__ == '__main__':
     space = App.space
     space.action = action1
     space.INTERACT_KOEFF = 0.1
-    space.update_delta = 5
+    space.update_delta = 15
     #space.gpu_compute.set(False)
     space.bondlock.set(True)
     App.run()

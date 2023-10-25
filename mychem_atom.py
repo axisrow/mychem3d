@@ -109,7 +109,7 @@ class Atom:
 
 
 
-        if self.type<6 and self.type!=4 and self.type!=2:
+        if self.type<6 and self.type!=4 and self.type!=2 and self.type!=5:
             for i in range(0,self.type):
                 n = Node(self)
                 n.f = 2*pi/self.type*i
@@ -155,6 +155,19 @@ class Atom:
             self.nodes.extend([n1,n2,n3,n4])
             (ep1,ep2,ep3,ep4) = (ElectronPairing(), ElectronPairing(),ElectronPairing(),ElectronPairing())
             self.el_pairs.extend([ep1,ep2,ep3,ep4])
+        elif self.type==5:
+            (n1,n2,n3,n4,n5) = (Node(self),Node(self),Node(self),Node(self),Node(self))
+            n1.f = 0
+            n1.f2 = 0
+            n2.f= 2*pi/3
+            n2.f2= 0
+            n3.f= 4*pi/3
+            n3.f2= 0
+            n4.f=  0
+            n4.f2= pi/2
+            n5.f=  0
+            n5.f2= -pi/2
+            self.nodes.extend([n1,n2,n3,n4,n5])
         elif self.type==6:
             (n1,n2) = (Node(self),Node(self))				
             n1.f = 0

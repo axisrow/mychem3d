@@ -8,17 +8,19 @@ from math import pi
 from math import *
 import glm
 
-formula = [4,2,1,1]
+#formula = [3,2,2,2,2,2,2,2,2,2,2,2]
+formula = [5,2,2,2,2,4,2,2,2,2]
 #def select_atom
 
 
 def action1(space):
-    global curindex,tp
+    global curindex,tp, startindex
     if space.t==1:    #C
         tp = 0
-        a0 = Atom(500,500,500,formula[tp])
+        a0 = Atom(50,500,500,formula[tp])
         space.appendatom(a0)
         space.atoms2compute()
+        startindex = 0
         
 
     if space.t>0 and space.t%500==0: #C
@@ -31,9 +33,10 @@ def action1(space):
         #a1 = Atom(p.x+60,p.y,p.z,random.randint(1,4))
         a1 = Atom(p.x+30,p.y,p.z,formula[tp])
         space.appendatom(a1)
-        curindex = 0
+        curindex = startindex
         while  curindex == space.atoms.index(a1) or not bond_atoms(space.atoms[curindex],a1) :
             curindex+=1
+            #startindex+=1
             if curindex>N: break
         space.atoms2compute()
 
@@ -48,6 +51,7 @@ if __name__ == '__main__':
     space.action = action1
     space.INTERACT_KOEFF = 1
     space.BOND_KOEFF = 0.2
+    space.REPULSION_KOEFF2 = 0.1
     space.update_delta = 15
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
