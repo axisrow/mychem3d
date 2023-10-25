@@ -69,7 +69,7 @@ class AppOgl(OpenGLFrame):
         self.lastY = 300
         self.yaw = -90
         self.pitch = 0 
-        self.fov = 50
+        self.fov = 45
         self.light_pos = glm.vec3(1.2,1.0,2.0)
 
         self.factor = 0.001

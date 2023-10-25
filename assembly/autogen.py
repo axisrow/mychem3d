@@ -9,7 +9,7 @@ from math import *
 import glm
 
 #formula = [3,2,2,2,2,2,2,2,2,2,2,2]
-formula = [5,2,2,2,2,4,2,2,2,2]
+formula = [4,2,2,2,2,4,4,]
 #def select_atom
 
 
@@ -23,7 +23,7 @@ def action1(space):
         startindex = 0
         
 
-    if space.t>0 and space.t%500==0: #C
+    if space.t>0 and space.t%600==0: #C
         tp+=1
         if tp>=len(formula): tp=0
         space.compute2atoms()
@@ -31,7 +31,7 @@ def action1(space):
         (c,d) = space.get_atoms_distant()
         p = c+d*0.8
         #a1 = Atom(p.x+60,p.y,p.z,random.randint(1,4))
-        a1 = Atom(p.x+30,p.y,p.z,formula[tp])
+        a1 = Atom(p.x+60,p.y,p.z,formula[tp])
         space.appendatom(a1)
         curindex = startindex
         while  curindex == space.atoms.index(a1) or not bond_atoms(space.atoms[curindex],a1) :
