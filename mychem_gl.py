@@ -380,6 +380,28 @@ class AppOgl(OpenGLFrame):
             offset +=1
 
 
+    def init_loc(self):
+            self.loc = {}
+            self.loc.update( {"iTime": gl.glGetUniformLocation(self.gpu_code, "iTime")})
+            self.loc.update( {"bondlock": gl.glGetUniformLocation(self.gpu_code, "bondlock") })
+            self.loc.update( {"gravity": gl.glGetUniformLocation(self.gpu_code, "gravity") })
+            self.loc.update( {"redox": gl.glGetUniformLocation(self.gpu_code, "redox") })
+            self.loc.update( {"shake": gl.glGetUniformLocation(self.gpu_code, "shake") })
+            self.loc.update( {"BOND_KOEFF": gl.glGetUniformLocation(self.gpu_code, "BOND_KOEFF") })
+            self.loc.update( {"INTERACT_KOEFF": gl.glGetUniformLocation(self.gpu_code, "INTERACT_KOEFF") })
+            self.loc.update( {"REPULSION_KOEFF1": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1") })
+            self.loc.update( {"REPULSION_KOEFF2": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2") })
+            self.loc.update( {"ROTA_KOEFF": gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF") })
+            #view_loc = gl.glGetUniformLocation(self.shader, "view")
+            #proj_loc = gl.glGetUniformLocation(self.shader, "projection")
+            #mode_loc = gl.glGetUniformLocation(self.shader, "mode")
+            #nodeindex_loc = gl.glGetUniformLocation(self.shader, "nodeindex")
+            self.loc.update( {"view": gl.glGetUniformLocation(self.shader, "view") })
+            self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
+            self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
+            self.loc.update( {"nodeindex": gl.glGetUniformLocation(self.shader, "nodeindex") })
+
+
     def create_objects(self):
         print("create objects start")
         self.atomMesh = Mesh(self.sphere_vertices)
@@ -388,6 +410,7 @@ class AppOgl(OpenGLFrame):
         self.nodeMesh.setup()
         self.containerMesh = Mesh(self.cube_vertices)
         self.containerMesh.setup()
+        self.init_loc()
 
     def render(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
@@ -400,15 +423,8 @@ class AppOgl(OpenGLFrame):
         self.cameraFront = glm.normalize(front)
         self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
         self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,1000.0)
-        model_loc = gl.glGetUniformLocation(self.shader, "model")
-        view_loc = gl.glGetUniformLocation(self.shader, "view")
-        proj_loc = gl.glGetUniformLocation(self.shader, "projection")
-        mode_loc = gl.glGetUniformLocation(self.shader, "mode")
-        nodeindex_loc = gl.glGetUniformLocation(self.shader, "nodeindex")
-        gl.glUniformMatrix4fv(view_loc,1, gl.GL_FALSE, glm.value_ptr(self.view))
-        gl.glUniformMatrix4fv(proj_loc,1, gl.GL_FALSE, glm.value_ptr(self.projection))
-        objcol_loc = gl.glGetUniformLocation(self.shader, "objectColor")
-        #light_loc = gl.glGetUniformLocation(self.shader, "lightColor")
+        gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
+        gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
 
         #render merge_atom
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -446,16 +462,16 @@ class AppOgl(OpenGLFrame):
         #if self.space.gpu_compute.get():
         gl.glBindVertexArray(self.atomMesh.VAO )
         # render computed atoms
-        gl.glUniform1i(mode_loc,1)
+        gl.glUniform1i(self.loc["mode"],1)
         gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
 
-        gl.glUniform1i(mode_loc,2)
+        gl.glUniform1i(self.loc["mode"],2)
         gl.glBindVertexArray(self.nodeMesh.VAO )
         for i in range(0,5):
-                gl.glUniform1i(nodeindex_loc,i)
+                gl.glUniform1i(self.loc["nodeindex"],i)
                 gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
 
-        gl.glUniform1i(mode_loc,0)
+        gl.glUniform1i(self.loc["mode"],0)
         gl.glBindVertexArray( 0 )
 
         # draw container            
@@ -487,26 +503,16 @@ class AppOgl(OpenGLFrame):
         gl.glBindVertexArray(self.atomMesh.VAO )
         if not self.space.pause and self.space.gpu_compute.get():
             gl.glUseProgram(self.gpu_code)
-            self.loc = {}
-            self.loc.update ( {"iTime": gl.glGetUniformLocation(self.gpu_code, "iTime")})
-            bondloc_loc = gl.glGetUniformLocation(self.gpu_code, "bondlock")
-            gravity_loc = gl.glGetUniformLocation(self.gpu_code, "gravity")
-            redox_loc = gl.glGetUniformLocation(self.gpu_code, "redox")
-            shk_loc = gl.glGetUniformLocation(self.gpu_code, "shake")
-            bk_loc = gl.glGetUniformLocation(self.gpu_code, "BOND_KOEFF")
-            ik_loc = gl.glGetUniformLocation(self.gpu_code, "INTERACT_KOEFF")
-            rk1_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1")
-            rk2_loc = gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2")
-            rotk_loc = gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF")
-            gl.glUniform1i(bondloc_loc,self.space.bondlock.get())
+            gl.glUniform1i(self.loc["bondlock"],self.space.bondlock.get())
             gl.glUniform1i(self.loc["iTime"],self.space.t)
-            gl.glUniform1i(gravity_loc,self.space.gravity.get())
-            gl.glUniform1i(redox_loc,self.space.redox.get())
-            gl.glUniform1f(bk_loc,self.space.BOND_KOEFF)
-            gl.glUniform1f(ik_loc,self.space.INTERACT_KOEFF)
-            gl.glUniform1f(rk1_loc,self.space.REPULSION_KOEFF1)
-            gl.glUniform1f(rk2_loc,self.space.REPULSION_KOEFF2)
-            gl.glUniform1f(rotk_loc,self.space.ROTA_KOEFF)
+            gl.glUniform1i(self.loc["gravity"],self.space.gravity.get())
+            gl.glUniform1i(self.loc["redox"],self.space.redox.get())
+            gl.glUniform1i(self.loc["shake"],self.space.shake.get())
+            gl.glUniform1f(self.loc["BOND_KOEFF"],self.space.BOND_KOEFF)
+            gl.glUniform1f(self.loc["INTERACT_KOEFF"],self.space.INTERACT_KOEFF)
+            gl.glUniform1f(self.loc["REPULSION_KOEFF1"],self.space.REPULSION_KOEFF1)
+            gl.glUniform1f(self.loc["REPULSION_KOEFF2"],self.space.REPULSION_KOEFF2)
+            gl.glUniform1f(self.loc["ROTA_KOEFF"],self.space.ROTA_KOEFF)
 
             for i in range(0,self.space.update_delta):
                 self.space.t+=1
