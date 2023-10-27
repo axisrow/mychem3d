@@ -27,12 +27,14 @@ def action1(space):
         a2 = Atom(x,y,z-50,1)
         space.appendatom(a2)
         bond_atoms(space.atoms[0],a2)
+        space.atoms[0].v = glm.vec3(0,0,0)
         space.atoms2compute()
 
-    if space.t==1200:  # cycle
+    if space.t==1200:  # 
         space.compute2atoms()
         a3 = Atom(x,y+50,z,1,f2= -pi/2 )
         space.appendatom(a3)
+        space.atoms[0].v = glm.vec3(0,0,0)
         bond_atoms(space.atoms[0],a3)
         
         space.atoms2compute()
