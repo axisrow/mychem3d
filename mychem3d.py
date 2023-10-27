@@ -88,7 +88,7 @@ class mychemApp():
         self.root.bind("<MouseWheel>", self.handle_scroll)
         self.glframe = AppOgl(self.root, width=1024, height=600)
         print("glframe created")
-        self.pause = False
+        self.space.pause = False
         self.merge_mode = False
         self.ttype = "mx"
         self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
@@ -114,15 +114,13 @@ class mychemApp():
     def sim_run(self):
         #self.space.atoms2compute()
         #self.space.atoms2compute()
-        self.pause = False
-        self.glframe.pause = False
+        self.space.pause = False
         #self.glframe.animate = 1
         self.status_bar.set("Running")
 
     def sim_pause(self):
         self.space.compute2atoms()
-        self.pause = True
-        self.glframe.pause = True
+        self.space.pause = True
         #self.glframe.animate = 0
         self.status_bar.settime(self.space.t)
         self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
@@ -134,7 +132,7 @@ class mychemApp():
         self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
         
     def handle_space(self,event=None):
-        if self.pause:
+        if self.space.pause:
             self.sim_run()
         else:
             self.sim_pause()

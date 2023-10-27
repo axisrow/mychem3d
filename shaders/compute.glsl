@@ -6,10 +6,11 @@ layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
 // Input uniforms go here if you need them.
 // Some examples:
 //uniform vec2 screen_size;
-uniform int nframes;
+uniform int iTime;
 uniform int bondlock;
 uniform int gravity;
 uniform int redox;
+uniform int shake;
 
 //uniform float frame_time;
 float BONDR = 4.0;
@@ -234,18 +235,19 @@ void main()
         //random redox 
         if (redox==1){
             if (pos_i.x<300){
-                if (rand(v_i.xy)>=0.9994) {atom_i.nodes[0].q = min(atom_i.nodes[0].q+1,1);
+                if (rand(v_i.xy)>=0.9994) {
+                    atom_i.nodes[0].q = 1;
                     atom_i.animate = 500;                    
                 }
             }
             if (pos_i.x>700){
-                if (rand(v_i.xy+100)>=0.9994) {
-                    atom_i.nodes[0].q = max(atom_i.nodes[0].q-1,-1);
+                if (rand(v_i.xy)>=0.9994) {
+                    atom_i.nodes[0].q = -1;
                     atom_i.animate = 500;
                 }
             }    
         }
-        if (r<600) {
+        if (r<100) {
              float rn;
              vec3 nE,ni_realpos,nj_realpos,ndelta;
              vec3 allnE = vec3(0,0,0);  
@@ -271,6 +273,7 @@ void main()
                             atom_i.nodes[ni].q=ni_q;
                             atom_i.nodes[ni].bonded=1;
                             atom_i.nodes[ni].pair=nj_index;
+                            //v_i *=0.5;
                         }
                     }                            
 

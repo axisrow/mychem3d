@@ -11,6 +11,7 @@ class Space:
     def __init__(self,width=1000,height=1000,depth=1000):
         self.gpu_compute =tk.BooleanVar()
         self.gpu_compute.set(True)
+        self.pause = False
         self.ucounter = 0
         self.debug = False
         self.WIDTH=width
@@ -46,7 +47,8 @@ class Space:
         self.select_i = 0 
         self.gravity = tk.BooleanVar()
         self.gravity.set(False)
-        self.shake = False
+        self.shake= tk.BooleanVar()
+        self.shake.set(False)
         self.SHAKE_KOEFF = 0.5
         self.competitive = True
         self.redox = tk.BooleanVar()
@@ -183,21 +185,24 @@ class Space:
          return center
 
 
-    def get_atoms_center(self):
+    def get_atoms_center(self, atoms=None):
+         if atoms==None:
+            atoms = self.atoms
          sum = glm.vec3(0,0,0)
-         N = len(self.atoms)
-         for a in self.atoms:
+         N = len(atoms)
+         for a in atoms:
               sum += a.pos
          center = sum/N
-         #print("center=",center)
          return center
 
 
-    def get_atoms_distant(self):
-         center = self.get_atoms_center()
+    def get_atoms_distant(self,atoms=None):
+         if atoms==None:
+              atoms = self.atoms
+         center = self.get_atoms_center(atoms)
          distant = glm.vec3(0,0,0)
-         N = len(self.atoms)
-         for a in self.atoms:
+         N = len(atoms)
+         for a in atoms:
               if abs(a.pos.x-center.x) > distant.x:
                    distant.x = a.pos.x-center.x
               if abs(a.pos.y-center.y) > distant.y:
@@ -402,7 +407,7 @@ class Space:
             if self.gravity.get():
                 self.np_ay -= self.g
 
-            if self.shake:
+            if self.shake.get():
                 self.np_ax += self.SHAKE_KOEFF * (np.random.rand(N)-0.5)
                 self.np_ay += self.SHAKE_KOEFF * (np.random.rand(N)-0.5)
                 self.np_az += self.SHAKE_KOEFF * (np.random.rand(N)-0.5)
