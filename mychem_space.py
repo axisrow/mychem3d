@@ -21,7 +21,6 @@ class Space:
         self.BOND_KOEFF = 0.3
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 0.4
-        #self.ATTRACTR = 5*self.ATOMRADIUS
         self.ROTA_KOEFF = 1
         self.REPULSION1 = -3
         self.REPULSION_KOEFF1 = 15
@@ -293,7 +292,7 @@ class Space:
             N = len(self.atoms)
 #            if N==0:
 #                return 0
-            self.t +=1
+#            self.t +=1
             if self.stoptime!= -1:
                 if self.t>self.stoptime:
                     return 0
@@ -421,21 +420,12 @@ class Space:
             #self.np_vz[np.logical_and(self.np_type==100,self.np_vz>=0)] = 1
             #self.np_vz[np.logical_and(self.np_type==100,self.np_vz<0)] = -1
 
-
-
-
-            #if self.moving_mode:
-            #	(cx,cy) = self.getpointer()
-            #	self.newatom.x=cx + self.moving_offsetx
-            #	self.newatom.y=cy + self.moving_offsety
-
             self.np_next()
             self.np_limits()
             
             
             if self.action:
                 self.action(self)            
-            #self.numpy2atoms()
             return N
 
 

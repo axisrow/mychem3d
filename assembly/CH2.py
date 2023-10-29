@@ -30,15 +30,6 @@ def action1(space):
         space.atoms[0].v = glm.vec3(0,0,0)
         space.atoms2compute()
 
-    if space.t==1200:  # 
-        space.compute2atoms()
-        a3 = Atom(x,y+50,z,1,f2= -pi/2 )
-        space.appendatom(a3)
-        
-        bond_atoms(space.atoms[0],a3)
-        
-        space.atoms2compute()
-
 
     if space.t==50:
         pass
@@ -49,10 +40,10 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    space.INTERACT_KOEFF = 0.1
+    #space.INTERACT_KOEFF = 0.1
     space.update_delta = 15
     #space.gpu_compute.set(False)
-    space.bondlock.set(True)
+    #space.bondlock.set(True)
     App.run()
 #
 #

@@ -1,7 +1,7 @@
 import random
 from re import S
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from mychem3d import mychemApp, Atom,Space
 from mychem_functions import bond_atoms
 from math import pi 
@@ -18,15 +18,12 @@ def action1(space):
     if space.t==1:    #C+C
         a0 = Atom(x+20,y+40,z,3)
         space.appendatom(a0)
-        rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
-        a1i = space.merge_from_file("examples/simple/carbonyl.json",50,0,0,rot)
-        a1 = space.atoms[a1i]
+        a1 = Atom(x+40,y+20,z,4)
+        space.appendatom(a1)
         a2 = Atom(x+40,y-20,z,3)
         space.appendatom(a2)
-        rot = glm.quat(cos(pi/4), glm.vec3(0,0,sin(pi/4)))
-        a3i = space.merge_from_file("examples/simple/carbonyl.json",0,-50,0,rot)
-        a3 = space.atoms[a3i]
-        a1 = space.atoms[a1i]
+        a3 = Atom(x,y-40,z,4)
+        space.appendatom(a3)
         a4 = Atom(x-40,y-20,z,4)
         space.appendatom(a4)
         a5 = Atom(x-40,y+20,z,4)
@@ -35,9 +32,19 @@ def action1(space):
         bond_atoms(a0,a5,1,0)  #N+C
         space.atoms2compute()
 
+    if space.t==200: #N+C 2
+        space.compute2atoms()
+        bond_atoms(a0,a5,0,2)
+        space.atoms2compute()
+
     if space.t==400: #N+C
         space.compute2atoms()
         bond_atoms(a1,a2,0,0)
+        space.atoms2compute()
+
+    if space.t==600: #
+        space.compute2atoms()
+        bond_atoms(a1,a2,1,2)
         space.atoms2compute()
 
 
@@ -46,60 +53,59 @@ def action1(space):
         bond_atoms(a3,a4,0,0)
         space.atoms2compute()
 
+
+    if space.t==1000: #
+        space.compute2atoms()
+        bond_atoms(a3,a4,1,2)
+        space.atoms2compute()
+
 ############
     if space.t==1200: #C+C
         space.compute2atoms()
-        bond_atoms(a0,a1,2)
+        bond_atoms(a0,a1)
         space.atoms2compute()
 
 
-    if space.t==1800: #C+C
+    if space.t==1500: #C+C
         space.compute2atoms()
         bond_atoms(a2,a3)
         space.atoms2compute()
 
 
-    if space.t==2200: #C+C
-        space.compute2atoms()
-        bond_atoms(a4,a5,2)
-        space.atoms2compute()
-
-
-    if space.t==2400: #
+    if space.t==1800: #C+C
         space.compute2atoms()
         bond_atoms(a4,a5)
         space.atoms2compute()
 
 
+    if space.t==2200: #C+H
+        space.compute2atoms()
+        a = Atom(x+60,y+60,z,1,f=pi)
+        space.appendatom(a)
+        bond_atoms(a1,a)
+        space.atoms2compute()
+
+
+    if space.t==2400: #C+H
+        space.compute2atoms()
+        a = Atom(x+60,y-60,z,1,f=pi)
+        space.appendatom(a)
+        bond_atoms(a3,a)
+        space.atoms2compute()
+
     if space.t==2600: #C+H
         space.compute2atoms()
-        a = Atom(x+20,y+60,z,1,f=pi)
+        a = Atom(x-60,y-60,z,1)
         space.appendatom(a)
-        bond_atoms(a0,a)
+        bond_atoms(a4,a)
         space.atoms2compute()
+
 
     if space.t==2800: #C+H
-        space.compute2atoms()
-        a = Atom(x+60,y+60,z,1)
-        space.appendatom(a)
-        bond_atoms(a2,a)
-        space.atoms2compute()
-
-
-    if space.t==3000: #C+H
         space.compute2atoms()
         a = Atom(x-60,y+60,z,1)
         space.appendatom(a)
         bond_atoms(a5,a)
-        space.atoms2compute()
-
-
-    if space.t==3200: #C+H
-        space.compute2atoms()
-        rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
-        #rot = glm.quat(0, 0, 0, 1)
-        i1 = space.merge_from_file("examples/simple/methyl.json",-60,-90,0,rot )
-        bond_atoms(a4, space.atoms[i1])
         space.atoms2compute()
 
 
@@ -114,8 +120,8 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    space.INTERACT_KOEFF = 0.5
-    #space.BONDS_KOEFF = 0.2
+    #space.INTERACT_KOEFF = 0.5
+    #space.BONDS_KOEFF = 0.5
     space.REPULSION_KOEFF1 = 7
     space.update_delta = 10
     #space.gpu_compute.set(False)

@@ -114,7 +114,6 @@ if __name__ == '__main__':
 #    space.INTERACT_KOEFF = 0.1
     #space.REPULSION_KOEFF2 = 5
     #space.BOND_KOEFF = 0.1
-    space.ROTA_KOEFF=2
     #space.INTERACT_KOEFF = 0.1
     space.update_delta = 15
     #space.gpu_compute.set(False)

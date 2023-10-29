@@ -1,7 +1,7 @@
 import random
 from re import S
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from mychem3d import mychemApp, Atom,Space
 from mychem_functions import bond_atoms
 from math import pi 
@@ -23,8 +23,10 @@ def action1(space):
         a1 = space.atoms[a1i]
         a2 = Atom(x+40,y-20,z,3)
         space.appendatom(a2)
-        a3 = Atom(x+20,y-40,z,4)
-        space.appendatom(a3)
+        rot = glm.quat(cos(pi/4), glm.vec3(0,0,sin(pi/4)))
+        a3i = space.merge_from_file("examples/simple/carbonyl.json",0,-50,0,rot)
+        a3 = space.atoms[a3i]
+        a1 = space.atoms[a1i]
         a4 = Atom(x-40,y-20,z,4)
         space.appendatom(a4)
         a5 = Atom(x-40,y+20,z,4)
@@ -41,7 +43,7 @@ def action1(space):
 
     if space.t==800: #
         space.compute2atoms()
-        bond_atoms(a3,a4)
+        bond_atoms(a3,a4,0,0)
         space.atoms2compute()
 
 ############
@@ -56,40 +58,35 @@ def action1(space):
         bond_atoms(a2,a3)
         space.atoms2compute()
 
+
     if space.t==2200: #C+C
         space.compute2atoms()
-        bond_atoms(a2,a3)
+        bond_atoms(a4,a5,2)
         space.atoms2compute()
 
 
-    if space.t==2400: #C+C
+    if space.t==2400: #
         space.compute2atoms()
         bond_atoms(a4,a5)
         space.atoms2compute()
 
 
-    if space.t==2600: #C+C
-        space.compute2atoms()
-        #bond_atoms(a4,a5)  # wow auto bond
-        space.atoms2compute()
-
-
-    if space.t==2800: #C+H
+    if space.t==2600: #C+H
         space.compute2atoms()
         a = Atom(x+20,y+60,z,1,f=pi)
         space.appendatom(a)
         bond_atoms(a0,a)
         space.atoms2compute()
 
-    if space.t==3200: #C+H
+    if space.t==2800: #C+H
         space.compute2atoms()
-        a = Atom(x-60,y+60,z,1)
+        a = Atom(x+60,y+60,z,1)
         space.appendatom(a)
-        bond_atoms(a4,a)
+        bond_atoms(a2,a)
         space.atoms2compute()
 
 
-    if space.t==3400: #C+H
+    if space.t==3000: #C+H
         space.compute2atoms()
         a = Atom(x-60,y+60,z,1)
         space.appendatom(a)
@@ -97,14 +94,14 @@ def action1(space):
         space.atoms2compute()
 
 
-    if space.t==3600: #C+H
+    if space.t==3200: #C+H
         space.compute2atoms()
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
-        ami = space.merge_from_file("examples/simple/aminogroup.json",-30,-50,0,rot)
-        bond_atoms(a3,space.atoms[ami])
+        #rot = glm.quat(0, 0, 0, 1)
+        i1 = space.merge_from_file("examples/simple/methyl.json",-60,-90,0,rot )
+        bond_atoms(a4, space.atoms[i1])
         space.atoms2compute()
 
-    
 
 
 

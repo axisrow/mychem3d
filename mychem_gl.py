@@ -410,6 +410,13 @@ class AppOgl(OpenGLFrame):
         self.nodeMesh.setup()
         self.containerMesh = Mesh(self.cube_vertices)
         self.containerMesh.setup()
+        model =  glm.mat4()
+        model =  glm.translate(model, glm.vec3(0.5, 0.5,0.5))
+        model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
+        model =  glm.scale(model,glm.vec3(1))
+        self.containerMesh.color = (1,1,1)
+        self.containerMesh.modelmatrix = model
+
         self.init_loc()
 
     def render(self):
@@ -427,37 +434,38 @@ class AppOgl(OpenGLFrame):
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
 
         #render merge_atom
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-        for a in self.space.merge_atoms:
-            pos = glm.vec3(a.pos)
-            pos -= self.space.merge_center
-            pos = self.space.merge_rot * pos
-            pos += self.space.merge_center
-            pos += self.space.merge_pos
-            pos *= self.factor
-            model =  glm.translate(pos)
-            model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
-            self.atomMesh.modelmatrix = model
-            self.atomMesh.color = a.color
-            self.atomMesh.draw(self.shader)
-            #render merge atoms nodes
-            for n in a.nodes:
-                pos = a.rot * n.pos
-                pos += a.pos
+        if len(self.space.merge_atoms)>0:
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            for a in self.space.merge_atoms:
+                pos = glm.vec3(a.pos)
                 pos -= self.space.merge_center
                 pos = self.space.merge_rot * pos
                 pos += self.space.merge_center
                 pos += self.space.merge_pos
                 pos *= self.factor
                 model =  glm.translate(pos)
-                model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
-                if n.bonded:
-                     self.nodeMesh.color = (0.0,1.0,0.0) 
-                else:
-                     self.nodeMesh.color = (1.0,1.0,1.0) 
-                self.nodeMesh.modelmatrix = model
-                self.nodeMesh.draw(self.shader)
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+                model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
+                self.atomMesh.modelmatrix = model
+                self.atomMesh.color = a.color
+                self.atomMesh.draw(self.shader)
+                #render merge atoms nodes
+                for n in a.nodes:
+                    pos = a.rot * n.pos
+                    pos += a.pos
+                    pos -= self.space.merge_center
+                    pos = self.space.merge_rot * pos
+                    pos += self.space.merge_center
+                    pos += self.space.merge_pos
+                    pos *= self.factor
+                    model =  glm.translate(pos)
+                    model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
+                    if n.bonded:
+                        self.nodeMesh.color = (0.0,1.0,0.0) 
+                    else:
+                        self.nodeMesh.color = (1.0,1.0,1.0) 
+                    self.nodeMesh.modelmatrix = model
+                    self.nodeMesh.draw(self.shader)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         #if self.space.gpu_compute.get():
         gl.glBindVertexArray(self.atomMesh.VAO )
@@ -475,12 +483,6 @@ class AppOgl(OpenGLFrame):
         gl.glBindVertexArray( 0 )
 
         # draw container            
-        model =  glm.mat4()
-        model =  glm.translate(model, glm.vec3(0.5, 0.5,0.5))
-        model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
-        model =  glm.scale(model,glm.vec3(1))
-        self.containerMesh.color = (1,1,1)
-        self.containerMesh.modelmatrix = model
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
         self.containerMesh.drawQuads(self.shader)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );

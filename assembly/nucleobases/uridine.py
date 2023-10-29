@@ -1,7 +1,7 @@
 import random
 from re import S
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from mychem3d import mychemApp, Atom,Space
 from mychem_functions import bond_atoms
 from math import pi 
@@ -16,7 +16,7 @@ def action1(space):
     if space.t==1:    # methyl + methyl
         i0 = space.merge_from_file("examples/sugar/ribozaA.json",0,0,0)
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
-        i1 = space.merge_from_file("examples/nucleobase/cytosine.json",60,60,0)
+        i1 = space.merge_from_file("examples/nucleobase/uracil.json",60,60,0)
         bond_atoms(space.atoms[i0],space.atoms[i1])
         #space.atoms[i0+1].color = (0,1,0)
         #space.atoms[i1+0].color = (0,1,0)
@@ -35,17 +35,17 @@ def action1(space):
         space.compute2atoms()
         space.atoms[6].color = (0,0,0)  #spec color for remove on save
         space.atoms[7].color = (0,0,0)
-        space.atoms[26].color = (0,0,0)
+        space.atoms[27].color = (0,0,0)
         space.atoms2compute()
 
     # search water
-    #if space.t>1 and space.t%200==0:
+    if space.t>1 and space.t%200==0:
        #print(index)
        #space.compute2atoms()
        #space.atoms[index].color = (0,1,0)
        #index+=1
        #space.atoms2compute()
-       #pass
+       pass
 
 
 
