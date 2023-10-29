@@ -91,7 +91,7 @@ class Atom:
             self.m=12
             self.r=10
             self.color = (1.0, 1.0, 0.0)
-        if self.type==5:
+        if self.type==5 or self.type==500:
             self.color = (128/255,64/255,48/255)
             self.m= 31
             self.r = 12
@@ -123,6 +123,15 @@ class Atom:
                 self.nodes.append(n)
                 ep = ElectronPairing()
                 self.el_pairs.append(ep)
+        elif type==500: #plane phosphor
+            for i in range(0,5):
+                n = Node(self)
+                n.f = 2*pi/5*i
+                self.nodes.append(n)
+                ep = ElectronPairing()
+                self.el_pairs.append(ep)
+
+
         elif type==200: # 
             (n1,n2) = (Node(self),Node(self))
             n1.f = 0
@@ -181,8 +190,8 @@ class Atom:
             n2.f = pi/2
             n3.f = pi
             self.nodes.extend([n1,n2,n3])
-        self.calc_node_positions()
         self.rot = glm.quat(glm.vec3(0,-f2,f))
+        self.calc_node_positions()
         self.rotv = glm.quat()
 
     def calc_node_positions(self):

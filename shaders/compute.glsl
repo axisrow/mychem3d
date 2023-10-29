@@ -134,7 +134,7 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 
 
 int shift_q(in float type1, in float type2, inout float q1, inout float q2){
-    float etable[7]=float[](5,1,4,400,6,3,2);
+    float etable[9]=float[](5,500,1,4,400,6,3,2,200);
     int i1,i2;
     for(int i=0;i<etable.length();i++){
         if (etable[i]==type1){
@@ -294,7 +294,7 @@ void main()
                                 atom_i.nodes[ni].pair=-1;
                             }
                     }
-                    if ( rn>BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0){
+                    if ( rn>BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0 && iTime>1){
                             if (rn!=0) a= ni_q*nj_q*INTERACT_KOEFF/rn;
                     }
 
@@ -333,9 +333,15 @@ void main()
 
 //dumping
     v_i *=0.9999;      
+ 
+ //gravity
+   if (gravity==1) v_i.y -= 0.001; //gravity
+     
+//shake
+   if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.03;
+
 //next
     v_i += E/(atom_i.m);
-    if (gravity==1) v_i.y -= 0.001; //gravity
     pos_i += v_i;
     atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
     

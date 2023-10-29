@@ -577,4 +577,4 @@ class AppOgl(OpenGLFrame):
 #        print("fps",self.nframes / tm, end="\r" )
         if self.nframes%10 == 0:
             if self.framedelta!=0:
-                self.status_bar.setFPS(1/self.framedelta)
+                self.status_bar.setFPS(self.nframes/tm)

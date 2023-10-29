@@ -26,7 +26,7 @@ class mychemApp():
         sim_menu = tk.Menu(self.menu_bar, tearoff=False)
         sim_menu.add_command(label="Go/Pause", accelerator="Space",command=self.handle_space)
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
-        sim_menu.add_checkbutton(label="Random shake", accelerator="s",command=self.handle_shake)
+        sim_menu.add_checkbutton(label="Random shake", accelerator="s",variable=self.space.shake, command=self.handle_shake)
         sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
         sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         sim_menu.add_checkbutton(label="Recording",variable=self.space.recording, command=self.handle_recording)
@@ -163,8 +163,8 @@ class mychemApp():
 
     def handle_shake(self,event=None):
         if event:
-            self.space.shake = not self.space.shake
-        self.status_bar.set("Random shake is "+ OnOff(self.space.shake))
+            self.space.shake.set(not self.space.shake.get())
+        self.status_bar.set("Random shake is "+ OnOff(self.space.shake.get()))
 
     def handle_redox(self,event=None):
         if event:

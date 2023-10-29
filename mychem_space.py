@@ -23,7 +23,7 @@ class Space:
         self.INTERACT_KOEFF= 0.4
         self.ROTA_KOEFF = 1
         self.REPULSION1 = -3
-        self.REPULSION_KOEFF1 = 15
+        self.REPULSION_KOEFF1 = 10
         self.REPULSION2 = 6
         self.REPULSION_KOEFF2= 0.4
         self.MAXVELOCITY = 1
@@ -260,7 +260,7 @@ class Space:
         return first
 
     def shift_q(self,type1,type2, q1, q2):
-        etable=[5,1,4,400,6,3,2]
+        etable=[5,500,1,4,400,6,3,2,200]
         i1 = etable.index(type1)
         i2 = etable.index(type2)
         if (i1>i2):
@@ -483,6 +483,7 @@ class Space:
             else:
                 aa.v = glm.vec3(a["vx"],a["vy"],vz)
             aa.rot = rot
+            aa.calc_node_positions()
             aa.q=a["q"]
             aa.m=a["m"]
 #            if not "version" in j:
