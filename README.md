@@ -17,13 +17,12 @@ Controls:
 -    Mouse wheel - move camera forward and back
 
  In merge mode (adding atoms or files):
--       enter or double-click - merge 
--        mouse wheel - change parameter
--        mouse wheel + shift - slow change
--        mouse wheel + control - move camera forward and back
--        g - move,  x,y,z for select axis
--        r - rotate object, x,y,z for select rotate axis
-
+- enter or double-click - merge 
+- mouse wheel - change parameter
+- mouse wheel + shift - slow change
+- mouse wheel + control - move camera forward and back
+- g - move,  x,y,z for select axis
+- r - rotate object, x,y,z for select rotate axis
 
 For select atoms for now use cursor left-right keys, 
 with enter go to merge mode with selected atom, and with enter or double-click confirm
