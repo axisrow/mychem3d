@@ -191,7 +191,6 @@ void main()
 
     float r;   //distance between atoms
     float a;   //acceleration
-    float sumradius;   
     vec3 delta;  //coordinates delta
     vec3 E = vec3(0.0,0.0,0.0);
     vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
@@ -205,35 +204,8 @@ void main()
         //
 
 
-    for (int j=0;j<In.atoms.length();j++){
-        if (i == j) continue;
-        atom_j = In.atoms[j];
-        pos_j = atom_j.pos.xyz;
-        delta = pos_i - pos_j;
-        sumradius = atom_i.r + atom_j.r;
-        r = distance(pos_i, pos_j);
-        a = 0;
-        if (r==0) continue;
-        if (r<(sumradius+REPULSION1))
-           a = 1/r*  REPULSION_KOEFF1;
-        else if (r<(sumradius+REPULSION2))
-            a = 1/r* REPULSION_KOEFF2;
-
-        float atom_jq = 0;
-        for (int nj = 0; nj<atom_j.ncount; nj++ )  atom_jq+= atom_j.nodes[nj].q;
-
-        a+= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
-        
-            //float qi=0, qj=0;
-            //for (int ni = 0; ni<atom_i.ncount; ni++ ) qi+=atom_i.nodes[ni].pos.w;
-            //for (int nj = 0; nj<atom_j.ncount; nj++ ) qj+=atom_j.nodes[nj].pos.w;
-            //if(r>sumradius+REPULSION2)
-                //a+= qi*qj*INTERACT_KOEFF/r;
-
-            //a += -0.0005;
-        E += delta/r*a;   //
-        //random redox 
-        if (redox==1){
+    //random redox 
+    if (redox==1){
             if (pos_i.x<300){
                 if (rand(v_i.xy)>=0.9994) {
                     atom_i.nodes[0].q = 1;
@@ -246,8 +218,34 @@ void main()
                     atom_i.animate = 500;
                 }
             }    
-        }
-        if (r<100) {
+    }
+
+
+    for (int j=0;j<In.atoms.length();j++){
+        if (i == j) continue;
+        atom_j = In.atoms[j];
+        pos_j = atom_j.pos.xyz;
+        delta = pos_i - pos_j;
+        r = distance(pos_i, pos_j);
+        if (r==0) continue;
+        
+        // 
+        // 
+        float atom_jq = 0;
+        for (int nj = 0; nj<atom_j.ncount; nj++ )  atom_jq+= atom_j.nodes[nj].q;
+        a= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
+        E += delta/r*a;   //
+
+        if (r<60) {
+             a = 0;
+             float sumradius = atom_i.r + atom_j.r;
+             if (r<(sumradius+REPULSION1))
+                a = 1/r*  REPULSION_KOEFF1;
+             else if (r<(sumradius+REPULSION2))
+                a = 1/r* REPULSION_KOEFF2;
+             E += delta/r*a;
+
+             //nodes   
              float rn;
              vec3 nE,ni_realpos,nj_realpos,ndelta;
              vec3 allnE = vec3(0,0,0);  
@@ -316,10 +314,10 @@ void main()
                 }
                 allnE += nE;
             }
-            
             E += allnE;
-        }
-    }
+        } //if r <100
+
+    } //forj
     
     //totalrot = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));    
     //atom_i.rotv = normalize(qmul(totalrot, atom_i.rotv));
@@ -332,7 +330,7 @@ void main()
     }
 
 //dumping
-    v_i *=0.9999;      
+   v_i *=0.9999;      
  
  //gravity
    if (gravity==1) v_i.y -= 0.001; //gravity
