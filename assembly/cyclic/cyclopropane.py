@@ -1,13 +1,16 @@
 import random
 from re import S
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from mychem3d import mychemApp, Atom,Space
 from mychem_functions import bond_atoms
 from math import pi 
 import mychem3d
 from math import *
 import glm
+
+
+
 
 
 
@@ -21,9 +24,11 @@ def action1(space):
         bond_atoms(a0,a1)
         space.atoms2compute()
 
+
+
     if space.t==450: #C+C+C
         space.compute2atoms()
-        a2 = Atom(x,y,z+50,4)
+        a2 = Atom(x,y,z+50,4,f2=-pi/2)
         space.appendatom(a2)
         bond_atoms(space.atoms[1],a2)
         space.atoms2compute()
@@ -49,14 +54,14 @@ def action1(space):
 
     if space.t==4000: # C0+H
         space.compute2atoms()
-        a = Atom(x+50,y+50,z,1)
+        a = Atom(x-20,y-20,z,1)
         space.appendatom(a)
         bond_atoms(space.atoms[0],a)
         space.atoms2compute()
 
     if space.t==4500: # C0+H
         space.compute2atoms()
-        a = Atom(x-50,y,z,1)
+        a = Atom(x+30,y+30,z,1,f=pi)
         space.appendatom(a)
         bond_atoms(space.atoms[0],a)
         space.atoms2compute()
@@ -69,19 +74,11 @@ def action1(space):
         bond_atoms(space.atoms[2],a)
         space.atoms2compute()
 
-    if space.t==5500: # C2+O
+    if space.t==5700: # C2+H
         space.compute2atoms()
-        a = Atom(x-20,y,z,2)
+        a = Atom(x,y,z+50,1)
         space.appendatom(a)
         bond_atoms(space.atoms[2],a)
-        space.atoms2compute()
-
-
-    if space.t==6300: # O+H
-        space.compute2atoms()
-        a = Atom(x-20,y+20,z+20,1)
-        space.appendatom(a)
-        bond_atoms(space.atoms[8],a)
         space.atoms2compute()
 
 
@@ -98,7 +95,7 @@ if __name__ == '__main__':
     space = App.space
     space.action = action1
     space.INTERACT_KOEFF = 0.1
-    space.update_delta = 25
+    space.update_delta = 15
     #space.gpu_compute.set(False)
     space.bondlock.set(True)
     App.run()

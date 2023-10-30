@@ -96,7 +96,7 @@ class Atom:
             self.m= 31
             self.r = 12
 
-        if self.type==6:
+        if self.type==6 or self.type==600:
             self.color = (131/255,206/255,137/255)
             self.m = 32
             self.r = 12
@@ -178,6 +178,13 @@ class Atom:
             n5.f2= -pi/2
             self.nodes.extend([n1,n2,n3,n4,n5])
         elif self.type==6:
+            (n1,n2) = (Node(self),Node(self))				
+            n1.f = 0
+            n2.f = glm.radians(92.1)
+            self.nodes.extend([n1,n2])
+            (ep1,ep2) = (ElectronPairing(), ElectronPairing())
+            self.el_pairs.extend([ep1,ep2])
+        elif self.type==600:
             (n1,n2) = (Node(self),Node(self))				
             n1.f = 0
             n2.f = pi

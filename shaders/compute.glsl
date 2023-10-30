@@ -134,7 +134,7 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 
 
 int shift_q(in float type1, in float type2, inout float q1, inout float q2){
-    float etable[9]=float[](5,500,1,4,400,6,3,2,200);
+    float etable[10]=float[](5,500,1,4,400,6,600,3,2,200);
     int i1,i2;
     for(int i=0;i<etable.length();i++){
         if (etable[i]==type1){

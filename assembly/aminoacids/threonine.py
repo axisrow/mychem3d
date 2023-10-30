@@ -48,26 +48,18 @@ def action1(space:Space):
         space.atoms2compute()
 
 
-    if space.t==800:
-        space.compute2atoms()
-        i2 = space.merge_from_file("examples/simple/CH2.json",0,30,-30)
-        #space.appendatom(a1)
-        bond_atoms(a1,space.atoms[i2])  #L/D
-        space.atoms2compute()
-
-
     if space.t==1200:
         space.compute2atoms()
         a2 = Atom(550,500,500,4)
         space.appendatom(a2)
         a2.v = glm.vec3(0,0,0)
-        bond_atoms(space.atoms[i2],a2)
+        bond_atoms(a1,a2)
         space.atoms2compute()
 
 
     if space.t==1600:
         space.compute2atoms()
-        i3 = space.merge_from_file("examples/simple/methyl.json",30,-30,0)
+        i3 = space.merge_from_file("examples/simple/methyl.json",10,-40,0)
         #space.appendatom(a1)
         bond_atoms(space.atoms[i3],a2)
         space.atoms2compute()
@@ -75,15 +67,15 @@ def action1(space:Space):
 
     if space.t==2000:
         space.compute2atoms()
-        i4 = space.merge_from_file("examples/simple/methyl.json",30,30,0)
+        i4 = space.merge_from_file("examples/simple/OH.json",10,30,0)
         #space.appendatom(a1)
         bond_atoms(space.atoms[i4],a2)
         space.atoms2compute()
 
 
-    if space.t==2600:
+    if space.t==2400:
         space.compute2atoms()
-        h2 = Atom(520,520,480,1)
+        h2 = Atom(540,500,470,1)
         space.appendatom(h2)
         bond_atoms(h2,a2)
         space.atoms2compute()

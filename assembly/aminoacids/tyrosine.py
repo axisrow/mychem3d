@@ -31,19 +31,17 @@ def action1(space:Space):
 
 
     if space.t==400:
-        space.compute2atoms()
-        h1 = Atom(500,550,500,1)
-        space.appendatom(h1)
-        bond_atoms(a1,h1)
-        space.atoms2compute()
+        #space.compute2atoms()
+        #h1 = Atom(500,550,500,1)
+        #space.appendatom(h1)
+        #bond_atoms(a1,h1)
+        #space.atoms2compute()
         pass
-
 
 
     if space.t==600:
         space.compute2atoms()
         ami = space.merge_from_file("examples/simple/aminogroup.json",0,0,0)
-        #space.appendatom(a1)
         bond_atoms(a1,space.atoms[ami],3)
         space.atoms2compute()
 
@@ -51,41 +49,23 @@ def action1(space:Space):
     if space.t==800:
         space.compute2atoms()
         i2 = space.merge_from_file("examples/simple/CH2.json",0,30,-30)
-        #space.appendatom(a1)
-        bond_atoms(a1,space.atoms[i2])  #L/D
+        bond_atoms(a1,space.atoms[i2],2)  #L/D
         space.atoms2compute()
 
 
     if space.t==1200:
         space.compute2atoms()
-        a2 = Atom(550,500,500,4)
-        space.appendatom(a2)
-        a2.v = glm.vec3(0,0,0)
-        bond_atoms(space.atoms[i2],a2)
+        i3 = space.merge_from_file("examples/cyclic/phenol.json",0,50,-30)
+        #space.atoms[i3+8].color = (0,1,0)
+        space.atoms[i3+2].nodes[3].q=0
+        space.atoms[i2].v = glm.vec3(0,0,0)
+        a1.nodes[1].q=-1
+
         space.atoms2compute()
 
-
-    if space.t==1600:
+    if space.t==1400:
         space.compute2atoms()
-        i3 = space.merge_from_file("examples/simple/methyl.json",30,-30,0)
-        #space.appendatom(a1)
-        bond_atoms(space.atoms[i3],a2)
-        space.atoms2compute()
-
-
-    if space.t==2000:
-        space.compute2atoms()
-        i4 = space.merge_from_file("examples/simple/methyl.json",30,30,0)
-        #space.appendatom(a1)
-        bond_atoms(space.atoms[i4],a2)
-        space.atoms2compute()
-
-
-    if space.t==2600:
-        space.compute2atoms()
-        h2 = Atom(520,520,480,1)
-        space.appendatom(h2)
-        bond_atoms(h2,a2)
+        bond_atoms(space.atoms[i2], space.atoms[i3+2])
         space.atoms2compute()
 
 

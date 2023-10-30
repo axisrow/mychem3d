@@ -260,7 +260,7 @@ class Space:
         return first
 
     def shift_q(self,type1,type2, q1, q2):
-        etable=[5,500,1,4,400,6,3,2,200]
+        etable=[5,500,1,4,400,6,600,3,2,200]
         i1 = etable.index(type1)
         i2 = etable.index(type2)
         if (i1>i2):
@@ -476,6 +476,7 @@ class Space:
                 if type==4: type=400
                 if type==2: type=200
                 if type==5: type=500
+                if type==6: type=600
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
             if zerospeed:

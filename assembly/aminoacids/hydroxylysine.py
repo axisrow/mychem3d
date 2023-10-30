@@ -12,7 +12,7 @@ import glm
 
 
 def action1(space:Space):
-    global i0,i1,i2,i3,a1,a2,a3
+    global i0,i1,i2,i3,i4,i5,i6,i7,a1,a2,a3
     if space.t==1:    
         i0=space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
@@ -50,44 +50,51 @@ def action1(space:Space):
 
     if space.t==800:
         space.compute2atoms()
-        i2 = space.merge_from_file("examples/simple/CH2.json",0,30,-30)
-        #space.appendatom(a1)
+        i2 = space.merge_from_file("examples/simple/CH2.json",0,30,0)
         bond_atoms(a1,space.atoms[i2])  #L/D
         space.atoms2compute()
 
 
     if space.t==1200:
         space.compute2atoms()
-        a2 = Atom(550,500,500,4)
-        space.appendatom(a2)
-        a2.v = glm.vec3(0,0,0)
-        bond_atoms(space.atoms[i2],a2)
+        i3 = space.merge_from_file("examples/simple/CH2.json",30,30,0)
+        bond_atoms(space.atoms[i2],space.atoms[i3])  #L/D
         space.atoms2compute()
 
 
     if space.t==1600:
         space.compute2atoms()
-        i3 = space.merge_from_file("examples/simple/methyl.json",30,-30,0)
-        #space.appendatom(a1)
-        bond_atoms(space.atoms[i3],a2)
+        i4 = space.merge_from_file("examples/simple/CH2.json",60,30,0)
+        bond_atoms(space.atoms[i4],space.atoms[i3])  #L/D
         space.atoms2compute()
 
 
-    if space.t==2000:
+    if space.t==1900:
         space.compute2atoms()
-        i4 = space.merge_from_file("examples/simple/methyl.json",30,30,0)
-        #space.appendatom(a1)
-        bond_atoms(space.atoms[i4],a2)
+        i5 = space.merge_from_file("examples/simple/CH2.json",60,60,0)
+        bond_atoms(space.atoms[i5],space.atoms[i4])  #L/D
         space.atoms2compute()
 
 
-    if space.t==2600:
+    if space.t==2300:
         space.compute2atoms()
-        h2 = Atom(520,520,480,1)
-        space.appendatom(h2)
-        bond_atoms(h2,a2)
+        i6 = space.merge_from_file("examples/simple/aminogroup.json",80,0,0)
+        bond_atoms(space.atoms[i6],space.atoms[i5])  #L/D
         space.atoms2compute()
 
+
+    if space.t==3200:
+        space.compute2atoms()
+        space.atoms[i4+2].color = (0,0,0)
+        space.atoms[i4+2].nodes[0].q=0
+        i7 = space.merge_from_file("examples/simple/OH.json",80,0,0)
+        space.atoms2compute()
+
+
+    if space.t==3500:
+        space.compute2atoms()
+        space.atoms[i7].nodes[1].q = +1
+        space.atoms2compute()
 
 
 

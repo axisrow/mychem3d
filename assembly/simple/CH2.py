@@ -1,7 +1,7 @@
 import random
 from re import S
 import sys, os
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.insert(1, os.path.join(sys.path[0], '../..'))
 from mychem3d import mychemApp, Atom,Space
 from mychem_functions import bond_atoms
 from math import pi 
@@ -13,7 +13,7 @@ import glm
 def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    #C + H
-        a0 = Atom(x,y,z,3,r=10,m=12)
+        a0 = Atom(x,y,z,4,r=10,m=12)
         space.appendatom(a0)
         a1 = Atom(x+50,y,z,1, f=pi)
         space.appendatom(a1)
@@ -22,13 +22,12 @@ def action1(space):
 
 
 
-    if space.t==500: #C+C+C
+    if space.t==500: #C
         space.compute2atoms()
-        a2 = Atom(x,y+30,z,1)
+        a2 = Atom(x,y,z-50,1)
         space.appendatom(a2)
         bond_atoms(space.atoms[0],a2)
-        space.atoms2compute()
-
+        space.atoms[0].v = glm.vec3(0,0,0)
         space.atoms2compute()
 
 
@@ -41,10 +40,10 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    space.INTERACT_KOEFF = 0.1
-    space.update_delta = 10
+    #space.INTERACT_KOEFF = 0.1
+    space.update_delta = 15
     #space.gpu_compute.set(False)
-    space.bondlock.set(True)
+    #space.bondlock.set(True)
     App.run()
 #
 #

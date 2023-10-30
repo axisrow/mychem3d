@@ -12,7 +12,7 @@ import glm
 
 
 def action1(space:Space):
-    global i0,i1,i2,i3,a1,a2,a3
+    global i0,i1,i2,i3,i4,i5,i6,a1,a2,a3,n1,n2
     if space.t==1:    
         i0=space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
@@ -42,52 +42,54 @@ def action1(space:Space):
 
     if space.t==600:
         space.compute2atoms()
-        ami = space.merge_from_file("examples/simple/aminogroup.json",0,0,0)
+        #ami = space.merge_from_file("examples/simple/aminogroup.json",0,0,0)
         #space.appendatom(a1)
-        bond_atoms(a1,space.atoms[ami],3)
+        #bond_atoms(a1,space.atoms[ami],3)
         space.atoms2compute()
 
 
     if space.t==800:
         space.compute2atoms()
-        i2 = space.merge_from_file("examples/simple/CH2.json",0,30,-30)
-        #space.appendatom(a1)
+        i2 = space.merge_from_file("examples/simple/CH2.json",0,30,0)
         bond_atoms(a1,space.atoms[i2])  #L/D
         space.atoms2compute()
 
 
     if space.t==1200:
         space.compute2atoms()
-        a2 = Atom(550,500,500,4)
-        space.appendatom(a2)
-        a2.v = glm.vec3(0,0,0)
-        bond_atoms(space.atoms[i2],a2)
+        i3 = space.merge_from_file("examples/simple/CH2.json",30,30,0)
+        bond_atoms(space.atoms[i2],space.atoms[i3])  #L/D
         space.atoms2compute()
 
 
     if space.t==1600:
         space.compute2atoms()
-        i3 = space.merge_from_file("examples/simple/methyl.json",30,-30,0)
-        #space.appendatom(a1)
-        bond_atoms(space.atoms[i3],a2)
+        i4 = space.merge_from_file("examples/simple/CH2.json",60,30,0)
+        bond_atoms(space.atoms[i4],space.atoms[i3])  #L/D
+        space.atoms2compute()
+
+    if space.t==1900:
+        space.compute2atoms()
+        n1 = Atom(520,520,500,3)
+        space.appendatom(n1)
+        bond_atoms(n1,space.atoms[i4])
         space.atoms2compute()
 
 
-    if space.t==2000:
+    if space.t==2500:
         space.compute2atoms()
-        i4 = space.merge_from_file("examples/simple/methyl.json",30,30,0)
-        #space.appendatom(a1)
-        bond_atoms(space.atoms[i4],a2)
-        space.atoms2compute()
-
-
-    if space.t==2600:
-        space.compute2atoms()
-        h2 = Atom(520,520,480,1)
+        h2 = Atom(520,500,500,1)
         space.appendatom(h2)
-        bond_atoms(h2,a2)
+        bond_atoms(h2,n1)
         space.atoms2compute()
 
+
+    if space.t==2800:
+        space.compute2atoms()
+        bond_atoms(n1,a1)
+        space.atoms2compute()
+
+    
 
 
 
@@ -97,8 +99,8 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    #space.INTERACT_KOEFF = 0.6
-    space.update_delta = 5
+    space.INTERACT_KOEFF = 0.6
+    space.update_delta = 10
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
     App.run()
