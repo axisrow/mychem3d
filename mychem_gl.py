@@ -555,13 +555,13 @@ class AppOgl(OpenGLFrame):
    #     self.do_movement()
         #time.sleep(0.1)
         self.lastframe_time = self.curframe_time
-        tm = time.time() - self.start
         throttle = 1/40 - self.framedelta
         if throttle>0:
             time.sleep(throttle)
         self.nframes += 1
                 
 #        print("fps",self.nframes / tm, end="\r" )
-        if self.nframes%10 == 0:
+        if self.nframes%50 == 0:
             if self.framedelta!=0:
+                tm = time.time() - self.start
                 self.status_bar.setFPS(self.nframes/tm)

@@ -113,6 +113,8 @@ class mychemApp():
 
     def sim_run(self):
         self.space.pause = False
+        self.glframe.start = time.time()
+        self.glframe.nframes = 0
         self.status_bar.set("Running")
 
     def sim_pause(self):
@@ -339,6 +341,7 @@ class mychemApp():
             self.space.merge2atoms()
             self.space.atoms2compute()
             self.resetdata = self.space.make_export()
+            self.status_bar.set("Merged")
 
 
 
