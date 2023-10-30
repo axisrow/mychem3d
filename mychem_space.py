@@ -210,7 +210,25 @@ class Space:
                    distant.z = a.pos.z-center.z
          return (center,distant)
 
-
+    def get_node_by_index(self,index):
+         index = int(index)
+         if index==-1:
+            return None
+         ai = index//5
+         ni = index%5
+         #print(f"  for index{index} result = { ai}  {ni}")
+         return self.atoms[ai].nodes[ni]
+    
+    def get_index_by_node(self,n):
+        if n != None:
+            parentindex = self.atoms.index(n.parent)
+            nodeindex = n.parent.nodes.index(n)
+            index = parentindex*5+nodeindex
+            #print(f"node = {n} parentIndex={parentindex} nodeindex={nodeindex}")
+        else:
+            index = -1
+        return index
+         
 
     def atoms2compute(self):
         if self.gpu_compute.get():
@@ -351,23 +369,26 @@ class Space:
                                     if self.debug: print("bond")
                                     bonded,node_i.q,node_j.q = self.shift_q(atom_i.type, atom_j.type, node_i.q,node_j.q)
                                     if bonded:
-                                        node_i.bonded = True
-                                        node_i.pair = nj_index
-                                        node_j.bonded = True
-                                        node_j.pair = ni_index
-                            if rn>self.BONDR and node_i.bonded and node_j.bonded and node_i.pair==nj_index and node_j.pair==ni_index:
+                                        node_i.bond(node_j)
+                                        #node_i.bonded = True
+                                        #node_i.pair = node_j
+                                        #node_j.bonded = True
+                                        #node_j.pair = node_i
+                            if rn>self.BONDR and node_i.bonded and node_j.bonded and node_i.pair==node_j:
                                  if self.debug: print("unbond")
-                                 node_i.bonded = False
-                                 node_i.pair = -1
-                                 node_j.bonded = False
-                                 node_j.pair = -1
+                                 node_i.unbond()
+                                 #node_i.bonded = False
+                                 #node_i.pair = None
+                                 #node_j.bonded = False
+                                 #node_j.pair = None
                             
-                            if rn<=self.BONDR and node_i.bonded and node_j.bonded and  node_i.pair==nj_index and node_j.pair==ni_index:
+                            if rn<=self.BONDR and node_i.bonded and node_j.bonded and  node_i.pair==node_j:
                                         a = -rn*self.BOND_KOEFF  #atom's bond force
                                         if node_i.q+node_j.q !=0 and not self.bondlock.get():
                                              if self.debug: print("unbond2")
-                                             node_i.bonded = False
-                                             node_i.pair = -1
+                                             node_i.unbond()
+                                             #node_i.bonded = False
+                                             #node_i.pair = None
                             elif rn>self.BONDR and not node_i.bonded and not node_j.bonded and self.t>1:
                                     if rn!=0: a= node_i.q*node_j.q*self.INTERACT_KOEFF/rn
                                     #if self.debug: print(a)

@@ -134,7 +134,8 @@ class AppOgl(OpenGLFrame):
                     a_data.append(0.0)
                     a_data.append(n.q)
                     a_data.append(n.bonded)
-                    a_data.append(n.pair)
+                    a_data.append(float(self.space.get_index_by_node(n.pair)))
+                    #print(f'debug bonded={n.bonded}, n.pair= {n.pair}, index={float(self.space.get_index_by_node(n.pair))}')
                     a_data.append(0.0)
                 for i in range(0,5-len(a.nodes)):
                     a_data.append(0.0)
@@ -304,25 +305,20 @@ class AppOgl(OpenGLFrame):
             a.pos.y = float(a_data[offset])
             offset +=1
             a.pos.z = float(a_data[offset])
-            offset +=1
-            offset +=1
+            offset +=2
             # v
             a.v.x = float(a_data[offset])
             offset +=1
             a.v.y = float(a_data[offset])
             offset +=1
             a.v.z = float(a_data[offset])
-            offset +=1
-            offset +=1
+            offset +=2
             # type, radius, m
             #a_data[offset]=a.type
-            offset +=1
             #a_data[offset]=a.r
-            offset +=1
             #a_data[offset]=a.m
-            offset +=1
             #a_data[offset]=len(a.nodes)
-            offset +=1
+            offset +=4
             #rot 
             a.rot.x = float(a_data[offset])
             offset +=1
@@ -343,41 +339,32 @@ class AppOgl(OpenGLFrame):
             offset +=1
             # anim
             #a_data[offset] =0.0
-            offset +=1
             #a_data[offset] =0.0
-            offset +=1
             #a_data[offset] =0.0
-            offset +=1
             #a_data[offset] =0.0
-            offset +=1
+            offset +=4
             for n in a.nodes:
                 #a_data[offset]   = n.pos.x
-                offset +=1
                 #a_data[offset] = n.pos.y
-                offset +=1
                 #a_data[offset] = n.pos.z
-                offset +=1
                 #a_data[offset] = 0.0
-                offset +=1
+                offset +=4
                 n.q = float(a_data[offset])
                 offset +=1
                 n.bonded = bool(a_data[offset])
                 offset +=1
-                n.pair = float(a_data[offset])
-                offset +=1
+                n.pair = self.space.get_node_by_index(a_data[offset]) 
+                #print(f"debug i={i} data = {a_data[offset]}, node = { n.pair}")
                 #a_data[offset] = 0.0
-                offset +=1
+                offset +=2
             for i in range(0,5-len(a.nodes)):
                 offset +=8
             #color 
             #a_data[offset]=a.color[0]
-            offset +=1
             #a_data[offset]=a.color[1]
-            offset +=1
             #a_data[offset]=a.color[2]
-            offset +=1
             #a_data[offset]=1.0
-            offset +=1
+            offset +=4
 
 
     def init_loc(self):
@@ -489,9 +476,9 @@ class AppOgl(OpenGLFrame):
         
         #render selector
         if self.space.select_mode:
-            if len(self.space.np_x)>0:
+            if len(self.space.atoms)>0:
                 model =  glm.mat4()
-                pos = glm.vec3(self.space.np_x[self.space.select_i],self.space.np_y[self.space.select_i],self.space.np_z[self.space.select_i])
+                pos = self.space.atoms[self.space.select_i].pos
                 model =  glm.translate(model, pos * self.factor  )
                 model =  glm.scale(model, glm.vec3(0.01,0.01,0.01))
                 self.atomMesh.color = (1,0,0)

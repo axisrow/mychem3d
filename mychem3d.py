@@ -112,10 +112,7 @@ class mychemApp():
 
 
     def sim_run(self):
-        #self.space.atoms2compute()
-        #self.space.atoms2compute()
         self.space.pause = False
-        #self.glframe.animate = 1
         self.status_bar.set("Running")
 
     def sim_pause(self):
@@ -268,9 +265,10 @@ class mychemApp():
         pass
 
     def handle_cursor(self,event=None):
-        if self.merge_mode == True: return
+        if self.merge_mode: return
+        if not self.space.pause: self.sim_pause()
         self.space.select_mode = True
-        N = self.space.np_x.size
+        N = len(self.space.atoms)
         if event.keysym == "Left":
             self.space.select_i -=1
             if self.space.select_i < 0:
@@ -329,16 +327,15 @@ class mychemApp():
             self.space.merge_atoms = [a]
             self.space.merge_pos = glm.vec3(0,0,0)
             self.space.merge_rot = glm.quat()
+            a.unbond()  
             self.space.atoms.remove(a)
             self.space.merge_center = self.space.get_mergeobject_center()
             self.merge_mode = True
-            
             self.space.select_mode = False
             self.space.atoms2compute()
             return
         if self.merge_mode:
             self.merge_mode = False 
-            self.space.compute2atoms()
             self.space.merge2atoms()
             self.space.atoms2compute()
             self.resetdata = self.space.make_export()

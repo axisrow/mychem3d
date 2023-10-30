@@ -12,7 +12,21 @@ class Node:
         self.q = 0 
         self.pos = glm.vec3(0,0,0)
 
-    def shift_q(self, n):
+
+    def bond(self,n):
+        n.pair = self
+        n.bonded = True
+        self.pair = n
+        self.bonded = True
+    
+    def unbond(self):
+        if self.bonded:
+            self.pair.pair = None
+            self.pair.bonded = False
+            self.pair = None
+            self.bonded = False
+
+    def shift_q(self, n):  #not used
         #PHCSNO
         type1 = self.parent.type
         type2 = n.parent.type
@@ -223,8 +237,8 @@ class Atom:
     def unbond(self):
         for n in self.nodes:
             if n.bonded:
-                p = n.pair.parent
+                #p = n.pair.parent
                 n.unbond()
-                p.calculate_q()	
-        self.calculate_q()
+                #p.calculate_q()	
+        #self.calculate_q()
 
