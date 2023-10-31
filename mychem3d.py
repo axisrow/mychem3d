@@ -12,6 +12,7 @@ from mychem_space import Space
 from mychem_gl import AppOgl
 from mychem_functions import OnOff
 import glm
+import random
 
 class mychemApp():
     def init_menu(self):
@@ -81,6 +82,7 @@ class mychemApp():
         self.root.bind("r", self.handle_mode)
         self.root.bind("g", self.handle_mode)
         self.root.bind("l", self.file_merge_recent)
+        self.root.bind("<Alt-l>", self.handle_random_recent)
         self.root.bind("<Alt-g>", self.handle_g)
         self.root.bind("0", self.handle_zero)
         self.root.bind("<b>", self.handle_bondlock)
@@ -251,6 +253,27 @@ class mychemApp():
         self.space.merge_center = self.space.get_mergeobject_center()
         self.status_bar.set("Merging mode")
         
+    def handle_random_recent(self,event=None):
+        if not self.recentdata:
+            return
+        self.sim_pause()
+        self.space.load_data(self.recentdata, merge=True)
+        (center,distant) = self.space.get_atoms_distant(self.space.merge_atoms)
+        for i in range(0,10):
+            self.space.merge_atoms = []
+            distant = glm.round(distant)
+            x= random.randint(distant.x+10,self.space.WIDTH-distant.x-10)-self.space.WIDTH/2.0
+            y= random.randint(distant.y+10,self.space.HEIGHT-distant.y-10)-self.space.HEIGHT/2.0
+            z= random.randint(distant.z+10,self.space.DEPTH-distant.z-10)-self.space.DEPTH/2.0
+            self.space.load_data(self.recentdata, merge=True)
+            self.space.merge_pos = glm.vec3(x,y,z)
+            self.space.merge_rot = glm.quat()
+    #        self.merge_rot = merge_rot
+            self.space.merge2atoms()
+        self.space.merge_pos = glm.vec3(0,0,0)
+        self.space.merge_rot = glm.quat()
+        self.space.atoms2compute()
+
 
     def file_save(self,event=None):
         self.sim_pause()

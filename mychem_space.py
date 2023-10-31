@@ -250,6 +250,7 @@ class Space:
     def merge2atoms(self):
         #self.compute2atoms()
         N = len(self.atoms)
+        self.merge_center = self.get_mergeobject_center()
         for a in self.merge_atoms:
             pos = a.pos
             pos -= self.merge_center
@@ -271,7 +272,6 @@ class Space:
         self.load_data(mergedata, merge=True)
         self.merge_pos = glm.vec3(x,y,z)
         self.merge_rot = merge_rot
-        self.merge_center = self.get_mergeobject_center()
         first = self.merge2atoms()
         self.merge_pos = glm.vec3(0,0,0)
         self.merge_rot = glm.quat()
