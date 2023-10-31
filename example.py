@@ -329,7 +329,7 @@ if __name__ == '__main__':
     #makeethan_old(space,500,500,500)
     #makecircle4(space,500,20)
     #makecircle4(space,500,60)
-    #makecircle4(space,500,40)
+    makecircle4(space,500,40)
         #makemethan(space,random.randint(500,700),random.randint(500,700),random.randint(500,700))
 #    makemethan(space, 500,500,500)
     #makeethan(space, 500,500,500)

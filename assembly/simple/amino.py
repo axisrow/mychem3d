@@ -29,8 +29,6 @@ def action1(space):
         bond_atoms(space.atoms[0],a2)
         space.atoms2compute()
 
-        space.atoms2compute()
-
 
     if space.t==50:
         pass

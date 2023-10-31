@@ -1,5 +1,7 @@
 import random
 from re import S
+import sys, os
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from mychem3d import mychemApp, Atom
 from math import pi 
 import mychem3d
@@ -37,7 +39,6 @@ if __name__ == '__main__':
     #a = Atom(500,700,500,100,m=100,r=50)
     #a.v = glm.vec3(0,-1,0)
     #space.appendatom(a)
-    space.gpu_compute = True
     
     space.appendmixer(2)
     #space.export_nodes = True

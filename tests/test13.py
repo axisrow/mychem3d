@@ -42,12 +42,15 @@ a2.nodes[0].q = -1
 a3 = Atom(450,530,500,1,f=pi, f2=0,r=6,m=1)
 a3.nodes[0].q = -1
 
-#space.debug = True
+space.debug = True
 space.gpu_compute.set(False)
 #space.stoptime = 1
 space.appendatom(a)        
 space.appendatom(a2)        
-#space.appendatom(a3)       
+
+space.appendatom(a3)       
+print (space.get_node_by_index(5))
+
 #space.appendmixer(2)
 #space.export = True
 #space.stoptime = 0

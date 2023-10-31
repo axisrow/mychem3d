@@ -94,12 +94,17 @@ vec3 rotate_vector(vec3 v, vec4 r)
 }
 
 void limits(inout vec3 pos,  inout vec3 v, in float radius){
-    if(v.x>1) v.x=1;
-    if(v.y>1) v.y=1;
-    if(v.z>1) v.z=1;
-    if(v.x<-1) v.x=-1;
-    if(v.y<-1) v.y=-1;
-    if(v.z<-1) v.z=-1;
+    //if(v.x>1) v.x=1;
+    //if(v.y>1) v.y=1;
+    //if(v.z>1) v.z=1;
+    //if(v.x<-1) v.x=-1;
+    //if(v.y<-1) v.y=-1;
+    //if(v.z<-1) v.z=-1;
+    //v.x = clamp(v.x,-1,1);
+    //v.y = clamp(v.y,-1,1);
+    //v.z = clamp(v.z,-1,1);
+    v = clamp(v , vec3(-1,-1,-1), vec3(1,1,1));
+
 
     if (pos.x > WIDTH-radius){
         pos.x = WIDTH-radius;
@@ -139,13 +144,13 @@ int shift_q(in float type1, in float type2, inout float q1, inout float q2){
     for(int i=0;i<etable.length();i++){
         if (etable[i]==type1){
             i1 = i;
-            break;
+            //break;
         }
     }
     for(int i=0;i<etable.length();i++){
         if (etable[i]==type2){
             i2 = i;
-            break;
+            //break;
         }
     }
     if (i1>i2){
@@ -300,8 +305,9 @@ void main()
                             vec3 v1 = normalize(ni_realpos);
                             vec3 v2 = normalize(target_direction);
                             float dt = dot(v1,v2);
-                            if(dt>1) dt=1;
-                            if(dt<-1) dt=-1;
+                            //if(dt>1) dt=1;
+                            //if(dt<-1) dt=-1;
+                            dt = clamp(dt,-1,1);
                             if (v1!=v2){
                                     vec3 axis = cross(v1,v2);
                                     float angle = acos(dt);
