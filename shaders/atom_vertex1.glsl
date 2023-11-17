@@ -20,8 +20,8 @@ struct Atom
     vec4 rot;
     vec4 rotv;
     float animate;
-    Node nodes[5];
     vec4 color;
+    Node nodes[5];
 };
 
 

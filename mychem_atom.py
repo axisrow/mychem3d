@@ -1,7 +1,31 @@
 from math import pi,sin,cos
+from ctypes import Structure,c_float,c_bool
 import glm
 
-class Node:
+class NodeC(Structure):
+    _fields_ = [
+        ("pos", c_float*4),
+        ("q", c_float),
+        ("bonded", c_float),
+        ("pair", c_float),
+        ("_padding",c_float)
+    ]
+
+    def to_ctypes(self,n,space):
+        self.pos[0:3] = n.pos.to_list()
+        self.pos[3] = 0
+        self.q = n.q 
+        self.bonded = float(n.bonded)
+        self.pair = float(space.get_index_by_node(n.pair))
+    
+    def from_ctypes(self,n,space):
+        #n.pos = glm.vec3(self.pos[0:3])
+        n.q = self.q
+        n.bonded = bool(self.bonded)
+        n.pair = space.get_node_by_index(self.pair) 
+
+
+class Node():
     def __init__(self,parent):
         self.f = 0
         self.f2 = 0
@@ -11,7 +35,6 @@ class Node:
         self.parent = parent
         self.q = 0 
         self.pos = glm.vec3(0,0,0)
-
 
     def bond(self,n):
         n.pair = self
@@ -66,7 +89,55 @@ class ElectronPairing():
         #self.node = None
 
 
-class Atom:
+class AtomC(Structure):
+    _fields_ = [
+        ("pos", c_float*4),
+        ("v", c_float*4),
+        ("type", c_float),
+        ("r", c_float),
+        ("m", c_float),
+        ("ncount", c_float),
+        ("rot", c_float*4),
+        ("rotv", c_float*4),
+        ("animate", c_float),
+        ("_pad1", c_float*3),
+        ("color", c_float*4),
+        ]
+    def to_ctypes(self, a):
+        self.pos[0:3]= a.pos.to_list()
+        self.pos[3]= 0
+        self.v[0:3]= a.v.to_list()
+        self.v[3]= 0
+        self.type = a.type
+        self.r = a.r
+        self.m = a.m
+        self.ncount = len(a.nodes)
+        self.rot[0]= a.rot.x
+        self.rot[1]= a.rot.y
+        self.rot[2]= a.rot.z
+        self.rot[3]= a.rot.w
+        self.rotv[0]= a.rotv.x
+        self.rotv[1]= a.rotv.y
+        self.rotv[2]= a.rotv.z
+        self.rotv[3]= a.rotv.w
+        self.animate = 0.0
+        self.color[0:3]= a.color
+        self.color[3]= 1.0
+
+    def from_ctypes(self,a):
+        a.pos = glm.vec3(self.pos[0:3])
+        a.v = glm.vec3(self.v[0:3])
+        a.rot.x = self.rot[0]
+        a.rot.y = self.rot[1]
+        a.rot.z = self.rot[2]
+        a.rot.w = self.rot[3]
+        a.rotv.x = self.rotv[0]
+        a.rotv.y = self.rotv[1]
+        a.rotv.z = self.rotv[2]
+        a.rotv.w = self.rotv[3]
+
+
+class Atom():
     id = 0
     def __init__(self,x,y,z, type=1,f=0,f2=0,r=10,m=1,q=0,fixed=False):
         Atom.id += 1
@@ -119,9 +190,6 @@ class Atom:
             self.color = (0.0,1.0,0.0)
         if self.type==100:
             self.color = (1.0, 0.0, 1.0)
-
-
-
 
         if self.type<6 and self.type!=4 and self.type!=2 and self.type!=5:
             for i in range(0,self.type):

@@ -49,9 +49,8 @@ struct Atom
     vec4 rot;
     vec4 rotv;
     float animate;
-    Node nodes[5];
     vec4 color;
-
+    Node nodes[5];
 };
 // Input buffer
 layout(std430, binding=0) buffer atoms_in

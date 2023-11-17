@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/python3.9
 import tkinter as tk
 import tkinter.filedialog as filedialog
 import time

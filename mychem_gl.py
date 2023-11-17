@@ -11,6 +11,7 @@ from math import sin,cos,sqrt,pi
 import time
 from mychem_functions import make_sphere_vert,make_cube2
 from mychem_data import cube_vertices
+from mychem_atom import Node,AtomC,NodeC
 from array import array
 from mesh import Mesh
 
@@ -87,284 +88,68 @@ class AppOgl(OpenGLFrame):
         self.nframes = 0          
         self.rframes = 0
         self.initok = True
+    
 
-
-
-    def atoms2ssbo(self,bind_flag=True):
+    def atoms2ssbo(self):
         self.N = len(self.space.atoms)
-        print(f"Atoms2ssbo N={self.N}")
-        #if bind_flag: gl.glBindVertexArray(self.atomMesh.VAO )
+        print(f"  Atoms2ssbo N={self.N}")
+        ac = AtomC()
+        nc = NodeC()
         if self.N>0:
-            a_data = []
+            a_data = bytearray()
             for a in self.space.atoms:
-                #
-                a_data.append(a.pos.x)
-                a_data.append(a.pos.y)
-                a_data.append(a.pos.z)
-                a_data.append(0.0)
-                # v
-                a_data.append(a.v.x)
-                a_data.append(a.v.y)
-                a_data.append(a.v.z)
-                a_data.append(0.0)
-                # type, radius, m
-                a_data.append(a.type)
-                a_data.append(a.r)
-                a_data.append(a.m)
-                a_data.append(len(a.nodes))
-                #rot 
-                a_data.append(a.rot.x)
-                a_data.append(a.rot.y)
-                a_data.append(a.rot.z)
-                a_data.append(a.rot.w)
-                #rotv 
-                a_data.append(a.rotv.x)
-                a_data.append(a.rotv.y)
-                a_data.append(a.rotv.z)
-                a_data.append(a.rotv.w)
-                # q
-                a_data.append(0)
-                a_data.append(0)
-                a_data.append(0)
-                a_data.append(0)
+                ac.to_ctypes(a)
+                abytearray =  bytearray(ac)               
+                a_data += abytearray
                 for n in a.nodes:
-                    a_data.append(n.pos.x)
-                    a_data.append(n.pos.y)
-                    a_data.append(n.pos.z)
-                    a_data.append(0.0)
-                    a_data.append(n.q)
-                    a_data.append(n.bonded)
-                    a_data.append(float(self.space.get_index_by_node(n.pair)))
-                    #print(f'debug bonded={n.bonded}, n.pair= {n.pair}, index={float(self.space.get_index_by_node(n.pair))}')
-                    a_data.append(0.0)
+                    nc.to_ctypes(n, self.space)
+                    nbytearray = bytearray(nc)
+                    a_data += nbytearray
                 for i in range(0,5-len(a.nodes)):
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                    a_data.append(0.0)
-                #color
-                a_data.append(a.color[0])
-                a_data.append(a.color[1])
-                a_data.append(a.color[2])
-                a_data.append(1.0)
-
-
-            a_data = np.array(a_data, dtype=np.float32)
+                    nbytearray = bytearray(ctypes.sizeof(NodeC))
+                    a_data += nbytearray
         else:
-            a_data = np.array([], dtype=np.float32)
-        #print(a_data)
-        print(f"atoms buffer len={len(a_data)}")
+            a_data = bytearray()
+        datasize = len(a_data)
+        print(f"  buffer size={datasize}")
         self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
-        
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, a_data.size*4, a_data , gl.GL_DYNAMIC_DRAW);
-        
+       
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, a_data , gl.GL_DYNAMIC_DRAW);
         self.atoms_buffer2 = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
-        zero = np.zeros(a_data.size)
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, zero.size*4, zero , gl.GL_DYNAMIC_DRAW);
-        if bind_flag: gl.glBindVertexArray(0)
-
-
-    def numpy2ssbo(self):
-        self.N = len(self.space.atoms)
-        if self.N==0: return
-        #print(f"numpy2ssbo N={self.N}")
-        space = self.space
-        asize = 68
-        a_data = np.empty([self.N*asize],dtype=np.float32)
-        offset = 0
-        for i in range(0,self.N):
-            #
-            a = self.space.atoms[i]
-            a_data[offset]   = space.np_x[i]
-            offset +=1
-            a_data[offset] = space.np_y[i]
-            offset +=1
-            a_data[offset] = space.np_z[i]
-            offset +=1
-            a_data[offset] = 0.0
-            offset +=1
-            # v
-            a_data[offset]=space.np_vx[i]
-            offset +=1
-            a_data[offset]=space.np_vy[i]
-            offset +=1
-            a_data[offset]=space.np_vz[i]
-            offset +=1
-            a_data[offset]=0.0
-            offset +=1
-            # type, radius, m
-            a_data[offset]=a.type
-            offset +=1
-            a_data[offset]=a.r
-            offset +=1
-            a_data[offset]=a.m
-            offset +=1
-            a_data[offset]=len(a.nodes)
-            offset +=1
-            #rot 
-            a_data[offset]=space.np_rot[i].x
-            offset +=1
-            a_data[offset]=space.np_rot[i].y
-            offset +=1
-            a_data[offset]=space.np_rot[i].z
-            offset +=1
-            a_data[offset]=space.np_rot[i].w
-            offset +=1
-            #rotv 
-            a_data[offset]=space.np_rotv[i].x
-            offset +=1
-            a_data[offset]=space.np_rotv[i].y
-            offset +=1
-            a_data[offset]=space.np_rotv[i].z
-            offset +=1
-            a_data[offset]=space.np_rotv[i].w
-            offset +=1
-            # anim
-            a_data[offset] =0.0
-            offset +=1
-            a_data[offset] =0.0
-            offset +=1
-            a_data[offset] =0.0
-            offset +=1
-            a_data[offset] =0.0
-            offset +=1
-            for n in a.nodes:
-                a_data[offset]   = n.pos.x
-                offset +=1
-                a_data[offset] = n.pos.y
-                offset +=1
-                a_data[offset] = n.pos.z
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = n.q
-                offset +=1
-                a_data[offset] = n.bonded
-                offset +=1
-                a_data[offset] = -1.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-            for i in range(0,5-len(a.nodes)):
-                a_data[offset]   = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-                a_data[offset] = 0.0
-                offset +=1
-            #color 
-            a_data[offset]=a.color[0]
-            offset +=1
-            a_data[offset]=a.color[1]
-            offset +=1
-            a_data[offset]=a.color[2]
-            offset +=1
-            a_data[offset]=1.0
-            offset +=1
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
-        gl.glBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, a_data.size*4, a_data )
+        zero = bytearray(datasize)
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, zero , gl.GL_DYNAMIC_DRAW);
 
     def ssbo2atoms(self):
         self.N = len(self.space.atoms)
-        print(f"ssbo2atoms N={self.N}")
-        space = self.space
-        asize = 68
-        #a_data = np.empty([self.N*asize],dtype=np.float32)
+        print(f"  ssbo2atoms N={self.N}")
+        asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        #gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
-        a_data8 = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, self.N*asize*4)
-        a_data = a_data8.view('<f4')
-        #self.space.fdata.write(np.array2string(a_data)+" " + str(self.space.t)+"\n")
+        a_data8 = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, self.N*asize)
+        print("  getbuffersubdata size=", self.N*asize)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
-
         offset = 0
         for i in range(0,self.N):
-            #
             a = self.space.atoms[i]
-            a.pos.x = float(a_data[offset]) 
-            offset +=1
-            a.pos.y = float(a_data[offset])
-            offset +=1
-            a.pos.z = float(a_data[offset])
-            offset +=2
-            # v
-            a.v.x = float(a_data[offset])
-            offset +=1
-            a.v.y = float(a_data[offset])
-            offset +=1
-            a.v.z = float(a_data[offset])
-            offset +=2
-            # type, radius, m
-            #a_data[offset]=a.type
-            #a_data[offset]=a.r
-            #a_data[offset]=a.m
-            #a_data[offset]=len(a.nodes)
-            offset +=4
-            #rot 
-            a.rot.x = float(a_data[offset])
-            offset +=1
-            a.rot.y = float(a_data[offset])
-            offset +=1
-            a.rot.z = float(a_data[offset])
-            offset +=1
-            a.rot.w = float(a_data[offset])
-            offset +=1
-            #rotv 
-            a.rotv.x = float(a_data[offset])
-            offset +=1
-            a.rotv.y = float(a_data[offset])
-            offset +=1
-            a.rotv.z = float(a_data[offset])
-            offset +=1
-            a.rotv.w = float(a_data[offset])
-            offset +=1
-            # anim
-            #a_data[offset] =0.0
-            #a_data[offset] =0.0
-            #a_data[offset] =0.0
-            #a_data[offset] =0.0
-            offset +=4
+            abytearray = a_data8[offset:offset+ctypes.sizeof(AtomC)]
+            ac = AtomC.from_buffer(abytearray)
+            ac.from_ctypes(a)
+            offset+= ctypes.sizeof(AtomC)
             for n in a.nodes:
-                #a_data[offset]   = n.pos.x
-                #a_data[offset] = n.pos.y
-                #a_data[offset] = n.pos.z
-                #a_data[offset] = 0.0
-                offset +=4
-                n.q = float(a_data[offset])
-                offset +=1
-                n.bonded = bool(a_data[offset])
-                offset +=1
-                n.pair = self.space.get_node_by_index(a_data[offset]) 
-                #print(f"debug i={i} data = {a_data[offset]}, node = { n.pair}")
-                #a_data[offset] = 0.0
-                offset +=2
+                nbytearray = a_data8[offset:offset+ctypes.sizeof(NodeC)]
+                nc = NodeC.from_buffer(nbytearray)
+                nc.from_ctypes(n,self.space)
+                offset+= ctypes.sizeof(NodeC)
             for i in range(0,5-len(a.nodes)):
-                offset +=8
-            #color 
-            #a_data[offset]=a.color[0]
-            #a_data[offset]=a.color[1]
-            #a_data[offset]=a.color[2]
-            #a_data[offset]=1.0
-            offset +=4
+                offset+= ctypes.sizeof(NodeC)
+
+    def numpy2ssbo(self):
+        self.space.numpy2atoms()
+        self.atoms2ssbo()
+
 
 
     def init_loc(self):

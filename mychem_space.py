@@ -6,6 +6,7 @@ import random
 from mychem_atom import Atom
 import glm
 import tkinter as tk
+import time
 
 class Space:
     def __init__(self,width=1000,height=1000,depth=1000):
@@ -231,21 +232,28 @@ class Space:
          
 
     def atoms2compute(self):
+        t = time.time()
         if self.gpu_compute.get():
             print("atoms2compute gpu")
-            self.glframe.atoms2ssbo(bind_flag=True)
+            self.glframe.atoms2ssbo()
         else:
             print("atoms2compute numpy")
             self.glframe.atoms2ssbo()
             self.atoms2numpy()
+        delta = time.time() - t
+        print("  delta=", delta)            
+
     
     def compute2atoms(self):
+        t = time.time()
         if self.gpu_compute.get():
             print("compute2atoms gpu")
             self.glframe.ssbo2atoms()
         else:
             print("compute2atoms numpy")
             self.numpy2atoms()
+        delta = time.time() - t
+        print("  delta=", delta)     
 
     def merge2atoms(self):
         #self.compute2atoms()
