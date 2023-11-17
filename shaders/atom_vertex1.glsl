@@ -2,6 +2,7 @@
 
 struct Node {
     vec4 pos;
+    vec4 rpos;  //real position
     float q;
     float bonded;
     float pair;
@@ -20,6 +21,7 @@ struct Atom
     vec4 rot;
     vec4 rotv;
     float animate;
+    float q;
     vec4 color;
     Node nodes[5];
 };
@@ -55,22 +57,6 @@ out vec3 FragPos;
 
 //out Atom currentAtom;
 
-
-vec4 qmul(vec4 q1, vec4 q2)
-{
-         return vec4(
-             q2.xyz * q1.w + q1.xyz * q2.w + cross(q1.xyz, q2.xyz),
-             q1.w * q2.w - dot(q1.xyz, q2.xyz)
-         );
-}
-   
-// Vector rotation with a quaternion
-// http://mathworld.wolfram.com/Quaternion.html
-vec3 rotate_vector(vec3 v, vec4 r)
-{
-         vec4 r_c = r * vec4(-1, -1, -1, 1);
-         return qmul(r, qmul(vec4(v, 0), r_c)).xyz;
-}
 
 
 void main()
@@ -109,12 +95,14 @@ void main()
     if (mode==2) { //nodes
         float factor = 0.001;
         Atom currentAtom = In.atoms[gl_InstanceID];
-        vec3 nodepos = rotate_vector(currentAtom.nodes[nodeindex].pos.xyz, currentAtom.rot);
+        //vec3 nodepos = rotate_vector(currentAtom.nodes[nodeindex].pos.xyz, currentAtom.rot);
+        vec3 nodepos = currentAtom.nodes[nodeindex].rpos.xyz;
         nodepos += currentAtom.pos.xyz;
         vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
         gl_Position = projection * view * vposition;
         float q = currentAtom.nodes[nodeindex].q;
         float bonded = currentAtom.nodes[nodeindex].bonded;
+        // node charge and bond color
         if (q==0) ObjectColor = vec3(1,1,1);
         if (q==1) ObjectColor = vec3(1,0,0); //vec3(255/256.0,95/256.0,160/256.0);
         if (q==-1) ObjectColor = vec3(0.0,0,252/256.0);

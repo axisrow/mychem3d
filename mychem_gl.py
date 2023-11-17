@@ -154,6 +154,7 @@ class AppOgl(OpenGLFrame):
 
     def init_loc(self):
             self.loc = {}
+            self.loc.update( {"stage": gl.glGetUniformLocation(self.gpu_code, "stage")})
             self.loc.update( {"iTime": gl.glGetUniformLocation(self.gpu_code, "iTime")})
             self.loc.update( {"bondlock": gl.glGetUniformLocation(self.gpu_code, "bondlock") })
             self.loc.update( {"gravity": gl.glGetUniformLocation(self.gpu_code, "gravity") })
@@ -291,6 +292,9 @@ class AppOgl(OpenGLFrame):
             for i in range(0,self.space.update_delta):
                 self.space.t+=1
                 if not self.space.pause:
+                    gl.glUniform1i(self.loc["stage"],1)
+                    gl.glDispatchCompute(int(len(self.space.atoms)/50)+1,1,1)        
+                    gl.glUniform1i(self.loc["stage"],2)
                     gl.glDispatchCompute(int(len(self.space.atoms)/50)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer

@@ -94,7 +94,7 @@ class mychemApp():
         self.merge_mode = False
         self.ttype = "mx"
         self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
-        self.glframe.animate = 1
+        self.glframe.animate = 10
         self.glframe.set_space(self.space)
         self.space.glframe = self.glframe
         #   app.config(cursor="none")

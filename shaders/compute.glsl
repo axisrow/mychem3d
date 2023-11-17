@@ -6,6 +6,7 @@ layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
 // Input uniforms go here if you need them.
 // Some examples:
 //uniform vec2 screen_size;
+uniform int stage;
 uniform int iTime;
 uniform int bondlock;
 uniform int gravity;
@@ -31,6 +32,7 @@ float DEPTH = 1000;
 // Structure of the ball data
 struct Node {
     vec4 pos;
+    vec4 rpos;  //real position
     float q;
     float bonded;
     float pair;
@@ -41,7 +43,6 @@ struct Atom
 {
     vec4 pos;
     vec4 v;
-//    vec4 a;
     float type;
     float r;
     float m;
@@ -49,6 +50,7 @@ struct Atom
     vec4 rot;
     vec4 rotv;
     float animate;
+    float q;
     vec4 color;
     Node nodes[5];
 };
@@ -184,7 +186,16 @@ int shift_q(in float type1, in float type2, inout float q1, inout float q2){
 void main()
 {
     //if (nframes>30) return; 
-    Atom atom_i, atom_j;
+    if (stage==1){  //calc q and rpos of nodes
+       In.atoms[i].q=0;
+       for (int ni = 0; ni<In.atoms[i].ncount; ni++ ) {
+                In.atoms[i].nodes[ni].rpos.xyz = rotate_vector(In.atoms[i].nodes[ni].pos.xyz, In.atoms[i].rot);
+                In.atoms[i].q+= In.atoms[i].nodes[ni].q;
+       } 
+       return;
+    }
+
+    Atom atom_i;
     vec3 pos_i,pos_j, v_i, v_j;
     
     atom_i = In.atoms[i];
@@ -201,12 +212,6 @@ void main()
 
 //  animate
     if (atom_i.animate >0) atom_i.animate-=1;
-
-    float atom_iq = 0;
-    for (int ni = 0; ni<atom_i.ncount; ni++ )  atom_iq+= atom_i.nodes[ni].q;
-//    atom_i.q
-        //
-
 
     //random redox 
     if (redox==1){
@@ -227,17 +232,13 @@ void main()
 
     for (int j=0;j<In.atoms.length();j++){
         if (i == j) continue;
-        atom_j = In.atoms[j];
+        Atom atom_j = In.atoms[j];
         pos_j = atom_j.pos.xyz;
         delta = pos_i - pos_j;
         r = distance(pos_i, pos_j);
         if (r==0) continue;
-        
-        // 
-        // 
-        float atom_jq = 0;
-        for (int nj = 0; nj<atom_j.ncount; nj++ )  atom_jq+= atom_j.nodes[nj].q;
-        a= atom_iq*atom_jq*INTERACT_KOEFF*0.5/r;
+
+        a= atom_i.q*atom_j.q*INTERACT_KOEFF*0.5/r;
         E += delta/r*a;   //
 
         if (r<60) {
@@ -254,12 +255,12 @@ void main()
              vec3 nE,ni_realpos,nj_realpos,ndelta;
              vec3 allnE = vec3(0,0,0);  
              for (int ni = 0; ni<atom_i.ncount; ni++ ) {
-                ni_realpos = rotate_vector(atom_i.nodes[ni].pos.xyz, atom_i.rot);
+                ni_realpos = atom_i.nodes[ni].rpos.xyz;
                 float ni_index= i*5+ni;
                 float ni_q=atom_i.nodes[ni].q;
                 nE = vec3(0.0,0.0,0.0);
                 for (int nj = 0; nj<atom_j.ncount; nj++){
-                    nj_realpos = rotate_vector(atom_j.nodes[nj].pos.xyz, atom_j.rot);
+                    nj_realpos = atom_j.nodes[nj].rpos.xyz;
                     ndelta =  ni_realpos - nj_realpos + delta;
                     float nj_index = j*5+nj;
                     rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);

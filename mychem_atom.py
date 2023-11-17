@@ -5,6 +5,7 @@ import glm
 class NodeC(Structure):
     _fields_ = [
         ("pos", c_float*4),
+        ("rpos", c_float*4),
         ("q", c_float),
         ("bonded", c_float),
         ("pair", c_float),
@@ -53,7 +54,7 @@ class Node():
         #PHCSNO
         type1 = self.parent.type
         type2 = n.parent.type
-        table=[5,1,4,400,6,3,2,200]
+        table=[5,500,1,4,400,6,600,3,2,200]
         i1 = table.index(type1)
         i2 = table.index(type2)
         canbond = False
@@ -100,7 +101,8 @@ class AtomC(Structure):
         ("rot", c_float*4),
         ("rotv", c_float*4),
         ("animate", c_float),
-        ("_pad1", c_float*3),
+        ("q",  c_float),
+        ("_pad1", c_float*2),
         ("color", c_float*4),
         ]
     def to_ctypes(self, a):
@@ -121,6 +123,7 @@ class AtomC(Structure):
         self.rotv[2]= a.rotv.z
         self.rotv[3]= a.rotv.w
         self.animate = 0.0
+        self.q = 0.0
         self.color[0:3]= a.color
         self.color[3]= 1.0
 
