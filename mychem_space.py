@@ -18,6 +18,7 @@ class Space:
         self.WIDTH=width
         self.HEIGHT=height
         self.DEPTH=depth
+        self.box = glm.vec3(self.WIDTH, self.HEIGHT, self.DEPTH)
         self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.3
         self.BONDR = 4.0
@@ -495,6 +496,7 @@ class Space:
             self.atoms = []
         for a in j["atoms"]:
             type = a["type"]
+            #if type==100: continue
             if "z" in a:
                 z = a["z"]
                 vz = a["vz"]
@@ -523,8 +525,6 @@ class Space:
                  for n in a["nodes"]:
                     aa.nodes[ni].q= n["q"]
                     ni+=1
-
-                      
             if merge:
                 aa.space = self
                 self.merge_atoms.append(aa)

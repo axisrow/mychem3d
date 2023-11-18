@@ -1,12 +1,13 @@
 #version 430
 
 // Set up our compute groups
-layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
+layout(local_size_x=80, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
 // Some examples:
 //uniform vec2 screen_size;
 uniform int stage;
+uniform vec3 box;
 uniform int iTime;
 uniform int bondlock;
 uniform int gravity;
@@ -23,9 +24,9 @@ float REPULSION1 = -3;
 uniform float REPULSION_KOEFF1;
 float REPULSION2 = 6;
 uniform float REPULSION_KOEFF2;
-float WIDTH = 1000;
-float HEIGHT = 1000;
-float DEPTH = 1000;
+float WIDTH = box.x;
+float HEIGHT = box.y;
+float DEPTH = box.z;
 
 
 
@@ -140,7 +141,7 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 
 
 int shift_q(in float type1, in float type2, inout float q1, inout float q2){
-    float etable[10]=float[](5,500,1,4,400,6,600,3,2,200);
+    float etable[11]=float[](5,500,1,4,400,6,600,3,2,200,100);
     int i1,i2;
     for(int i=0;i<etable.length();i++){
         if (etable[i]==type1){
@@ -210,6 +211,7 @@ void main()
     vec3 E = vec3(0.0,0.0,0.0);
     vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
 
+    
 //  animate
     if (atom_i.animate >0) atom_i.animate-=1;
 
@@ -221,7 +223,7 @@ void main()
                     atom_i.animate = 500;                    
                 }
             }
-            if (pos_i.x>700){
+            if (pos_i.x>WIDTH-300){
                 if (rand(v_i.xy)>=0.9994) {
                     atom_i.nodes[0].q = -1;
                     atom_i.animate = 500;

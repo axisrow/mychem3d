@@ -191,8 +191,12 @@ class Atom():
 
         if self.type==10:
             self.color = (0.0,1.0,0.0)
+        
         if self.type==100:
             self.color = (1.0, 0.0, 1.0)
+            self.m = 100
+            self.r = 25
+
 
         if self.type<6 and self.type!=4 and self.type!=2 and self.type!=5:
             for i in range(0,self.type):

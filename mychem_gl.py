@@ -155,6 +155,7 @@ class AppOgl(OpenGLFrame):
     def init_loc(self):
             self.loc = {}
             self.loc.update( {"stage": gl.glGetUniformLocation(self.gpu_code, "stage")})
+            self.loc.update( {"box": gl.glGetUniformLocation(self.gpu_code, "box")})
             self.loc.update( {"iTime": gl.glGetUniformLocation(self.gpu_code, "iTime")})
             self.loc.update( {"bondlock": gl.glGetUniformLocation(self.gpu_code, "bondlock") })
             self.loc.update( {"gravity": gl.glGetUniformLocation(self.gpu_code, "gravity") })
@@ -184,9 +185,10 @@ class AppOgl(OpenGLFrame):
         self.containerMesh = Mesh(self.cube_vertices)
         self.containerMesh.setup()
         model =  glm.mat4()
-        model =  glm.translate(model, glm.vec3(0.5, 0.5,0.5))
+        model =  glm.scale(model,self.space.box/glm.vec3(1000))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
-        model =  glm.scale(model,glm.vec3(1))
+        model =  glm.translate(model, glm.vec3(1, 1, 1))
+
         self.containerMesh.color = (1,1,1)
         self.containerMesh.modelmatrix = model
 
@@ -279,6 +281,7 @@ class AppOgl(OpenGLFrame):
         if not self.space.pause and self.space.gpu_compute.get():
             gl.glUseProgram(self.gpu_code)
             gl.glUniform1i(self.loc["bondlock"],self.space.bondlock.get())
+            gl.glUniform3fv(self.loc["box"], 1, glm.value_ptr(self.space.box))
             gl.glUniform1i(self.loc["iTime"],self.space.t)
             gl.glUniform1i(self.loc["gravity"],self.space.gravity.get())
             gl.glUniform1i(self.loc["redox"],self.space.redox.get())
@@ -293,9 +296,9 @@ class AppOgl(OpenGLFrame):
                 self.space.t+=1
                 if not self.space.pause:
                     gl.glUniform1i(self.loc["stage"],1)
-                    gl.glDispatchCompute(int(len(self.space.atoms)/50)+1,1,1)        
+                    gl.glDispatchCompute(int(len(self.space.atoms)/80)+1,1,1)        
                     gl.glUniform1i(self.loc["stage"],2)
-                    gl.glDispatchCompute(int(len(self.space.atoms)/50)+1,1,1)        
+                    gl.glDispatchCompute(int(len(self.space.atoms)/80)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
