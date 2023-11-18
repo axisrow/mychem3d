@@ -198,7 +198,7 @@ class mychemApp():
         self.sim_pause()
         self.space.atoms = []	
         self.space.mixers = []
-        self.space.merge_pos = glm.vec3(0,0,0)
+        self.space.merge_pos = self.space.box/2
         self.space.merge_rot = glm.quat()
         self.space.merge_atoms = []
         self.space.select_mode = False
@@ -350,7 +350,7 @@ class mychemApp():
             self.sim_pause()
             a = self.space.atoms[self.space.select_i]
             self.space.merge_atoms = [a]
-            self.space.merge_pos = glm.vec3(0,0,0)
+            self.space.merge_pos = self.space.box/2
             self.space.merge_rot = glm.quat()
             a.unbond()  
             self.space.atoms.remove(a)

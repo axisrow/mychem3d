@@ -215,7 +215,6 @@ class AppOgl(OpenGLFrame):
                 pos = glm.vec3(a.pos)
                 pos -= self.space.merge_center
                 pos = self.space.merge_rot * pos
-                pos += self.space.merge_center
                 pos += self.space.merge_pos
                 pos *= self.factor
                 model =  glm.translate(pos)
@@ -229,7 +228,6 @@ class AppOgl(OpenGLFrame):
                     pos += a.pos
                     pos -= self.space.merge_center
                     pos = self.space.merge_rot * pos
-                    pos += self.space.merge_center
                     pos += self.space.merge_pos
                     pos *= self.factor
                     model =  glm.translate(pos)

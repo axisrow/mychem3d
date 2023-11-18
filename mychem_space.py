@@ -41,7 +41,7 @@ class Space:
         self.createf = 0
         self.standard = True
         self.merge_atoms = []
-        self.merge_pos = glm.vec3(0,0,0)
+        self.merge_pos = self.box/2
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
         self.select_mode = False
@@ -264,7 +264,6 @@ class Space:
             pos = a.pos
             pos -= self.merge_center
             pos = self.merge_rot * pos
-            pos += self.merge_center
             pos += self.merge_pos
             a.pos = pos
             a.rot = self.merge_rot * a.rot
@@ -282,7 +281,7 @@ class Space:
         self.merge_pos = glm.vec3(x,y,z)
         self.merge_rot = merge_rot
         first = self.merge2atoms()
-        self.merge_pos = glm.vec3(0,0,0)
+        self.merge_pos = self.box/2
         self.merge_rot = glm.quat()
         return first
 
