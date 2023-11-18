@@ -14,7 +14,7 @@ import glm
 def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    #C+C
-        a0 = Atom(x,y,z,4,r=10,m=12)
+        a0 = Atom(x,y,z,4)
         space.appendatom(a0)
         a1 = Atom(x+50,y,z,4)
         space.appendatom(a1)
@@ -23,7 +23,7 @@ def action1(space):
 
     if space.t==450: #C+C+C
         space.compute2atoms()
-        a2 = Atom(x,y,z+50,4)
+        a2 = Atom(x,y,z+50,4,f2=-pi/2)
         space.appendatom(a2)
         bond_atoms(space.atoms[1],a2)
         space.atoms2compute()
@@ -42,7 +42,7 @@ def action1(space):
 
     if space.t==3200:  #C1 +H
         space.compute2atoms()
-        a = Atom(x+40,y,z,1, f=pi)
+        a = Atom(x+40,y-20,z,1, f=pi)
         space.appendatom(a)
         bond_atoms(space.atoms[1],a)
         space.atoms2compute()
@@ -54,7 +54,7 @@ def action1(space):
         bond_atoms(space.atoms[0],a)
         space.atoms2compute()
 
-    if space.t==4500: # C0+H
+    if space.t==4600: # C0+H
         space.compute2atoms()
         a = Atom(x-50,y,z,1)
         space.appendatom(a)
@@ -62,24 +62,24 @@ def action1(space):
         space.atoms2compute()
 
 
-    if space.t==5000: # C2+H
+    if space.t==5200: # C2+H
         space.compute2atoms()
         a = Atom(x-30,y,z,1)
         space.appendatom(a)
         bond_atoms(space.atoms[2],a)
         space.atoms2compute()
 
-    if space.t==5500: # C2+O
+    if space.t==5700: # C2+O
         space.compute2atoms()
-        a = Atom(x-20,y,z,2)
+        a = Atom(x+20,y,z,2)
         space.appendatom(a)
         bond_atoms(space.atoms[2],a)
         space.atoms2compute()
 
 
-    if space.t==6300: # O+H
+    if space.t==7300: # O+H
         space.compute2atoms()
-        a = Atom(x-20,y+20,z+20,1)
+        a = Atom(x+20,y+20,z+20,1)
         space.appendatom(a)
         bond_atoms(space.atoms[8],a)
         space.atoms2compute()
@@ -100,7 +100,6 @@ if __name__ == '__main__':
     space.INTERACT_KOEFF = 0.1
     space.update_delta = 25
     #space.gpu_compute.set(False)
-    space.bondlock.set(True)
     App.run()
 #
 #

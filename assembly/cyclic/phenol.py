@@ -121,7 +121,7 @@ def action1(space:Space):
 
     if space.t==3200: #C+H
         space.compute2atoms()
-        i = space.merge_from_file("examples/simple/OH.json",-50,0,0)
+        i = space.merge_from_file("examples/simple/OH.json",450,500,500)
         bond_atoms(a5,space.atoms[i])
         space.atoms2compute()
 
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     #space.INTERACT_KOEFF = 0.5
     #space.BONDS_KOEFF = 0.5
     space.REPULSION_KOEFF1 = 7
-    space.update_delta = 5
+    space.update_delta = 25
     #space.gpu_compute.set(False)
     space.bondlock.set(True)
     App.run()

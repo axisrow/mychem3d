@@ -65,7 +65,7 @@ def action1(space):
     if space.t==1800: #C+C
         space.compute2atoms()
         rot = glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(1,0,0))
-        i = space.merge_from_file("examples/simple/OH.json",40,20,40,rot )        
+        i = space.merge_from_file("examples/simple/OH.json",540,520,540,rot )        
         bond_atoms(a1,space.atoms[i])
         space.atoms2compute()
 
@@ -73,7 +73,7 @@ def action1(space):
     if space.t==2300: #C+C
         space.compute2atoms()
         rot = glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(1,0,0))
-        i = space.merge_from_file("examples/simple/OH.json",20,20,-20,rot )        
+        i = space.merge_from_file("examples/simple/OH.json",520,520,480,rot )        
         bond_atoms(a2,space.atoms[i],3)
         space.atoms2compute()
 
@@ -81,7 +81,7 @@ def action1(space):
     if space.t==2600: #C+C
         space.compute2atoms()
         rot = glm.quat(cos(-pi/4), sin(-pi/4)*glm.vec3(0,0,1)) * glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(1,0,0)) 
-        i = space.merge_from_file("examples/simple/OH.json",0,-30,-20,rot )        
+        i = space.merge_from_file("examples/simple/OH.json",500,470,480,rot )        
         bond_atoms(a3,space.atoms[i])
         space.atoms2compute()
 
@@ -89,7 +89,7 @@ def action1(space):
     if space.t==2900: #C+C
         space.compute2atoms()
         rot = glm.quat(cos(-pi/4), sin(-pi/4)*glm.vec3(0,0,1))  * glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(1,0,0)) 
-        i = space.merge_from_file("examples/simple/OH.json",-80,-30,40,rot )        
+        i = space.merge_from_file("examples/simple/OH.json",520,570,540,rot )        
         bond_atoms(a5,space.atoms[i],2)
         space.atoms2compute()
 ##########

@@ -17,14 +17,12 @@ import glm
 def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    #C+C
-        a0 = Atom(x,y,z,4,r=10,m=12)
+        a0 = Atom(x,y,z,4)
         space.appendatom(a0)
         a1 = Atom(x+50,y,z,4)
         space.appendatom(a1)
         bond_atoms(a0,a1)
         space.atoms2compute()
-
-
 
     if space.t==450: #C+C+C
         space.compute2atoms()

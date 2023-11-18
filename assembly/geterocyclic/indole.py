@@ -143,13 +143,13 @@ def action1(space):
         space.atoms2compute()
 
 
-    if space.t==4600: #C+C
+    if space.t==5800: #C+C
         space.compute2atoms()
         bond_atoms(n1,a4,2)
         space.atoms2compute()
 
 
-    if space.t==4800: #C+H
+    if space.t==6200: #C+H
         space.compute2atoms()
         a = Atom(x-60,y-60,z,1)
         space.appendatom(a)
@@ -157,7 +157,7 @@ def action1(space):
         space.atoms2compute()
 
 
-    if space.t==5000: #C+H
+    if space.t==6500: #C+H
         space.compute2atoms()
         a = Atom(x-60,y-60,z,1)
         space.appendatom(a)
@@ -165,7 +165,7 @@ def action1(space):
         space.atoms2compute()
 
 
-    if space.t==5200: #C+H
+    if space.t==6800: #C+H
         space.compute2atoms()
         a = Atom(x-60,y-60,z,1)
         space.appendatom(a)

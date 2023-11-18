@@ -175,7 +175,7 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    space.INTERACT_KOEFF = 0.5
+    space.INTERACT_KOEFF = 0.4
     #space.BONDS_KOEFF = 0.5
     space.REPULSION_KOEFF1 = 7
     space.update_delta = 15
