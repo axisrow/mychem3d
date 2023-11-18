@@ -19,10 +19,17 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-#
+    space.setSize(2000,100,1000)
     for i in range(0,300):
-        space.merge_from_file("examples/simple/NH3.json",random.randint(-500,500),random.randint(-500,500),random.randint(-500,500))
-        space.merge_from_file("examples/aldehyde/glycolaldehyde.json",random.randint(-500,500),random.randint(-500,500),random.randint(-500,500))
+        x = random.randint(0,space.WIDTH)
+        y = random.randint(0,space.HEIGHT)
+        z = random.randint(0,space.DEPTH)
+        space.merge_from_file("examples/simple/NH3.json",x,y,z)
+        x = random.randint(0,space.WIDTH)
+        y = random.randint(0,space.HEIGHT)
+        z = random.randint(0,space.DEPTH)
+        space.merge_from_file("examples/aldehyde/glycolaldehyde.json",x,y,z)
+
     space.update_delta = 5
      #space.recording = True
     space.appendmixer(1)

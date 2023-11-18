@@ -1,3 +1,4 @@
+#!/usr/bin/python3.9
 import random
 from re import S
 import sys, os

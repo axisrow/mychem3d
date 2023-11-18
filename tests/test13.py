@@ -1,4 +1,6 @@
 import random
+import sys,os
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from mychem3d import mychemApp, Atom
 from math import *
 

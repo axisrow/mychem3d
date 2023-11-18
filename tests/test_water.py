@@ -19,10 +19,12 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    SIZE = 400
     for i in range(0,2000):
-        space.merge_from_file("examples/simple/H2O.json",random.randint(-SIZE,SIZE),random.randint(-SIZE,SIZE),random.randint(-SIZE,SIZE))
-    space.update_delta = 1
+        x = random.randint(0,space.WIDTH)
+        y = random.randint(0,space.HEIGHT)
+        z = random.randint(0,space.DEPTH)        
+        space.merge_from_file("examples/simple/H2O.json",x,y,z)
+    space.update_delta = 5
      #space.recording = True
     #space.appendmixer(1)
     #space.redox.set(True)
@@ -30,3 +32,6 @@ if __name__ == '__main__':
 #
 #
 #300 - 9 fps
+#300 - 1delta 40 fps
+#2000 - 1delta 14,34 
+#2000 - 5 delta 3,89

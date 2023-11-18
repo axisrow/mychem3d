@@ -14,9 +14,9 @@ import glm
 def action1(space):
     global i0,i1,i3,a1
     if space.t==1:    
-        i0=space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
+        i0=space.merge_from_file("examples/simple/carbonyl.json",500,500,500)
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
-        i1=space.merge_from_file("examples/simple/OH.json",-50,0,+30, rot)
+        i1=space.merge_from_file("examples/simple/OH.json",500-50,590,500+30, rot)
         bond_atoms(space.atoms[i0],space.atoms[i1])
         #bond_atoms(space.atoms[0],space.atoms[1])
         space.atoms2compute()
@@ -37,7 +37,7 @@ def action1(space):
 
     if space.t==2500: # +H
         space.compute2atoms()
-        i1=space.merge_from_file("examples/simple/methyl.json",50,0,+30)
+        i1=space.merge_from_file("examples/simple/methyl.json",550,500,500+30)
         bond_atoms(a1,space.atoms[i1])
         space.atoms2compute()
 
@@ -45,7 +45,7 @@ def action1(space):
 
     if space.t==3000: # +H
         space.compute2atoms()
-        i2=space.merge_from_file("examples/simple/aminogroup.json",0,50,0)
+        i2=space.merge_from_file("examples/simple/aminogroup.json",500,520,480)
         bond_atoms(a1,space.atoms[i2])
         space.atoms2compute()
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     space = App.space
     space.action = action1
     #space.INTERACT_KOEFF = 0.6
-    space.update_delta = 5
+    space.update_delta = 15
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
     App.run()

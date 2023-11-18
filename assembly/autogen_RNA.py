@@ -9,7 +9,7 @@ from math import *
 import glm
 
 
-seq = "AAAAAAAA"
+seq = "AAA"
 
 data = { "A": {"name":"adenosine", "corr":(0,0,0)},
          "T": {"name":"thymidine", "corr":(0,0,0)},
@@ -23,11 +23,12 @@ deltat=8000
 
 def action1(space):
     global curindex,tp,nexttime,counter,index1,index2,index3
+    (x,y,z)=(200,200,800)
     if space.t==0:
         counter = 0
         tp = seq[counter]
         corr = glm.vec3(data[tp]["corr"])
-        index1=space.merge_from_file("examples/nucleobase/"+data[tp]["name"]+".json",-200+corr.x,-450+corr.y,300+corr.z)
+        index1=space.merge_from_file("examples/nucleobase/"+data[tp]["name"]+".json",x+corr.x,y+corr.y,z+corr.z)
         #space.atoms[index1+3].color=(0,1,0)
         #space.atoms[index1+5].color=(0,1,0)
         space.atoms[index1+5].nodes[2].q=0  #-OH
@@ -40,7 +41,7 @@ def action1(space):
         if counter+1==len(seq): return
         pos = space.atoms[index1].pos
         rot = glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(0,0,1))
-        index2=space.merge_from_file("examples/simple/h3po4.json",pos.x-590,pos.y-440,pos.z-500,rot)
+        index2=space.merge_from_file("examples/simple/h3po4.json",pos.x,pos.y+40,pos.z,rot)
 
         tp = seq[counter+1]
         corr = glm.vec3(data[tp]["corr"])
@@ -48,7 +49,7 @@ def action1(space):
         #space.atoms[index2+4].color=(0,1,0)
         space.atoms[index2+2].nodes[0].q=0  #H3PO4 -H down
         space.atoms[index2+6].nodes[0].q=0  #H3PO4 -H up
-        index3=space.merge_from_file("examples/nucleobase/"+data[tp]["name"]+".json",pos.x-500+corr.x, pos.y+60-500+corr.y,pos.z-500+corr.z)
+        index3=space.merge_from_file("examples/nucleobase/"+data[tp]["name"]+".json",pos.x+corr.x, pos.y+100+corr.y,pos.z+corr.z)
         space.atoms[index3+3].nodes[2].q=0        
 
         #curindex = 0
@@ -80,6 +81,7 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
+    space.setSize(2000,2000,2000)
     space.action = action1
     space.INTERACT_KOEFF = 0.5
     #space.BOND_KOEFF = 0.2

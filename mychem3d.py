@@ -122,7 +122,7 @@ class mychemApp():
     def run(self):
         self.resetdata = self.space.make_export()
         #self.space.atoms2compute()
-        self.root.after(100,self.firstrun)
+        self.root.after(300,self.firstrun)
         self.root.mainloop()
         
 

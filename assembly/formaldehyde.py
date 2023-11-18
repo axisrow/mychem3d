@@ -16,7 +16,7 @@ def action1(space):
     if space.t==1:    
         print("action50")
        #space.compute2atoms()
-        space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
+        space.merge_from_file("examples/simple/carbonyl.json",x,y,z)
         a1 = Atom(x+10,y,z+50,1, f=pi)
         space.appendatom(a1)
         bond_atoms(space.atoms[0],a1)

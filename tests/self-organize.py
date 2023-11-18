@@ -21,9 +21,9 @@ if __name__ == '__main__':
     space = App.space
 #
     for i in range(0,300):
-        x = random.randint(50,950)-500
-        y = random.randint(50,950)-500
-        z = random.randint(50,950)-500
+        x = random.randint(50,950)
+        y = random.randint(50,950)
+        z = random.randint(50,950)
         f = glm.radians(random.randint(0,360))
         rot = glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random()))
         rot = glm.normalize(rot)

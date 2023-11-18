@@ -14,9 +14,9 @@ import glm
 def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    #OH
-        space.merge_from_file("examples/simple/OH.json",0,0,0)
+        space.merge_from_file("examples/simple/OH.json",500,500,500)
         rot = glm.quat(cos(pi/2), sin(pi/2)*glm.vec3(0,0,1))
-        space.merge_from_file("examples/simple/OH.json",50,20,10,rot)
+        space.merge_from_file("examples/simple/OH.json",520,520,510,rot)
         bond_atoms(space.atoms[0],space.atoms[2])
         space.atoms2compute()
 
@@ -37,8 +37,8 @@ if __name__ == '__main__':
     space.action = action1
     space.INTERACT_KOEFF = 0.06
     space.update_delta = 10
-    space.gpu_compute.set(False)
-    space.bondlock.set(True)
+    #space.gpu_compute.set(False)
+    #space.bondlock.set(True)
     App.run()
 #
 #

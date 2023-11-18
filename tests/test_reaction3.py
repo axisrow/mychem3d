@@ -27,7 +27,10 @@ if __name__ == '__main__':
         #space.merge_from_file("examples/alkene/etylen.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
         #space.merge_from_file("examples/alkane/decane.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))
         #space.merge_from_file("examples/aldehyde/formaldehyde.json",random.randint(-500,500),random.randint(-500,500),random.randint(-500,500))
-        i=space.merge_from_file("examples/nucleobase/adenosine.json",random.randint(-400,400),random.randint(-400,400),random.randint(-400,400))
+        x = random.randint(0,space.WIDTH)
+        y = random.randint(0,space.HEIGHT)
+        z = random.randint(0,space.DEPTH)
+        i=space.merge_from_file("examples/nucleobase/adenosine.json",x,y,z)
         space.atoms[i+5].nodes[0].q = 1
         space.atoms[i+5].color= (0,1,0)
     #space.export = True

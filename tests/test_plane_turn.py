@@ -15,6 +15,10 @@ def makeplane(space,y):
                a = Atom(i,y,j,400,m=12,r=10)
                a.rot = glm.quat(cos(pi/2.0/2.0), glm.vec3(1,0,0)* sin(pi/2.0/2.0))
                a.calc_node_positions()
+               if j==200:
+                    a.nodes[3].q=1
+               if j>=893:
+                    a.nodes[1].q=-1
                space.appendatom(a)
 
 #            
@@ -28,9 +32,8 @@ if __name__ == '__main__':
     #makeplane(space,400)
     makeplane(space,500)
 
-    a = Atom(500,700,500,100,m=100,r=50)
-    a.v = glm.vec3(0,-1,0)
-    space.appendatom(a)
+    #a = Atom(500,700,500,100,m=100,r=50)
+    #a.v = glm.vec3(0,-1,0)
     
     #space.appendmixer(2)
     #space.export_nodes = True

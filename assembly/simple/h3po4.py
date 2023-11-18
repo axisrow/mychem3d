@@ -26,20 +26,20 @@ def action1(space):
     if space.t==700:
         space.compute2atoms()
         #rot = glm.quat(cos(-pi/4), sin(-pi/4)*glm.vec3(0,0,1))  * glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(1,0,0)) 
-        i = space.merge_from_file("examples/simple/OH.json",-80,-30,0 )        
+        i = space.merge_from_file("examples/simple/OH.json",500-80,500-30,500 )        
         bond_atoms(a1,space.atoms[i])
         space.atoms2compute()
 
     if space.t==1200:
         space.compute2atoms()
-        i = space.merge_from_file("examples/simple/OH.json",40,-30,0 )        
+        i = space.merge_from_file("examples/simple/OH.json",540,500-30,500 )        
         bond_atoms(a1,space.atoms[i])
         space.atoms2compute()
 
 
     if space.t==1600:
         space.compute2atoms()
-        i = space.merge_from_file("examples/simple/OH.json",40,30,40 )        
+        i = space.merge_from_file("examples/simple/OH.json",540,530,540 )        
         bond_atoms(a1,space.atoms[i])
         space.atoms2compute()
 

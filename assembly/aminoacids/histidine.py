@@ -12,11 +12,12 @@ import glm
 
 
 def action1(space):
+    (x,y,z)=(500,500,500)
     global i0,i1,i3,a1
     if space.t==1:    
-        i0=space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
+        i0=space.merge_from_file("examples/simple/carbonyl.json",x,y,z)
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
-        i1=space.merge_from_file("examples/simple/OH.json",-50,0,+30, rot)
+        i1=space.merge_from_file("examples/simple/OH.json",-50+x,y,+30+z, rot)
         bond_atoms(space.atoms[i0],space.atoms[i1])
         #bond_atoms(space.atoms[0],space.atoms[1])
         space.atoms2compute()
@@ -37,7 +38,7 @@ def action1(space):
 
     if space.t==2500: # +H
         space.compute2atoms()
-        i1=space.merge_from_file("examples/simple/methyl.json",50,0,+30)
+        i1=space.merge_from_file("examples/simple/methyl.json",50+x,y,+30+z)
         bond_atoms(a1,space.atoms[i1])
         space.atoms2compute()
 
@@ -45,8 +46,8 @@ def action1(space):
 
     if space.t==3000: # +H
         space.compute2atoms()
-        i2=space.merge_from_file("examples/simple/aminogroup.json",0,50,0)
-        i3=space.merge_from_file("examples/geterocyclic/imidazole.json",100,0,0)
+        i2=space.merge_from_file("examples/simple/aminogroup.json",x,50+y,z)
+        i3=space.merge_from_file("examples/geterocyclic/imidazole.json",100+x,y,z)
         bond_atoms(a1,space.atoms[i2])
         space.atoms2compute()
 

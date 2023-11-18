@@ -16,7 +16,7 @@ def action1(space):
     global curindex,tp,g1,g2,nexttime,counter
     if space.t==0:    #C
         tp = 0
-        g1=space.merge_from_file("examples/amide/formamide.json",-450,100,450)
+        g1=space.merge_from_file("examples/amide/formamide.json",-450+500,100+500,450+500)
         space.atoms2compute()
         counter = 0
 
@@ -24,7 +24,7 @@ def action1(space):
         space.compute2atoms()
         space.atoms[g1].nodes[0].q=0  #remove H
         pos = space.atoms[g1].pos
-        g2=space.merge_from_file("examples/amide/formamide.json",pos.x-500+50,pos.y-500,pos.z-500-20)
+        g2=space.merge_from_file("examples/amide/formamide.json",pos.x+50,pos.y,pos.z-20)
         curindex = 0
         space.atoms2compute()
 
@@ -54,8 +54,9 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
+    space.INTERACT_KOEFF = 0.3
     space.BOND_KOEFF = 0.3
-    space.update_delta = 20
+    space.update_delta = 10
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
     App.run()

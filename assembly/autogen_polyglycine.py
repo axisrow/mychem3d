@@ -18,7 +18,7 @@ def action1(space):
     global curindex,tp,g1,g2,nexttime,counter
     if space.t==0:    #C
         tp = 0
-        g1=space.merge_from_file("examples/aminoacids/glycine.json",0,0,-400)
+        g1=space.merge_from_file("examples/aminoacids/glycine.json",500,500,100)
         space.atoms2compute()
         counter = 0
 
@@ -26,7 +26,7 @@ def action1(space):
         space.compute2atoms()
         space.atoms[g1].nodes[0].q=0  #remove OH
         pos = space.atoms[g1].pos
-        g2=space.merge_from_file("examples/aminoacids/glycine.json",pos.x-500,pos.y-500,pos.z-500)
+        g2=space.merge_from_file("examples/aminoacids/glycine.json",pos.x,pos.y,pos.z)
         curindex = 0
         space.atoms2compute()
 

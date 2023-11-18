@@ -14,10 +14,10 @@ import glm
 def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    #OH
-        i1=space.merge_from_file("examples/simple/OH.json",50,00,0)
+        i1=space.merge_from_file("examples/simple/OH.json",x+50,y,z)
         #i1=space.merge_from_file("examples/simple/OH.json",0,30,0)
         #i1=space.merge_from_file("examples/simple/OH.json",0,60,0)
-        i2=space.merge_from_file("examples/aldehyde/acetaldehyde.json",150,50,10)
+        i2=space.merge_from_file("examples/aldehyde/acetaldehyde.json",x+150,y+50,z+10)
         #i2=space.merge_from_file("examples/aldehyde/acetaldehyde.json",250,50,10)
         #i2=space.merge_from_file("examples/aldehyde/acetaldehyde.json",50,50,10)
         #i2=space.merge_from_file("examples/aldehyde/acetaldehyde.json",0,50,10)

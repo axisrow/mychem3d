@@ -18,7 +18,7 @@ def action1(space):
     global curindex,tp,g1,g2,nexttime,counter
     if space.t==0:    #C
         tp = 0
-        g1=space.merge_from_file("examples/aminoacids/alanine.json",0,0,-400)
+        g1=space.merge_from_file("examples/aminoacids/alanine.json",500,500,100)
         space.atoms2compute()
         counter = 0
 
@@ -26,20 +26,21 @@ def action1(space):
         space.compute2atoms()
         space.atoms[g1].nodes[0].q=0  #remove OH
         pos = space.atoms[g1].pos
-        g2=space.merge_from_file("examples/aminoacids/alanine.json",pos.x-500+30,pos.y-500,pos.z-500)
+        g2=space.merge_from_file("examples/aminoacids/alanine.json",pos.x,pos.y,pos.z+50)
         curindex = 0
         space.atoms2compute()
 
     if space.t==counter*timeout+20:  #remove H
             space.compute2atoms()
-            space.atoms[g2+7].nodes[0].q=0
+            #space.atoms[g2+11].color = (1,0,1)
+            space.atoms[g2+11].nodes[0].q=0
             space.atoms2compute()
 
 
-    if space.t==counter*timeout+1000:  #bond
+    if space.t==counter*timeout+500:  #bond
             space.compute2atoms()
-            space.atoms[g1].nodes[0].q=-1
-            space.atoms[g2+7].nodes[0].q=1
+            space.atoms[g1].nodes[0].q=1
+            #space.atoms[g2+11].nodes[0].q=1
             g1 = g2  #next
             space.atoms2compute() 
             if counter<15: 
@@ -53,9 +54,9 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.action = action1
-    #space.INTERACT_KOEFF = 0.5
+    space.INTERACT_KOEFF = 0.5
     space.BOND_KOEFF = 0.2
-    space.update_delta = 35
+    space.update_delta = 5
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
     App.run()

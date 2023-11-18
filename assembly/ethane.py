@@ -13,10 +13,10 @@ import glm
 def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    # methyl + methyl
-        i0 = space.merge_from_file("examples/simple/methyl.json",0,0,0)
+        i0 = space.merge_from_file("examples/simple/methyl.json",500,500,500)
         rot = glm.quat(cos(pi/2), glm.vec3(0,0,sin(pi/2)))
         #rot = glm.quat(0, 0, 0, 1)
-        i1 = space.merge_from_file("examples/simple/methyl.json",-60,-30,0,rot )
+        i1 = space.merge_from_file("examples/simple/methyl.json",500-60,500-30,500,rot )
         bond_atoms(space.atoms[i0],space.atoms[i1])
         space.atoms2compute()
 

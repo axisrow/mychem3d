@@ -16,12 +16,12 @@ def action1(space):
     (x,y,z)=(500,500,500)
     if space.t==1:    
        #space.compute2atoms()
-        i1=space.merge_from_file("examples/simple/carbonyl.json",0,0,0)
-        i2=space.merge_from_file("examples/simple/methyl.json",0,0,0)
+        i1=space.merge_from_file("examples/simple/carbonyl.json",x,y,z)
+        i2=space.merge_from_file("examples/simple/methyl.json",x,y,z+30)
         bond_atoms(space.atoms[i1],space.atoms[i2])
         space.atoms2compute()
 
-    if space.t==500: # C+H
+    if space.t==1500: # C+H
         space.compute2atoms()
         a1 = Atom(x+10,y,z-20,1,f2=pi/2)
         space.appendatom(a1)
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     space.action = action1
     #space.BOND_KOEFF = 0.4
     #space.INTERACT_KOEFF = 0.1
-    space.update_delta = 15
+    space.update_delta = 5
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)
     App.run()
