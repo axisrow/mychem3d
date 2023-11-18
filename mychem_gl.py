@@ -82,7 +82,7 @@ class AppOgl(OpenGLFrame):
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
         print("objects created")
-        self.space.atoms2compute()
+        #self.space.atoms2compute()
 
         self.start = time.time()
         self.nframes = 0          
@@ -294,9 +294,9 @@ class AppOgl(OpenGLFrame):
                 self.space.t+=1
                 if not self.space.pause:
                     gl.glUniform1i(self.loc["stage"],1)
-                    gl.glDispatchCompute(int(len(self.space.atoms)/80)+1,1,1)        
+                    gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
                     gl.glUniform1i(self.loc["stage"],2)
-                    gl.glDispatchCompute(int(len(self.space.atoms)/80)+1,1,1)        
+                    gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)

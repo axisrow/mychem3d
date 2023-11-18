@@ -14,11 +14,8 @@ class Space:
         self.gpu_compute.set(True)
         self.pause = False
         self.ucounter = 0
+        self.setSize(width,height,depth)
         self.debug = False
-        self.WIDTH=width
-        self.HEIGHT=height
-        self.DEPTH=depth
-        self.box = glm.vec3(self.WIDTH, self.HEIGHT, self.DEPTH)
         self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.3
         self.BONDR = 4.0
@@ -41,7 +38,6 @@ class Space:
         self.createf = 0
         self.standard = True
         self.merge_atoms = []
-        self.merge_pos = self.box/2
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
         self.select_mode = False
@@ -63,6 +59,14 @@ class Space:
         self.show_q = False
         self.action = None
         self.fdata = open('data.txt',"w")
+
+    def setSize(self, width,height,depth):
+        self.WIDTH=width
+        self.HEIGHT=height
+        self.DEPTH=depth
+        self.box = glm.vec3(self.WIDTH, self.HEIGHT, self.DEPTH)
+        self.merge_pos = self.box/2
+
 
     def appendatom(self,a):
         a.space = self

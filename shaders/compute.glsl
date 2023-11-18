@@ -1,7 +1,7 @@
 #version 430
 
 // Set up our compute groups
-layout(local_size_x=80, local_size_y=1,local_size_z=1) in;
+layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
 // Some examples:

@@ -55,6 +55,7 @@ class mychemApp():
         self.init_menu()
         self.lastX = 300
         self.lastY = 300
+    #    self.root.bind('<Configure>', self.handle_resize)
         self.root.bind("1", self.handle_add_atom2)
         self.root.bind("2", self.handle_add_atom2)
         self.root.bind("3", self.handle_add_atom2)
@@ -107,10 +108,23 @@ class mychemApp():
 
         self.status_bar.set('Ready')
 
+    def handle_resize(self, event):
+        print(event)
+
+
+    def firstrun(self):
+        print("firstruns")
+        if self.glframe.initok:
+            self.space.atoms2compute()
+        else:
+            self.root.after(100,self.firstrun)    
+        
     def run(self):
         self.resetdata = self.space.make_export()
         #self.space.atoms2compute()
+        self.root.after(100,self.firstrun)
         self.root.mainloop()
+        
 
 
     def sim_run(self):
