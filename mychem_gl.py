@@ -295,6 +295,7 @@ class AppOgl(OpenGLFrame):
                 if not self.space.pause:
                     gl.glUniform1i(self.loc["stage"],1)
                     gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
+                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     gl.glUniform1i(self.loc["stage"],2)
                     gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)

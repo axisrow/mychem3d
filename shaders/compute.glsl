@@ -338,7 +338,7 @@ void main()
     }
 
 //dumping
-   v_i *=0.9999;      
+   //v_i *=0.9999;      
  
  //gravity
    if (gravity==1) v_i.y -= 0.001; //gravity

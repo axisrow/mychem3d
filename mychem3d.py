@@ -364,7 +364,7 @@ class mychemApp():
             self.sim_pause()
             a = self.space.atoms[self.space.select_i]
             self.space.merge_atoms = [a]
-            self.space.merge_pos = self.space.box/2
+            self.space.merge_pos = a.pos.xyz
             self.space.merge_rot = glm.quat()
             a.unbond()  
             self.space.atoms.remove(a)

@@ -265,11 +265,11 @@ class Space:
         N = len(self.atoms)
         self.merge_center = self.get_mergeobject_center()
         for a in self.merge_atoms:
-            pos = a.pos
+            pos = a.pos.xyz
             pos -= self.merge_center
             pos = self.merge_rot * pos
             pos += self.merge_pos
-            a.pos = pos
+            a.pos = pos.xyz
             a.rot = self.merge_rot * a.rot
             self.appendatom(a)
         self.merge_atoms = []
