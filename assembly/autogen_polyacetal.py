@@ -16,7 +16,7 @@ def action1(space):
     global curindex,tp,g1,g2,nexttime,counter,turn
     if space.t==0:    #C
         tp = 0
-        g1=space.merge_from_file("examples/aldehyde/formaldehyde.json",-450,100,450)
+        g1=space.merge_from_file("examples/aldehyde/formaldehyde.json",500,600,950)
         #space.atoms[g1+3].nodes[1].q=0
 #        space.atoms[g1].nodes[2].q=0 
         space.atoms2compute()
@@ -34,7 +34,7 @@ def action1(space):
             #space.atoms[g2+3].color = (0,1,0)
             turn=1
         pos = space.atoms[g1].pos
-        g2=space.merge_from_file("examples/aldehyde/formaldehyde.json",pos.x-500+80,pos.y-500,pos.z-500-20)
+        g2=space.merge_from_file("examples/aldehyde/formaldehyde.json",pos.x+80,pos.y,pos.z-20)
         curindex = 0
         space.atoms2compute()
 
@@ -65,8 +65,6 @@ if __name__ == '__main__':
     space.action = action1
     #space.BOND_KOEFF = 0.3
     space.update_delta = 10
-    space.gpu_compute.set(False)
-    #space.bondlock.set(True)
     App.run()
 #
 #

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(2000,100,1000)
+    space.setSize(2000,200,1000)
     for i in range(0,300):
         x = random.randint(0,space.WIDTH)
         y = random.randint(0,space.HEIGHT)
@@ -32,6 +32,7 @@ if __name__ == '__main__':
 
     space.update_delta = 5
      #space.recording = True
+    space.INTERACT_KOEFF = 1
     space.appendmixer(1)
     space.redox.set(True)
     App.run()

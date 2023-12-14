@@ -9,10 +9,10 @@ from math import *
 import glm
 
 
-seq = "AAA"
+seq = "ATCGATCGATCGATCG"
 
 data = { "A": {"name":"adenosine", "corr":(0,0,0)},
-         "T": {"name":"thymidine", "corr":(0,0,0)},
+         "T": {"name":"thymidine", "corr":(0,0,30)},
          "C": {"name":"cytidine",  "corr":(0,20,30)},
          "G": {"name":"guanosine", "corr":(0,0,0)},
          "U": {"name":"uridine",   "corr":(-20,40,30)}
@@ -35,13 +35,14 @@ def action1(space):
 
         space.atoms2compute()
 
-    if space.t==counter*deltat: #C
+    if space.t==counter*deltat+100: #C
         space.compute2atoms()
 #        space.atoms[index1+5].nodes[0].q=0
         if counter+1==len(seq): return
+
         pos = space.atoms[index1].pos
         rot = glm.quat(cos(pi/4), sin(pi/4)*glm.vec3(0,0,1))
-        index2=space.merge_from_file("examples/simple/h3po4.json",pos.x,pos.y+40,pos.z,rot)
+        index2=space.merge_from_file("examples/simple/h3po4.json",pos.x-20,pos.y+50,pos.z,rot)
 
         tp = seq[counter+1]
         corr = glm.vec3(data[tp]["corr"])
@@ -49,13 +50,13 @@ def action1(space):
         #space.atoms[index2+4].color=(0,1,0)
         space.atoms[index2+2].nodes[0].q=0  #H3PO4 -H down
         space.atoms[index2+6].nodes[0].q=0  #H3PO4 -H up
-        index3=space.merge_from_file("examples/nucleobase/"+data[tp]["name"]+".json",pos.x+corr.x, pos.y+100+corr.y,pos.z+corr.z)
+        index3=space.merge_from_file("examples/nucleobase/"+data[tp]["name"]+".json",pos.x+corr.x, pos.y+130+corr.y,pos.z+corr.z)
         space.atoms[index3+3].nodes[2].q=0        
 
         #curindex = 0
         space.atoms2compute()
 
-    if space.t==counter*deltat+800:  #H3PO4 + n1
+    if space.t==counter*deltat+1500:  #H3PO4 + n1
             space.compute2atoms()
             bond_atoms(space.atoms[index1+5],space.atoms[index2+2])  
             #space.atoms[index3].v = glm.vec3(0,0,0)
@@ -72,7 +73,7 @@ def action1(space):
             #space.atoms[index1].v = glm.vec3(0,0,0)
             index1 = index3  #next
             space.atoms2compute() 
-            counter+=1
+            if counter+1!=len(seq): counter+=1
 
 
 
@@ -83,7 +84,7 @@ if __name__ == '__main__':
     space = App.space
     space.setSize(2000,2000,2000)
     space.action = action1
-    space.INTERACT_KOEFF = 0.5
+    #space.INTERACT_KOEFF = 0.5
     #space.BOND_KOEFF = 0.2
     #space.REPULSION_KOEFF2=0.2
     space.update_delta = 15

@@ -28,7 +28,7 @@ For select atoms for now use cursor left-right keys,
 with enter go to merge mode with selected atom, and with enter or double-click confirm
 
 
-
+Do not view video parallel to use this simulator, the simulation may hang
 
 
 Some examples:

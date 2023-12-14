@@ -12,11 +12,11 @@ import glm
 timeout=1500
 
 
-def action1(space):
+def action1(space:Space):
     global curindex,tp,g1,g2,nexttime,counter
     if space.t==0:    #C
         tp = 0
-        g1=space.merge_from_file("examples/alkene/ethylene.json",-400+500,100+500,450+500)
+        g1=space.merge_from_file("examples/alkene/ethylene.json",100,100+500,450+500)
         space.atoms2compute()
         counter = 0
 
@@ -24,7 +24,7 @@ def action1(space):
         space.compute2atoms()
         space.atoms[g1].nodes[3].q=1  #broke C-C
         pos = space.atoms[g1].pos
-        g2=space.merge_from_file("examples/alkene/ethylene.json",pos.x+50,pos.y,pos.z-20)
+        g2=space.merge_from_file("examples/alkene/ethylene.json",pos.x+150,pos.y,pos.z-20)
         curindex = 0
         space.atoms2compute()
 

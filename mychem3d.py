@@ -276,9 +276,9 @@ class mychemApp():
         for i in range(0,10):
             self.space.merge_atoms = []
             distant = glm.round(distant)
-            x= random.randint(distant.x+10,self.space.WIDTH-distant.x-10)-self.space.WIDTH/2.0
-            y= random.randint(distant.y+10,self.space.HEIGHT-distant.y-10)-self.space.HEIGHT/2.0
-            z= random.randint(distant.z+10,self.space.DEPTH-distant.z-10)-self.space.DEPTH/2.0
+            x= random.randint(distant.x+10,self.space.WIDTH-distant.x-10)
+            y= random.randint(distant.y+10,self.space.HEIGHT-distant.y-10)
+            z= random.randint(distant.z+10,self.space.DEPTH-distant.z-10)
             self.space.load_data(self.recentdata, merge=True)
             self.space.merge_pos = glm.vec3(x,y,z)
             self.space.merge_rot = glm.quat()
