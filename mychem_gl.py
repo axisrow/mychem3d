@@ -111,6 +111,7 @@ class AppOgl(OpenGLFrame):
         else:
             a_data = bytearray()
         datasize = len(a_data)
+        a_data = np.array(a_data,dtype=np.byte)
         print(f"  buffer size={datasize}")
         self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
