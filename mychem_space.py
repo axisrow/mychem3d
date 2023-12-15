@@ -513,7 +513,7 @@ class Space:
                 if type==6: type=600
                 rot = glm.quat(glm.vec3(0,0,-a["f"]))
             aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
-            if zerospeed:
+            if zerospeed and type!=100:
                 aa.v= glm.vec3(0,0,0) 
             else:
                 aa.v = glm.vec3(a["vx"],a["vy"],vz)

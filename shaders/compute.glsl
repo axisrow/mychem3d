@@ -334,7 +334,8 @@ void main()
 
  // mixer
     if (atom_i.type==100){
-        v_i = normalize(v_i);
+        if (v_i!= vec3(0.0,0.0,0.0))
+            v_i = normalize(v_i);
     }
 
 //dumping
