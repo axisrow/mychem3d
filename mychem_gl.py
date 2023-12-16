@@ -34,8 +34,6 @@ class AppOgl(OpenGLFrame):
         #gl.glEnable (gl.GL_LINE_SMOOTH);    
         #gl.glfwWindowHint(gl.GLFW_SAMPLES, 4);
         #gl.glEnable(gl.GL_MULTISAMPLE); 
-        
-
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
         compute_shader = open("shaders/compute.glsl","r").read()

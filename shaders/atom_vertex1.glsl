@@ -101,12 +101,12 @@ void main()
         vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
         gl_Position = projection * view * vposition;
         float q = currentAtom.nodes[nodeindex].q;
-        float bonded = currentAtom.nodes[nodeindex].bonded;
+        //float bonded = currentAtom.nodes[nodeindex].bonded;
         // node charge and bond color
         if (q==0) ObjectColor = vec3(1,1,1);
         if (q==1) ObjectColor = vec3(1,0,0); //vec3(255/256.0,95/256.0,160/256.0);
         if (q==-1) ObjectColor = vec3(0.0,0,252/256.0);
-        if (bonded==1) ObjectColor= ObjectColor/2;
+        //if (bonded==1) ObjectColor= ObjectColor/2;
         //else ObjectColor = vec3(1,1,1);
         FragPos = vposition.xyz;
         Normal = normal;

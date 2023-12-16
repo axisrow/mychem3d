@@ -116,12 +116,15 @@ class mychemApp():
         print("firstruns")
         if self.glframe.initok:
             self.space.atoms2compute()
+            self.space.pause = False
         else:
+            print("wait")
             self.root.after(100,self.firstrun)    
         
     def run(self):
         self.resetdata = self.space.make_export()
         #self.space.atoms2compute()
+        self.space.pause = True
         self.root.after(300,self.firstrun)
         self.root.mainloop()
         
@@ -541,7 +544,7 @@ class OptionsFrame():
         self.update_slider.set(self.space.update_delta)
 
         self.label1 = tk.Label(a, text= "Interact koeff").grid(row=1,column=0)
-        self.interact_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
+        self.interact_slider = tk.Scale(a, from_=0, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
         self.interact_slider.grid(row=1,column=1)
         self.interact_slider.set(int(self.space.INTERACT_KOEFF*100))
 

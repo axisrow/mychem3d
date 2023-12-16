@@ -240,8 +240,8 @@ void main()
         r = distance(pos_i, pos_j);
         if (r==0) continue;
 
-        a= atom_i.q*atom_j.q*INTERACT_KOEFF*0.5/r;
-        E += delta/r*a;   //
+        a= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
+        E += delta/r*a;   
 
         if (r<60) {
              a = 0;
@@ -272,51 +272,37 @@ void main()
                     a = 0;
                     //bonds update 
                     
-                    if (rn<=BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0 ){
+                    if (rn<=BONDR ){
                         int canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q);
                         if (canbond==1){
                             atom_i.nodes[ni].q=ni_q;
-                            atom_i.nodes[ni].bonded=1;
-                            atom_i.nodes[ni].pair=nj_index;
                             //v_i *=0.5;
                         }
                     }                            
 
-                    //if (rn>BONDR && rn<BONDR+3 && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1){
-                    if (rn>BONDR && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1 && In.atoms[i].nodes[ni].pair == nj_index && In.atoms[j].nodes[nj].pair == ni_index){
-                        if (bondlock==0){
-                            atom_i.nodes[ni].bonded=0;
-                            atom_i.nodes[ni].pair=-1;
-                        }
-                    }                            
                     
                     //node interact
-                    //if (rn<=BONDR && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1){
-                    if (rn<=BONDR && In.atoms[i].nodes[ni].bonded==1 && In.atoms[j].nodes[nj].bonded==1 && In.atoms[i].nodes[ni].pair == nj_index && In.atoms[j].nodes[nj].pair == ni_index ){
+                    if (rn<=BONDR ){
                             a = -rn*BOND_KOEFF;
-                            if (In.atoms[i].nodes[ni].q + In.atoms[j].nodes[nj].q !=0 && bondlock==0){
-                                atom_i.nodes[ni].bonded=0;
-                                atom_i.nodes[ni].pair=-1;
-                            }
                     }
-                    if ( rn>BONDR && In.atoms[i].nodes[ni].bonded==0 && In.atoms[j].nodes[nj].bonded==0 && iTime>1){
-                            if (rn!=0) a= ni_q*nj_q*INTERACT_KOEFF/rn;
+                    if ( rn>BONDR ){
+                            if (rn!=0) a+= ni_q*nj_q*INTERACT_KOEFF/rn;
                     }
 
-                            vec3 target_direction = nj_realpos + pos_j - pos_i;
-                            vec3 v1 = normalize(ni_realpos);
-                            vec3 v2 = normalize(target_direction);
-                            float dt = dot(v1,v2);
-                            //if(dt>1) dt=1;
-                            //if(dt<-1) dt=-1;
-                            dt = clamp(dt,-1,1);
-                            if (v1!=v2){
-                                    vec3 axis = cross(v1,v2);
-                                    float angle = acos(dt);
-                                    angle = -angle * a * ROTA_KOEFF;
-                                    vec4 rot = vec4(sin(angle/2.0)* axis,cos(angle/2.0) ); // quat
-                                    totalrot = normalize(qmul(rot, totalrot));
-                            }
+                    vec3 target_direction = nj_realpos + pos_j - pos_i;
+                    vec3 v1 = normalize(ni_realpos);
+                    vec3 v2 = normalize(target_direction);
+                    float dt = dot(v1,v2);
+                    //if(dt>1) dt=1;
+                    //if(dt<-1) dt=-1;
+                    dt = clamp(dt,-1,1);
+                    if (v1!=v2){
+                            vec3 axis = cross(v1,v2);
+                            float angle = acos(dt);
+                            angle = -angle * a * ROTA_KOEFF;
+                            vec4 rot = vec4(sin(angle/2.0)* axis,cos(angle/2.0) ); // quat
+                            totalrot = normalize(qmul(rot, totalrot));
+                    }
 
                     if (rn!=0) nE += ndelta/rn*a;
                 }

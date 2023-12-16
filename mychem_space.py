@@ -19,7 +19,7 @@ class Space:
         self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.3
         self.BONDR = 4.0
-        self.INTERACT_KOEFF= 0.4
+        self.INTERACT_KOEFF= 0.1
         self.ROTA_KOEFF = 1
         self.REPULSION1 = -3
         self.REPULSION_KOEFF1 = 10
