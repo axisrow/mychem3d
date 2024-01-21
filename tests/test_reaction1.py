@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     space.update_delta = 5
      #space.recording = True
-    space.INTERACT_KOEFF = 1
+    #space.INTERACT_KOEFF = 1
     space.appendmixer(1)
     space.redox.set(True)
     App.run()

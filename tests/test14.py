@@ -31,11 +31,12 @@ space = App.space
 #space.stoptime = 10 
 #makesomething(space,150,250,0)
 #makesomething(space,350,250,0)
-for i in range(0,200):
-        space.appendatom(Atom(random.randrange(1,space.WIDTH/5), random.randrange(1,space.HEIGHT/5),random.randrange(1,space.DEPTH/5), 1, m=1,r=6));
-        space.appendatom(Atom(random.randrange(1,space.WIDTH/5), random.randrange(1,space.HEIGHT/5),random.randrange(1,space.DEPTH/5), 2, m=16,r=8));
-        space.appendatom(Atom(random.randrange(1,space.WIDTH/5), random.randrange(1,space.HEIGHT/5),random.randrange(1,space.DEPTH/5), 4, m=12,r=10));
-        space.appendatom(Atom(random.randrange(1,100), random.randrange(1,100),random.randrange(1,100), random.randrange(1,6)));
+for i in range(0,1000):
+        t = random.randint(1,4);
+        a = Atom(random.randrange(1,space.WIDTH), random.randrange(1,space.HEIGHT),random.randrange(1,space.DEPTH),t )        
+        for n in a.nodes:
+                n.q= random.choice([-1,1])
+        space.appendatom(a);
 space.appendmixer(2)
 #space.export = True
 #space.stoptime = 0

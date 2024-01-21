@@ -19,13 +19,13 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(2400,200,200)
+    space.setSize(200,200,200)
     for i in range(0,500):
         x = random.randint(0,space.WIDTH)
         y = random.randint(0,space.HEIGHT)
         z = random.randint(0,space.DEPTH)        
-        #space.merge_from_file("examples/simple/H2O.json",x,y,z)
-        space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
+        space.merge_from_file("examples/simple/H2O.json",x,y,z)
+        #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
     space.update_delta = 5
      #space.recording = True
     #space.appendmixer(1)

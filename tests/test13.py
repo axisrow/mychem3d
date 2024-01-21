@@ -36,21 +36,21 @@ space = App.space
         #space.appendatom(Atom(random.randrange(1,space.WIDTH/5), random.randrange(1,space.HEIGHT/5),random.randrange(1,space.DEPTH/5), 4, m=12,r=10));
         #space.appendatom(Atom(random.randrange(1,100), random.randrange(1,100),random.randrange(1,100), random.randrange(1,6)));
 a = Atom(450,500,500,2,f=0, f2=0, r=6,m=1)
-a.nodes[0].q = 1
-#a.nodes[1].q = 1
+#a.nodes[0].q = -1
+a.nodes[1].q = 1
 #a2 = Atom(519,500,500,1,pi, f2=pi/4)
-a2 = Atom(497,520,500,1,f=pi/3, f2=0,r=6,m=1)
+a2 = Atom(560,520,500,1,f=pi/3, f2=0,r=6,m=1)
 a2.nodes[0].q = -1
-a3 = Atom(450,530,500,1,f=pi, f2=0,r=6,m=1)
+a3 = Atom(650,530,500,1,f=pi, f2=0,r=6,m=1)
 a3.nodes[0].q = -1
 
 space.debug = True
-space.gpu_compute.set(False)
+#space.gpu_compute.set(False)
 #space.stoptime = 1
 space.appendatom(a)        
 space.appendatom(a2)        
 
-space.appendatom(a3)       
+#space.appendatom(a3)      
 print (space.get_node_by_index(5))
 
 #space.appendmixer(2)

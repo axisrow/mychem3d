@@ -56,7 +56,7 @@ class AppOgl(OpenGLFrame):
    
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
-        self.cameraPos = glm.vec3(0.5,0.5,1)
+        self.cameraPos = glm.vec3(0.5,0.5,2)
         #self.cameraPos = glm.vec3(0.5,0.5,0.5)
         self.cameraTarget = glm.vec3(0.5,0.5,0.5)
 
@@ -294,10 +294,10 @@ class AppOgl(OpenGLFrame):
                 if not self.space.pause:
                     gl.glUniform1i(self.loc["stage"],1)
                     gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
-                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     gl.glUniform1i(self.loc["stage"],2)
                     gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
-                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    ##gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)

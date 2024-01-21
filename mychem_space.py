@@ -270,7 +270,8 @@ class Space:
             pos = self.merge_rot * pos
             pos += self.merge_pos
             a.pos = pos.xyz
-            a.rot = self.merge_rot * a.rot
+            a.rot = glm.normalize(self.merge_rot * a.rot)
+            a.calc_node_positions()
             self.appendatom(a)
         self.merge_atoms = []
         return N

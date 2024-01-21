@@ -40,7 +40,7 @@ if __name__ == '__main__':
     #a.v = glm.vec3(0,-1,0)
     #space.appendatom(a)
     
-    space.appendmixer(2)
+    #space.appendmixer(2)
     #space.export_nodes = True
     #space.competitive =True
     #space.stoptime=5
