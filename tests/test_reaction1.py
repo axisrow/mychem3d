@@ -21,14 +21,18 @@ if __name__ == '__main__':
     space = App.space
     space.setSize(2000,200,1000)
     for i in range(0,300):
+        f = random.random()*pi
+        rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
         y = random.randint(0,space.HEIGHT)
         z = random.randint(0,space.DEPTH)
-        space.merge_from_file("examples/simple/NH3.json",x,y,z)
+        space.merge_from_file("examples/simple/NH3.json",x,y,z,rot)
+        f = random.random()*pi
+        rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
         y = random.randint(0,space.HEIGHT)
         z = random.randint(0,space.DEPTH)
-        space.merge_from_file("examples/aldehyde/glycolaldehyde.json",x,y,z)
+        space.merge_from_file("examples/aldehyde/glycolaldehyde.json",x,y,z,rot)
 
     space.update_delta = 5
      #space.recording = True
