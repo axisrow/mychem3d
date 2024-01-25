@@ -36,6 +36,7 @@ class AppOgl(OpenGLFrame):
         #gl.glEnable(gl.GL_MULTISAMPLE); 
         self.nearatomsmax = 5000
         self.LOCALSIZEX = 64
+        self.nearflag = False
 
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
@@ -132,6 +133,7 @@ class AppOgl(OpenGLFrame):
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.near_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 2, self.near_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*(self.nearatomsmax+1), None , gl.GL_DYNAMIC_DRAW);
+        self.nearflag = True    
 
 
     def ssbo2atoms(self):
@@ -310,7 +312,8 @@ class AppOgl(OpenGLFrame):
                     gl.glUniform1i(self.loc["stage"],1)
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                     #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-                    if self.space.t%(int(self.space.NEARDIST/2.0))==0:  #near field calc
+                    if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
+                        self.nearflag = False
                         gl.glUniform1i(self.loc["stage"],2)
                         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
 
