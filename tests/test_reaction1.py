@@ -39,5 +39,7 @@ if __name__ == '__main__':
 #
 #
 #300 - 9 fps  update_delta=5    nodesinter 100
-
+#300 - 40 fps update_delta=5    nodesinter 40  near field 200, <5000 atoms
+#300 - 26 fps update_delta=5    nodesinter 40  near field 300, <5000 atoms
+#300 - 26 fps update_delta=5    nodesinter 40  near field 300, <`0000 atoms
 

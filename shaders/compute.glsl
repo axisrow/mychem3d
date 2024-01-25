@@ -1,7 +1,7 @@
 #version 430
 
 // Set up our compute groups
-layout(local_size_x=55, local_size_y=1,local_size_z=1) in;
+layout(local_size_x=LOCALSIZEX, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
 // Some examples:
@@ -24,6 +24,7 @@ float REPULSION1 = -3;
 uniform float REPULSION_KOEFF1;
 float REPULSION2 = 10;
 uniform float REPULSION_KOEFF2;
+uniform float NEARDIST;
 float WIDTH = box.x;
 float HEIGHT = box.y;
 float DEPTH = box.z;
@@ -80,6 +81,11 @@ layout(std430, binding=1) buffer atoms_out
 {
     Atom atoms[];
 } Out;
+
+layout(std430, binding=2) buffer near_atoms
+{
+    int indexes[][NEARATOMSMAX];
+} Near;
 
 
 int i = int(gl_GlobalInvocationID);
@@ -204,15 +210,29 @@ void main()
 
     Atom atom_i;
     vec3 pos_i,pos_j, v_i, v_j;
-    
+    float r;   //distance between atoms
+    vec3 delta;  //coordinates delta
     atom_i = In.atoms[i];
-    
     pos_i= atom_i.pos.xyz;
+
+    if (stage==2){ //calc near atoms
+        int index = 0;
+        for (int j=0;j<In.atoms.length();j++){
+            if (i == j) continue;
+            r = distance(pos_i, In.atoms[j].pos.xyz);
+            if (r<NEARDIST){
+                Near.indexes[i][index+1]=j;
+                index++;
+            }
+        }
+        Near.indexes[i][0]=index;  // near atoms count
+
+    }
+
+
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
-    float r;   //distance between atoms
-    vec3 delta;  //coordinates delta
     float f1,f2,f3;
     vec3 F = vec3(0.0,0.0,0.0);
     vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
@@ -238,7 +258,8 @@ void main()
     }
 
 
-    for (int j=0;j<In.atoms.length();j++){
+    for (int jj=1;jj<=Near.indexes[i][0];jj++){
+        int j = Near.indexes[i][jj];
         if (i == j) continue;
         Atom atom_j = In.atoms[j];
         pos_j = atom_j.pos.xyz;
@@ -246,10 +267,10 @@ void main()
         r = distance(pos_i, pos_j);
         if (r==0) continue;
 
-        if (r<300){
+        //if (r<300){
             f1= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
             F += delta/r*f1;  
-        }
+        //}
 
         if (r<40) {
              f2 = 0;
@@ -291,7 +312,7 @@ void main()
 
                     if (rn>BONDR && rn<=BONDR*2){
                         float k = getk(atom_i.type, atom_j.type);
-                        if (rn!=0) f3+= k* ni_q * nj_q;
+                        if (rn!=0) f3+= k* ni_q * nj_q / rn;
                     }
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;
@@ -333,6 +354,8 @@ void main()
  
  //gravity
    if (gravity==1) v_i.y -= 0.001; //gravity
+
+   //if (pos_i.y < 30) v_i.y += 0.1;
      
 //shake
    if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.03;

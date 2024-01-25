@@ -34,9 +34,14 @@ class AppOgl(OpenGLFrame):
         #gl.glEnable (gl.GL_LINE_SMOOTH);    
         #gl.glfwWindowHint(gl.GLFW_SAMPLES, 4);
         #gl.glEnable(gl.GL_MULTISAMPLE); 
+        self.nearatomsmax = 5000
+        self.LOCALSIZEX = 64
+
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
         compute_shader = open("shaders/compute.glsl","r").read()
+        compute_shader = compute_shader.replace("NEARATOMSMAX",str(self.nearatomsmax))
+        compute_shader = compute_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
 #        geom_shader = open("shaders/atom_geom1.glsl","r").read()
 
         self.shader = OpenGL.GL.shaders.compileProgram(
@@ -81,11 +86,11 @@ class AppOgl(OpenGLFrame):
         self.create_objects()
         print("objects created")
         #self.space.atoms2compute()
-
         self.start = time.time()
         self.nframes = 0          
         self.rframes = 0
         self.initok = True
+        
     
 
     def atoms2ssbo(self):
@@ -121,6 +126,13 @@ class AppOgl(OpenGLFrame):
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
         zero = bytearray(datasize)
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, zero , gl.GL_DYNAMIC_DRAW);
+    
+        #nearbuffer
+        self.near_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.near_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 2, self.near_buffer);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*(self.nearatomsmax+1), None , gl.GL_DYNAMIC_DRAW);
+
 
     def ssbo2atoms(self):
         self.N = len(self.space.atoms)
@@ -165,6 +177,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"REPULSION_KOEFF1": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1") })
             self.loc.update( {"REPULSION_KOEFF2": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2") })
             self.loc.update( {"ROTA_KOEFF": gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF") })
+            self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
             #view_loc = gl.glGetUniformLocation(self.shader, "view")
             #proj_loc = gl.glGetUniformLocation(self.shader, "projection")
             #mode_loc = gl.glGetUniformLocation(self.shader, "mode")
@@ -173,6 +186,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
             self.loc.update( {"nodeindex": gl.glGetUniformLocation(self.shader, "nodeindex") })
+            
 
 
     def create_objects(self):
@@ -288,15 +302,20 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["REPULSION_KOEFF1"],self.space.REPULSION_KOEFF1)
             gl.glUniform1f(self.loc["REPULSION_KOEFF2"],self.space.REPULSION_KOEFF2)
             gl.glUniform1f(self.loc["ROTA_KOEFF"],self.space.ROTA_KOEFF)
+            gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
 
             for i in range(0,self.space.update_delta):
                 self.space.t+=1
                 if not self.space.pause:
                     gl.glUniform1i(self.loc["stage"],1)
-                    gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
+                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                     #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-                    gl.glUniform1i(self.loc["stage"],2)
-                    gl.glDispatchCompute(int(len(self.space.atoms)/54)+1,1,1)        
+                    if self.space.t%(int(self.space.NEARDIST/2.0))==0:  #near field calc
+                        gl.glUniform1i(self.loc["stage"],2)
+                        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+
+                    gl.glUniform1i(self.loc["stage"],3)
+                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                     ##gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
