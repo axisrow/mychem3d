@@ -83,6 +83,30 @@ def makealkane(space,x,y,z,n):
      space.appendatom(Atom(x-5,y+n*15,z,1,f=3*pi/2,r=6,m=1))
 
 
+def makecarboxylic(space,x,y,z,n):
+     #space.appendatom(Atom(x-3,y-15,z-5,1,f=pi/2,r=6,m=1))
+     #space.appendatom(Atom(x-5,y,z+5,2,f=0, f2=pi/2))
+     f = pi/2
+     rot1 = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(1,0,0)))
+     f = pi
+     rot2 = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(0,1,0)))
+     space.merge_from_file("examples/simple/carboxyl.json", x+5,y-10,z, rot2*rot1)
+     for i in range(1,n):
+         f2 = i%2 * pi
+         dx = -10 * (i%2) 
+         dz = -5 * (i%2) 
+         space.appendatom(Atom(x+dx,y+i*15,z+dz,4,f2=f2,r=10,m=12))
+         if i%2 == 0 :
+             space.appendatom(Atom(x,y+i*15,z+17,1,f2=-pi/2,r=6,m=1))
+             space.appendatom(Atom(x+17,y+i*15,z-5,1,f=pi,f2=0,r=6,m=1))
+         elif not i%2==0:
+             space.appendatom(Atom(x+dx,y+i*15,z+dz-17,1,f2=pi/2,r=6,m=1))
+             space.appendatom(Atom(x+dx-15,y+i*15,z+dz+5,1,f=0,f2=0,r=6,m=1))
+     space.appendatom(Atom(x-5,y+n*15,z,1,f=3*pi/2,r=6,m=1))
+
+
+
+
 def makealcohol(space,x,y,z,n):
      space.appendatom(Atom(x-3,y-15,z-5,1,f=pi/2,r=6,m=1))
      for i in range(0,n):
@@ -342,7 +366,8 @@ if __name__ == '__main__':
     #makeplane(space,300)
     #makeplane(space,400)
     #makeplane(space,500)
-    makealkane(space,500,300,700,60)
+    #makealkane(space,500,300,700,60)
+    makecarboxylic(space,500,500,500,60)
     #makeplane(space,600)
     #makealcohol(space,500,400,500,10)
     #makealcohol(space,600,100,600,30)
