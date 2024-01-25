@@ -285,7 +285,9 @@ class mychemApp():
             z= random.randint(distant.z+10,self.space.DEPTH-distant.z-10)
             self.space.load_data(self.recentdata, merge=True)
             self.space.merge_pos = glm.vec3(x,y,z)
-            self.space.merge_rot = glm.quat()
+            f = random.random()*3.1415
+            rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
+            self.space.merge_rot = rot
     #        self.merge_rot = merge_rot
             self.space.merge2atoms()
         self.space.merge_pos = glm.vec3(0,0,0)
