@@ -43,6 +43,7 @@ class AppOgl(OpenGLFrame):
         compute_shader = open("shaders/compute.glsl","r").read()
         compute_shader = compute_shader.replace("NEARATOMSMAX",str(self.nearatomsmax))
         compute_shader = compute_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
+        compute_shader = compute_shader.replace("MAXVEL",str(self.space.MAXVELOCITY))
 #        geom_shader = open("shaders/atom_geom1.glsl","r").read()
 
         self.shader = OpenGL.GL.shaders.compileProgram(

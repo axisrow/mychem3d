@@ -117,7 +117,7 @@ vec3 rotate_vector(vec3 v, vec4 r)
 }
 
 void limits(inout vec3 pos,  inout vec3 v, in float radius){
-    v = clamp(v , vec3(-1,-1,-1), vec3(1,1,1));
+    v = clamp(v , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
 
 
     if (pos.x > WIDTH-radius){
@@ -260,7 +260,7 @@ void main()
 
     for (int jj=1;jj<=Near.indexes[i][0];jj++){
         int j = Near.indexes[i][jj];
-        if (i == j) continue;
+        //if (i == j) continue;
         Atom atom_j = In.atoms[j];
         pos_j = atom_j.pos.xyz;
         delta = pos_i - pos_j;
@@ -369,7 +369,6 @@ void main()
     limits(pos_i,v_i,atom_i.r); //borders of container
     
 
-    //atom_out.a.xyz = vec3(0.01,0.01,0.01);
     atom_i.v.xyz = v_i;
     atom_i.pos.xyz = pos_i;
     Out.atoms[i] = atom_i;
