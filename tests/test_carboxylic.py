@@ -9,8 +9,6 @@ import mychem3d
 from math import *
 import glm
 
-
-
 #            
 # #
 #
@@ -19,16 +17,26 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(300,300,300)
-    for i in range(0,500):
+    space.setSize(1000,1000,300)
+    for i in range(0,20):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
         y = random.randint(0,space.HEIGHT)
         z = random.randint(0,space.DEPTH)        
-        space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
+        i1 = space.merge_from_file("examples/carboxylic/capric_acid.json",x,y,z,rot)
         #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
-    space.update_delta = 1
+    for i in range(0,3000):
+        f = random.random()*pi
+        rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
+        x = random.randint(0,space.WIDTH)
+        y = random.randint(0,space.HEIGHT)
+        z = random.randint(0,space.DEPTH)        
+        i2 = space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
+        #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
+
+    space.update_delta = 5
+    space.INTERACT_KOEFF = 0.4
      #space.recording = True
     #space.appendmixer(1)
     #space.redox.set(True)

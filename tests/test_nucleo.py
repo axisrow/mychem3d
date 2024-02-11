@@ -32,7 +32,7 @@ def action1(space):
             dy = random.randint(-400,400)
             dz = random.randint(-400,400)
             #i1=space.merge_from_file("examples/simple/OH.json",x+dx,y+dz,z+dy,rot)
-            i1=space.merge_from_file("examples/simple/H2O.json",x+dx,y+dz,z+dy,rot)
+            #i1=space.merge_from_file("examples/simple/H2O.json",x+dx,y+dz,z+dy,rot)
             #space.atoms[i1].nodes[1].q=-1
 #        for i in range(0,20):
 #            f = random.random()*pi
