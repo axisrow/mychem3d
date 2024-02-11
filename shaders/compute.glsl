@@ -32,16 +32,16 @@ float DEPTH = box.z;
 
 //float etable[11]=float[](5,500,1,4,400,6,600,3,2,200,100);
 //(5,1,4,6,3,2);
-float ktab[6][6] = {  {1.0, 1.5, 1.0, 1.0, 0.1, 1.0},
-                      {1.5, 1.0, 1.0, 1.5, 2.0, 1.0},
+float ktab[6][6] = {  {1.0, 1.5, 1.0, 0.5, 0.1, 1.0},
+                      {1.5, 1.0, 1.0, 2.0, 2.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0},
-                      {1.0, 1.5, 1.0, 2.0, 0.1, 1.0},
+                      {0.5, 2.0, 1.0, 1.5, 0.1, 1.0},
                       {1.0, 2.0, 1.0, 1.0, 1.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0} };
 
 float getk(float t1 , float t2){
     if (t1>=100.0) t1 /=100.0 ;
-    if (t2>=100.0) t1 /=100.0 ;
+    if (t2>=100.0) t2 /=100.0 ;
     return ktab[int(t1-1.0)][int(t2-1.0)];
 }
 
@@ -298,21 +298,20 @@ void main()
                     float nj_q=atom_j.nodes[nj].q;
                     //if (rn == 0) continue;
                     f3 = 0;
-                    
+                    float k = getk(atom_i.type, atom_j.type);
                     //node interact
                     //if (rn<=BONDR ){
                     if (rn<=BONDR ){                        
                         int canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q);
-                        if (canbond==1){
-                            atom_i.nodes[ni].q=ni_q;
-                            f3 = -rn*BOND_KOEFF;
+                        atom_i.nodes[ni].q=ni_q;
+                        if (ni_q+nj_q==0){
+                            
+                            f3 = -rn*BOND_KOEFF*k;
                             //v_i *=0.5;
                         }
                     }
-
                     if (rn>BONDR && rn<=BONDR*2){
-                        float k = getk(atom_i.type, atom_j.type);
-                        if (rn!=0) f3+= k* ni_q * nj_q / rn;
+                        if (rn!=0) f3+= k* ni_q *nj_q * INTERACT_KOEFF/rn;
                     }
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;
@@ -323,7 +322,7 @@ void main()
                             dt = clamp(dt,-1,1);
                             vec3 axis = cross(v1,v2);
                             float angle = acos(dt);
-                            angle = -angle * f3 * ROTA_KOEFF/(atom_i.m);
+                            angle = -angle * f3 * ROTA_KOEFF/atom_i.m*10.0;
                             vec4 rot = normalize(vec4(sin(angle/2.0)* axis,cos(angle/2.0) )); // quat
                             totalrot = qmul(rot, totalrot);
                     }
