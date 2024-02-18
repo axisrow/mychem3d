@@ -17,14 +17,14 @@ class Space:
         self.setSize(width,height,depth)
         self.debug = False
         self.ATOMRADIUS = 10
-        self.BOND_KOEFF = 0.3
+        self.BOND_KOEFF = 0.15
         self.BONDR = 4.0
-        self.INTERACT_KOEFF= 0.1
+        self.INTERACT_KOEFF= 0.4
         self.ROTA_KOEFF = 1
         self.REPULSION1 = -3
         self.REPULSION_KOEFF1 = 10
         self.REPULSION2 = 6
-        self.REPULSION_KOEFF2= 0.4
+        self.REPULSION_KOEFF2= 0.2
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
         self.t = -1
@@ -41,8 +41,8 @@ class Space:
         self.merge_atoms = []
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
-        self.select_mode = False
-        self.select_i = 0 
+        self.select_mode = 0
+        self.selected_atoms = [] 
         self.gravity = tk.BooleanVar()
         self.gravity.set(False)
         self.shake= tk.BooleanVar()

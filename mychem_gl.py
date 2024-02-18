@@ -78,7 +78,7 @@ class AppOgl(OpenGLFrame):
         self.light_pos = glm.vec3(1.2,1.0,2.0)
 
         self.factor = 0.001
-
+        self.curpos = glm.vec3(0.,0.,0.)
         self.sphere_vertices = np.array(make_sphere_vert(1,20), dtype=np.float32)
         self.sphere_vertices2 = np.array(make_sphere_vert(1,5), dtype=np.float32)
         self.cube_vertices = np.array(make_cube2(), dtype=np.float32)
@@ -201,7 +201,7 @@ class AppOgl(OpenGLFrame):
         self.containerMesh = Mesh(self.cube_vertices)
         self.containerMesh.setup()
         model =  glm.mat4()
-        model =  glm.scale(model,self.space.box/glm.vec3(1000))
+        model =  glm.scale(model,self.space.box/glm.vec3(1/self.factor))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
         model =  glm.translate(model, glm.vec3(1, 1, 1))
 
@@ -220,7 +220,7 @@ class AppOgl(OpenGLFrame):
                 )
         self.cameraFront = glm.normalize(front)
         self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
-        self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,1000.0)
+        self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,10.0)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
 
@@ -275,14 +275,14 @@ class AppOgl(OpenGLFrame):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
         self.containerMesh.drawQuads(self.shader)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
-        
-        #render selector
-        if self.space.select_mode:
-            if len(self.space.atoms)>0:
+
+        #render selection
+        if self.space.select_mode==1:
+            for i in self.space.selected_atoms:
+                a = self.space.atoms[i]
                 model =  glm.mat4()
-                pos = self.space.atoms[self.space.select_i].pos
-                model =  glm.translate(model, pos * self.factor  )
-                model =  glm.scale(model, glm.vec3(0.01,0.01,0.01))
+                model =  glm.translate(model, a.pos * self.factor  )
+                model =  glm.scale(model, glm.vec3(a.r * self.factor*1.1))
                 self.atomMesh.color = (1,0,0)
                 self.atomMesh.modelmatrix = model
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );

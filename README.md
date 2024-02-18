@@ -17,15 +17,18 @@ Controls:
 -    Mouse wheel - move camera forward and back
 
  In merge mode (adding atoms or files):
-- enter or double-click - merge 
+- enter or double-click - do merge 
 - mouse wheel - change parameter
 - mouse wheel + shift - slow change
 - mouse wheel + control - move camera forward and back
 - g - move,  x,y,z for select axis
 - r - rotate object, x,y,z for select rotate axis
 
-For select atoms for now use cursor left-right keys, 
-with enter go to merge mode with selected atom, and with enter or double-click confirm
+Selection atoms
+1. molecule selection mode
+    double-click an atom, then use the mouse wheel to add neighboring atoms to the selection
+    enter - go to merge mode with selected atoms
+
 
 
 Do not view video parallel to use this simulator, the simulation may hang

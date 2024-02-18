@@ -2,7 +2,7 @@
 import tkinter as tk
 import tkinter.filedialog as filedialog
 import time
-from math import sin,cos,log
+from math import sin,cos,log,sqrt
 import os
 import json
 from json import encoder
@@ -13,6 +13,7 @@ from mychem_gl import AppOgl
 from mychem_functions import OnOff
 import glm
 import random
+import OpenGL.GL as gl
 
 class mychemApp():
     def init_menu(self):
@@ -63,8 +64,8 @@ class mychemApp():
         self.root.bind("4", self.handle_add_atom2)
         self.root.bind("5", self.handle_add_atom2)
         self.root.bind("6", self.handle_add_atom2)
-        self.root.bind("<Left>", self.handle_cursor)
-        self.root.bind("<Right>", self.handle_cursor)
+        #self.root.bind("<Left>", self.handle_cursor)
+        #self.root.bind("<Right>", self.handle_cursor)
         #self.root.bind("<KeyRelease>", self.handle_keyrelease)
         self.root.bind("<space>", self.handle_space)
         self.root.bind("<Alt-r>", self.handle_reset)
@@ -361,22 +362,43 @@ class mychemApp():
         if self.merge_mode:
             self.handle_enter(event)
             return
-        #(x,y,z) = glm.unProject(glm.vec3(event.x,event.y,0),self.glframe.view,self.glframe.projection, (0,0,self.glframe.width,self.glframe.height))
-        #print(x,y,z)
+        #print("coord ", event.x, event.y)
+        #print("size ", self.glframe.winfo_width(), self.glframe.winfo_height() ) 
 
-        
+        if not self.space.pause: self.sim_pause()
+        N = len(self.space.atoms)
+        y = self.glframe.height - event.y
+        z = gl.glReadPixels(event.x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
+        (x,y,z) = glm.unProject(glm.vec3(event.x, y,z),self.glframe.view,self.glframe.projection, (0,0,self.glframe.width,self.glframe.height))
+        pos = glm.vec3(x,y,z) / self.glframe.factor
+        print(pos)
+        near_atom_i= -1
+        for i in range(0,N):
+             a = self.space.atoms[i] 
+             d = glm.distance(a.pos,  pos)
+             print(d)
+             if d<=a.r+1:
+                 near_atom_i=i
+        if near_atom_i != -1:
+            self.space.selected_atoms = [near_atom_i]
+            self.space.select_mode = 1
+        else:
+            self.space.select_mode = 0
+
     def handle_enter(self,event:tk.Event):
-        if self.space.select_mode:
+        if self.space.select_mode==1:
+            self.space.select_mode = 0
             self.sim_pause()
-            a = self.space.atoms[self.space.select_i]
-            self.space.merge_atoms = [a]
-            self.space.merge_pos = a.pos.xyz
+            for i in self.space.selected_atoms:
+                a = self.space.atoms[i]
+                self.space.merge_atoms.append(a)
+                #a.unbond()  
+            for m in self.space.merge_atoms:
+                self.space.atoms.remove(m)
             self.space.merge_rot = glm.quat()
-            a.unbond()  
-            self.space.atoms.remove(a)
             self.space.merge_center = self.space.get_mergeobject_center()
+            self.space.merge_pos = glm.vec3(self.space.merge_center)
             self.merge_mode = True
-            self.space.select_mode = False
             self.space.atoms2compute()
             return
         if self.merge_mode:
@@ -388,10 +410,23 @@ class mychemApp():
 
 
 
+    def sphere_intersect(self, ro, rd, pos, rad):
+           oc = glm.vec3(ro - pos)
+           b = glm.dot( oc, rd )
+           c = glm.dot( oc, oc ) - rad*rad;
+           h = b*b - c
+           if h<0.0:  return -1
+           h = sqrt( h )
+           return -b-h
+
+
+
     def handle_mouseb1(self,event:tk.Event):
         self.lastX = event.x
         self.lastY = event.y
-            
+
+
+
         
 
     def handle_mouse1move(self,event:tk.Event):
@@ -456,6 +491,22 @@ class mychemApp():
                 self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,1,0)) * self.space.merge_rot
             if self.ttype=="rz":
                 self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1)) * self.space.merge_rot
+         elif self.space.select_mode==1: #select molecule
+            if event.delta>0:
+                new_selected = self.space.selected_atoms.copy()
+                for i in self.space.selected_atoms:
+                    for j in range(0, len(self. space.atoms)):
+                        if i==j: continue
+                        sumrad = self.space.atoms[i].r + self.space.atoms[j].r
+                        if glm.distance(self.space.atoms[i].pos, self.space.atoms[j].pos)<= sumrad+self.space.BONDR+2:
+                            if not j in new_selected:
+                                new_selected.append(j)
+                self.space.selected_atoms = new_selected.copy()
+            else:
+                self.space.selected_atoms.pop()
+                if len(self.space.selected_atoms)==0:
+                    self.space.select_mode=0
+         
          else:
             if shift:
                 cameraSpeed = 0.01
@@ -466,6 +517,7 @@ class mychemApp():
             else:
                 self.glframe.cameraPos -= cameraSpeed * self.glframe.cameraFront   
 
+           
 
 
 
