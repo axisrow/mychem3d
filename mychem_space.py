@@ -19,12 +19,13 @@ class Space:
         self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.15
         self.BONDR = 4.0
-        self.INTERACT_KOEFF= 0.4
-        self.ROTA_KOEFF = 1
+        self.INTERACT_KOEFF= 1.0
+        self.ROTA_KOEFF = 10
         self.REPULSION1 = -3
         self.REPULSION_KOEFF1 = 10
         self.REPULSION2 = 6
         self.REPULSION_KOEFF2= 0.2
+        self.MASS_KOEFF = 10.0
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
         self.t = -1

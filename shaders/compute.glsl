@@ -24,6 +24,7 @@ float REPULSION1 = -3;
 uniform float REPULSION_KOEFF1;
 float REPULSION2 = 10;
 uniform float REPULSION_KOEFF2;
+uniform float MASS_KOEFF;
 uniform float NEARDIST;
 float WIDTH = box.x;
 float HEIGHT = box.y;
@@ -32,10 +33,10 @@ float DEPTH = box.z;
 
 //float etable[11]=float[](5,500,1,4,400,6,600,3,2,200,100);
 //(5,1,4,6,3,2);
-float ktab[6][6] = {  {1.0, 1.5, 1.0, 0.5, 0.1, 1.0},
+float ktab[6][6] = {  {1.0, 1.5, 1.0, 0.8, 0.1, 1.0},
                       {1.5, 1.0, 1.0, 2.0, 2.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0},
-                      {0.5, 2.0, 1.0, 1.5, 0.1, 1.0},
+                      {0.8, 2.0, 1.0, 1.5, 0.1, 1.0},
                       {1.0, 2.0, 1.0, 1.0, 1.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0} };
 
@@ -53,7 +54,7 @@ struct Node {
     float q;
     float bonded;
     float pair;
-    float noname;
+    float spin;
 };
 
 struct Atom
@@ -306,7 +307,7 @@ void main()
                         atom_i.nodes[ni].q=ni_q;
                         if (ni_q+nj_q==0){
                             
-                            f3 = -rn*BOND_KOEFF*k;
+                            f3 = -rn* BOND_KOEFF*k;
                             //v_i *=0.5;
                         }
                     }
@@ -322,7 +323,7 @@ void main()
                             dt = clamp(dt,-1,1);
                             vec3 axis = cross(v1,v2);
                             float angle = acos(dt);
-                            angle = -angle * f3 * ROTA_KOEFF/atom_i.m*10.0;
+                            angle = -angle * f3 * ROTA_KOEFF/ (atom_i.m);
                             vec4 rot = normalize(vec4(sin(angle/2.0)* axis,cos(angle/2.0) )); // quat
                             totalrot = qmul(rot, totalrot);
                     }
@@ -360,7 +361,7 @@ void main()
    if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.03;
 
 //next
-    v_i += F/(atom_i.m);
+    v_i += F/(atom_i.m*MASS_KOEFF);
     pos_i += v_i;
     atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
     

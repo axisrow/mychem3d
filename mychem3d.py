@@ -590,7 +590,7 @@ class OptionsFrame():
         a = tk.Toplevel()
         a.title("Fine tuning (options)")
         a.resizable(0, 0)
-        a.geometry('420x300')
+        a.geometry('420x400')
         #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
         #self.frame.pack()
         self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
@@ -619,12 +619,19 @@ class OptionsFrame():
         self.bondk_slider.set(self.space.BOND_KOEFF*100)
         
         self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
-        self.rotk_slider = tk.Scale(a, from_=1, to=100, length=100,orient=tk.HORIZONTAL,command=self.set_rotk)
+        self.rotk_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,command=self.set_rotk)
         self.rotk_slider.grid(row=5,column=1)
         #self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
-        self.rotk_slider.set(self.space.ROTA_KOEFF*10)
+        self.rotk_slider.set(self.space.ROTA_KOEFF)
 
-        self.checkbox = tk.Checkbutton(a, text="GPU Compute", variable=self.space.gpu_compute,command=self.on_checkbox).grid(row=6,column=0)
+
+        self.label6 = tk.Label(a, text= "Mass koeff").grid(row=6,column=0)
+        self.massk_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_massk)
+        self.massk_slider.grid(row=6,column=1)
+        self.massk_slider.set(self.space.MASS_KOEFF)
+
+
+        self.checkbox = tk.Checkbutton(a, text="GPU Compute", variable=self.space.gpu_compute,command=self.on_checkbox).grid(row=7,column=0)
 
         #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
 
@@ -657,9 +664,11 @@ class OptionsFrame():
 
     def set_rotk(self,value):
 
-        self.space.ROTA_KOEFF = float(value)/10.0
+        self.space.ROTA_KOEFF = float(value)
 #        print("rota =",self.space.ROTA_KOEFF)
-
+    
+    def set_massk(self,value):
+        self.space.MASS_KOEFF = float(value)
 
 
 if __name__ == '__main__':
