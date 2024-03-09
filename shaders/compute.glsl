@@ -89,6 +89,12 @@ layout(std430, binding=2) buffer near_atoms
 } Near;
 
 
+layout(std430, binding=3) buffer far_field
+{
+    vec4 F;
+} Far;
+
+
 int i = int(gl_GlobalInvocationID);
 // Output buffer
 //layout(std430, binding=1) buffer atoms_out
@@ -213,11 +219,14 @@ void main()
     vec3 pos_i,pos_j, v_i, v_j;
     float r;   //distance between atoms
     vec3 delta;  //coordinates delta
+    float f1,f2,f3;
+    vec3 F;
     atom_i = In.atoms[i];
     pos_i= atom_i.pos.xyz;
 
-    if (stage==2){ //calc near atoms
+    if (stage==2){ //calc near atoms  and far field
         int index = 0;
+        F = vec3(0,0,0);
         for (int j=0;j<In.atoms.length();j++){
             if (i == j) continue;
             r = distance(pos_i, In.atoms[j].pos.xyz);
@@ -225,17 +234,22 @@ void main()
                 Near.indexes[i][index+1]=j;
                 index++;
             }
+            else {  //far field
+                delta = In.atoms[i].pos.xyz - In.atoms[j].pos.xyz;
+                f1= In.atoms[i].q*In.atoms[j].q*INTERACT_KOEFF/r;
+                if (r!=0) F += delta/r*f1;  
+            }
+
         }
         Near.indexes[i][0]=index;  // near atoms count
-
+        Far.F.xyz = F/2.0;
     }
 
 
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
-    float f1,f2,f3;
-    vec3 F = vec3(0.0,0.0,0.0);
+    F = vec3(0.0,0.0,0.0);
     vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
 
     
@@ -359,6 +373,9 @@ void main()
      
 //shake
    if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.03;
+
+// far field
+    F += Far.F.xyz*0.01;
 
 //next
     v_i += F/(atom_i.m*MASS_KOEFF);

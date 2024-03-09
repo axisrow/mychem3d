@@ -136,6 +136,13 @@ class AppOgl(OpenGLFrame):
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*(self.nearatomsmax+1), None , gl.GL_DYNAMIC_DRAW);
         self.nearflag = True    
 
+        #far field buffer
+        self.far_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.far_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
+
+
 
     def ssbo2atoms(self):
         self.N = len(self.space.atoms)
