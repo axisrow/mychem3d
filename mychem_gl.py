@@ -126,8 +126,7 @@ class AppOgl(OpenGLFrame):
         self.atoms_buffer2 = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
-        zero = bytearray(datasize)
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, zero , gl.GL_DYNAMIC_DRAW);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, None , gl.GL_DYNAMIC_DRAW);
     
         #nearbuffer
         self.near_buffer = gl.glGenBuffers(1)
@@ -321,15 +320,16 @@ class AppOgl(OpenGLFrame):
                 if not self.space.pause:
                     gl.glUniform1i(self.loc["stage"],1)
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
                         self.nearflag = False
                         gl.glUniform1i(self.loc["stage"],2)
                         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
                     gl.glUniform1i(self.loc["stage"],3)
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    ##gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
