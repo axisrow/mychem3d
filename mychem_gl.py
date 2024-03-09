@@ -180,6 +180,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"REPULSION_KOEFF1": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1") })
             self.loc.update( {"REPULSION_KOEFF2": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2") })
             self.loc.update( {"ROTA_KOEFF": gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF") })
+            self.loc.update( {"MASS_KOEFF": gl.glGetUniformLocation(self.gpu_code, "MASS_KOEFF") })
             self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
             #view_loc = gl.glGetUniformLocation(self.shader, "view")
             #proj_loc = gl.glGetUniformLocation(self.shader, "projection")
@@ -305,6 +306,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["REPULSION_KOEFF1"],self.space.REPULSION_KOEFF1)
             gl.glUniform1f(self.loc["REPULSION_KOEFF2"],self.space.REPULSION_KOEFF2)
             gl.glUniform1f(self.loc["ROTA_KOEFF"],self.space.ROTA_KOEFF)
+            gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
 
             for i in range(0,self.space.update_delta):
