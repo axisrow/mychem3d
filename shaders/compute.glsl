@@ -33,10 +33,10 @@ float DEPTH = box.z;
 
 //float etable[11]=float[](5,500,1,4,400,6,600,3,2,200,100);
 //(5,1,4,6,3,2);
-float ktab[6][6] = {  {1.0, 1.5, 1.0, 0.8, 0.1, 1.0},
-                      {1.5, 1.0, 1.0, 2.0, 2.0, 1.0},
+float ktab[6][6] = {  {0.5, 1.5, 1.0, 1.0, 0.1, 1.0},
+                      {1.5, 0.5, 1.0, 2.0, 2.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0},
-                      {0.8, 2.0, 1.0, 1.5, 0.1, 1.0},
+                      {1.0, 2.0, 1.0, 1.5, 0.1, 1.0},
                       {1.0, 2.0, 1.0, 1.0, 1.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0} };
 
@@ -245,6 +245,11 @@ void main()
         Far.F.xyz = F/2.0;
     }
 
+    if(stage==3){   //autospinset
+
+
+    }
+
 
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
@@ -319,14 +324,16 @@ void main()
                     if (rn<=BONDR ){                        
                         int canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q);
                         atom_i.nodes[ni].q=ni_q;
-                        if (ni_q+nj_q==0){
-                            
+                        if (atom_i.nodes[ni].spin !=0 && atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0){
                             f3 = -rn* BOND_KOEFF*k;
                             //v_i *=0.5;
                         }
+                        else {
+                            f3 = 10;
+                        }
                     }
                     if (rn>BONDR && rn<=BONDR*2){
-                        if (rn!=0) f3+= k* ni_q *nj_q * INTERACT_KOEFF/rn;
+                        if (rn!=0) f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF/rn;
                     }
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;

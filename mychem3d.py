@@ -117,6 +117,7 @@ class mychemApp():
     def firstrun(self):
         print("firstruns")
         if self.glframe.initok:
+            self.space.autospinset(self.space.atoms)
             self.space.atoms2compute()
             self.space.pause = False
         else:

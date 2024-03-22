@@ -9,7 +9,7 @@ class NodeC(Structure):
         ("q", c_float),
         ("bonded", c_float),
         ("pair", c_float),
-        ("_padding",c_float)
+        ("spin",c_float)
     ]
 
     def to_ctypes(self,n,space):
@@ -18,12 +18,14 @@ class NodeC(Structure):
         self.q = n.q 
         self.bonded = float(n.bonded)
         self.pair = float(space.get_index_by_node(n.pair))
+        self.spin = float(n.spin)
     
     def from_ctypes(self,n,space):
         #n.pos = glm.vec3(self.pos[0:3])
         n.q = self.q
         n.bonded = bool(self.bonded)
         n.pair = space.get_node_by_index(self.pair) 
+        n.spin = self.spin
 
 
 class Node():
@@ -35,7 +37,9 @@ class Node():
         self.pair = None
         self.parent = parent
         self.q = 0 
+        self.spin = 0
         self.pos = glm.vec3(0,0,0)
+
 
     def bond(self,n):
         n.pair = self

@@ -291,6 +291,41 @@ class Space:
         self.merge_pos = self.box/2
         self.merge_rot = glm.quat()
         return first
+    
+    def autospinset(self, atoms):
+        N = len(atoms)
+        print("Autospinset start")
+        for i in range(0,N):
+            atom_i = atoms[i]
+            for j in range(0,N):
+                if i==j: continue
+                atom_j = atoms[j]
+                for ni in range (0,len(atom_i.nodes)):
+                    node_i = atom_i.nodes[ni]
+                    if node_i.spin == 0:
+                        ni_realpos =  atom_i.rot * node_i.pos
+                        for nj in range(0, len(atom_j.nodes)):
+                            node_j = atom_j.nodes[nj]
+                            nj_realpos =  atom_j.rot * node_j.pos
+                            rn = glm.distance(atom_i.pos + ni_realpos, atom_j.pos + nj_realpos)
+                            if rn<self.BONDR:
+                                if node_j.spin !=0:
+                                    node_i.spin = - node_j.spin
+                                else:
+                                    node_i.spin = random.choice([-1,1])    
+                    #print(f"spinset i={i} j={j} ni={ni} spin = {node_i.spin}" )                                    
+        for i in range(0,N):
+            atom_i = atoms[i]
+            for ni in range (0,len(atom_i.nodes)):
+                node_i = atom_i.nodes[ni]
+                if node_i.spin == 0:
+                    node_i.spin = random.choice([-1,1])    
+
+        print("Autospinset stop")
+
+
+         
+    
 
     def shift_q(self,type1,type2, q1, q2):
         etable=[5,500,1,4,400,6,600,3,2,200]
@@ -536,47 +571,10 @@ class Space:
                 self.merge_atoms.append(aa)
             else:
                 self.appendatom(aa)
-        			
+        if merge:
+            self.autospinset(self.merge_atoms)			
+        else:
+            self.autospinset(self.atoms)    
 
 
 
-##redox
-                                    # if self.redox:
-                                    # 	in_redox_zone = False
-                                    # 	redox_zone = -1 
-                                    # 	if self.segmented_redox and self.np_x[i]<self.WIDTH/10*1:
-                                    # 		redox_zone=1
-                                    # 		in_redox_zone = True
-                                    # 	if self.segmented_redox and self.np_x[i]>self.WIDTH/10*9:
-                                    # 		redox_zone=2
-                                    # 		in_redox_zone = True
-                                    # 	if not self.segmented_redox:
-                                    # 		redox_zone=0
-                                    # 		in_redox_zone = True
-                                    # 	if in_redox_zone and random.randint(0,5000)==1:
-                                    # 			pair_a = np
-                                    # 			(ep1, ep2) = (ni.assigned_ep, nj.assigned_ep)
-                                    # 			(ecount1,ecount2) = (ni.assigned_ep.ecount,nj.assigned_ep.ecount)
-                                    # 			ni.unbond()
-                                    # 			rc=random.choice([True,False])
-                                    # 			if (redox_zone==1) or (redox_zone==0 and rc):
-                                    # 				print("reduction")
-                                    # 				if ecount1 == 1:
-                                    # 					ecount1 = 2
-                                    # 				else:
-                                    # 					if ecount1 == 0:
-                                    # 						ecount1 = 1
-                                    # 					if ecount2 ==0:
-                                    # 						ecount2 = 1
-                                    # 			if (redox_zone==2) or (redox_zone==0 and not rc):
-                                    # 				print("oxidation")
-                                    # 				if ecount1 == 1:
-                                    # 					ecount1 = 0	
-                                    # 				else:
-                                    # 					if ecount2 ==2:
-                                    # 						ecount2 = 1
-                                    # 					if ecount1 == 2:
-                                    # 						ecount1 = 1
-                                    # 			(ep1.ecount,ep2.ecount) = (ecount1,ecount2)
-                                    # 			self.np_q[i] = atom_i.calculate_q()
-                                    # 			self.np_q[j] = atom_j.calculate_q()
