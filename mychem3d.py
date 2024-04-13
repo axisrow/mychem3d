@@ -23,6 +23,7 @@ class mychemApp():
         file_menu.add_command(label="Open", accelerator="o", command=self.file_open)
         file_menu.add_command(label="Merge", accelerator="m", command=self.file_merge)
         file_menu.add_command(label="Merge recent", accelerator="l", command=self.file_merge_recent)
+        file_menu.add_command(label="Merge recent random x10", accelerator="Alt+l", command=self.handle_random_recent)
         file_menu.add_command(label="Save", accelerator="Alt+s", command=self.file_save)
         file_menu.add_command(label="Exit", command=self.file_exit)
         sim_menu = tk.Menu(self.menu_bar, tearoff=False)
@@ -302,9 +303,11 @@ class mychemApp():
             self.space.merge_rot = rot
     #        self.merge_rot = merge_rot
             self.space.merge2atoms()
-        self.space.merge_pos = glm.vec3(0,0,0)
+        self.space.merge_pos = self.space.box/2
         self.space.merge_rot = glm.quat()
         self.space.atoms2compute()
+        self.merge_mode = False
+
 
 
     def file_save(self,event=None):
