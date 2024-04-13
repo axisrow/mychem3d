@@ -28,13 +28,14 @@ class Space:
         self.MASS_KOEFF = 5.0
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
+        self.heat = 0.0
         self.t = -1
         self.stoptime = -1
         self.recordtime = 0
         self.recording = tk.BooleanVar()
         self.recording.set(False)
         self.atoms = []	
-        self.g = 0.01
+        self.g = 0.001
         self.newatom = None
         self.createtype=4
         self.createf = 0

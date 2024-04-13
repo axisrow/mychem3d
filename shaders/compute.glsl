@@ -1,5 +1,4 @@
 #version 430
-
 // Set up our compute groups
 layout(local_size_x=LOCALSIZEX, local_size_y=1,local_size_z=1) in;
 
@@ -19,6 +18,7 @@ float BONDR = 4;
 uniform float BOND_KOEFF;
 uniform float ATTRACT_KOEFF;
 uniform float INTERACT_KOEFF;
+uniform float INTERACT_KOEFF2=1.0;
 uniform float ROTA_KOEFF;
 float REPULSION1 = -3;
 uniform float REPULSION_KOEFF1;
@@ -26,6 +26,7 @@ float REPULSION2 = 10;
 uniform float REPULSION_KOEFF2;
 uniform float MASS_KOEFF;
 uniform float NEARDIST;
+uniform float HEAT;
 float WIDTH = box.x;
 float HEIGHT = box.y;
 float DEPTH = box.z;
@@ -34,9 +35,9 @@ float DEPTH = box.z;
 //float etable[11]=float[](5,500,1,4,400,6,600,3,2,200,100);
 //(5,1,4,6,3,2);
 float ktab[6][6] = {  {0.5, 1.5, 1.0, 1.0, 0.1, 1.0},
-                      {1.5, 0.5, 1.0, 2.0, 2.0, 1.0},
+                      {1.5, 0.5, 1.0, 1.5, 2.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0},
-                      {1.0, 2.0, 1.0, 1.5, 0.1, 1.0},
+                      {1.0, 1.5, 1.0, 1.5, 0.1, 1.0},
                       {1.0, 2.0, 1.0, 1.0, 1.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0} };
 
@@ -230,6 +231,7 @@ void main()
         for (int j=0;j<In.atoms.length();j++){
             if (i == j) continue;
             r = distance(pos_i, In.atoms[j].pos.xyz);
+            if (r==0) continue;
             if (r<NEARDIST){
                 Near.indexes[i][index+1]=j;
                 index++;
@@ -237,12 +239,12 @@ void main()
             else {  //far field
                 delta = In.atoms[i].pos.xyz - In.atoms[j].pos.xyz;
                 f1= In.atoms[i].q*In.atoms[j].q*INTERACT_KOEFF/r;
-                if (r!=0) F += delta/r*f1;  
+                F += f1 * delta/r;  
             }
 
         }
         Near.indexes[i][0]=index;  // near atoms count
-        Far.F.xyz = F/2.0;
+        Far.F.xyz = F;
     }
 
     if(stage==3){   //autospinset
@@ -316,7 +318,7 @@ void main()
 
                     //r2n = ndelta.x*ndelta
                     float nj_q=atom_j.nodes[nj].q;
-                    //if (rn == 0) continue;
+                    if (rn == 0) continue;
                     f3 = 0;
                     float k = getk(atom_i.type, atom_j.type);
                     //node interact
@@ -324,16 +326,16 @@ void main()
                     if (rn<=BONDR ){                        
                         int canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q);
                         atom_i.nodes[ni].q=ni_q;
-                        if (atom_i.nodes[ni].spin !=0 && atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0){
+                        if (atom_i.nodes[ni].spin !=0 && atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 && canbond ==1){
                             f3 = -rn* BOND_KOEFF*k;
                             //v_i *=0.5;
                         }
                         else {
-                            f3 = 10;
+                            f3 = 1/rn;
                         }
                     }
-                    if (rn>BONDR && rn<=BONDR*2){
-                        if (rn!=0) f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF/rn;
+                    if (rn>BONDR && rn < BONDR*2 ){
+                        f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
                     }
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;
@@ -349,7 +351,7 @@ void main()
                             totalrot = qmul(rot, totalrot);
                     }
 
-                    if (rn!=0) nF += ndelta/rn*f3;
+                    nF += ndelta/rn*f3;
                     F += nF;
                 }
                 
@@ -370,11 +372,12 @@ void main()
             v_i = normalize(v_i);
     }
 
-//dumping
-   //v_i *=0.9999;      
+//heating
+   v_i +=  v_i * HEAT*0.0001;      
+   
  
  //gravity
-   if (gravity==1) v_i.y -= 0.001; //gravity
+   if (gravity==1) v_i.y -= 0.0001; //gravity
 
    //if (pos_i.y < 30) v_i.y += 0.1;
      
@@ -382,7 +385,7 @@ void main()
    if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.03;
 
 // far field
-    F += Far.F.xyz*0.01;
+   //F += Far.F.xyz*0.01;
 
 //next
     v_i += F/(atom_i.m*MASS_KOEFF);

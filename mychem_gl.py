@@ -188,6 +188,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"ROTA_KOEFF": gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF") })
             self.loc.update( {"MASS_KOEFF": gl.glGetUniformLocation(self.gpu_code, "MASS_KOEFF") })
             self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
+            self.loc.update( {"HEAT": gl.glGetUniformLocation(self.gpu_code, "HEAT") })
             #view_loc = gl.glGetUniformLocation(self.shader, "view")
             #proj_loc = gl.glGetUniformLocation(self.shader, "projection")
             #mode_loc = gl.glGetUniformLocation(self.shader, "mode")
@@ -314,6 +315,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["ROTA_KOEFF"],self.space.ROTA_KOEFF)
             gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
+            gl.glUniform1f(self.loc["HEAT"],self.space.heat)
 
             for i in range(0,self.space.update_delta):
                 self.space.t+=1

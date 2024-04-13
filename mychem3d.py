@@ -75,9 +75,6 @@ class mychemApp():
         self.root.bind("<Button-1>", self.handle_mouseb1)
         self.root.bind("<Return>", self.handle_enter)
         self.root.bind("<Escape>", self.handle_escape)
-        self.root.bind("<B1-Motion>", self.handle_mouse1move)
-        self.root.bind("<Motion>", self.handle_motion)
-        self.root.bind("<Double-Button-1>", self.handle_doubleclick)
         self.root.bind("<s>", self.handle_shake)
         self.root.bind("x", self.handle_mode)
         self.root.bind("y", self.handle_mode)
@@ -90,20 +87,30 @@ class mychemApp():
         self.root.bind("0", self.handle_zero)
         self.root.bind("<b>", self.handle_bondlock)
         #self.root.bind("<FocusIn>"), self.handle_focusin
-        self.root.bind("<MouseWheel>", self.handle_scroll)
         self.glframe = AppOgl(self.root, width=1024, height=600)
+        self.glframe.bind("<B1-Motion>", self.handle_mouse1move)
+        self.glframe.bind("<Motion>", self.handle_motion)
+        self.glframe.bind("<Double-Button-1>", self.handle_doubleclick)
+        self.glframe.bind("<MouseWheel>", self.handle_scroll)
+
         print("glframe created")
         self.space.pause = False
         self.merge_mode = False
         self.ttype = "mx"
-        self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
+        #self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
+        self.glframe.grid(row=0,column=0,sticky="NSEW")
         self.glframe.animate = 10
         self.glframe.set_space(self.space)
         self.space.glframe = self.glframe
+        self.root.columnconfigure(index=0, weight=3)
+        self.root.rowconfigure(index=0, weight=3)
+        self.heat = tk.Scale(self.root, from_ =10, to=-10,showvalue=0, length=400,command=self.setHeat)
+        self.heat.grid(row=0, column=1)
         #   app.config(cursor="none")
         #app.after(100, app.printContext)
         self.status_bar = StatusBar(self.root)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        #self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        self.status_bar.grid(row=1,column=0,sticky="EW")
         self.glframe.status_bar = self.status_bar
         if not os.path.exists('output'):
             os.makedirs('output')
@@ -113,6 +120,10 @@ class mychemApp():
     def handle_resize(self, event):
         print(event)
 
+
+    def setHeat(self, value):
+        self.space.heat = float(value)
+        self.status_bar.set('heat = ' + str(value))
 
     def firstrun(self):
         print("firstruns")
@@ -555,15 +566,15 @@ class mychemApp():
 class StatusBar(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        status_frame = tk.Frame(parent, bd=1, relief=tk.SUNKEN)
-        status_frame.pack(side=tk.BOTTOM, fill=tk.X)
-        self.label = tk.Label(status_frame, text= "Status")
+        #status_frame = tk.Frame(parent, bd=1, relief=tk.SUNKEN)
+        #status_frame.pack(side=tk.BOTTOM, fill=tk.X)
+        self.label = tk.Label(self, text= "Status")
         self.label.pack(side=tk.LEFT)
-        self.fpslabel = tk.Label(status_frame, text="FPS")
+        self.fpslabel = tk.Label(self, text="FPS")
         self.fpslabel.pack(side=tk.RIGHT)
-        self.timelabel = tk.Label(status_frame, text="Time")
+        self.timelabel = tk.Label(self, text="Time")
         self.timelabel.pack(side=tk.RIGHT)
-        self.info = tk.Label(status_frame, text="Info")
+        self.info = tk.Label(self, text="Info")
         self.info.pack(side=tk.RIGHT)
 
     
