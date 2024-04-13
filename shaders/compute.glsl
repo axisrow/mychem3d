@@ -245,6 +245,7 @@ void main()
         }
         Near.indexes[i][0]=index;  // near atoms count
         Far.F.xyz = F;
+        return;
     }
 
     if(stage==3){   //autospinset
@@ -274,7 +275,36 @@ void main()
                 }
             }
         }                
+        return;
     }
+
+    if (stage==4){
+        for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+            vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
+            float bonded = 0.0;
+            for (int jj=1;jj<=Near.indexes[i][0];jj++){
+                int j = Near.indexes[i][jj];
+                Atom atom_j = In.atoms[j];
+                pos_j = atom_j.pos.xyz;
+                delta = pos_i - pos_j;
+                r =     distance(pos_i, pos_j);
+//                if (r==0) continue;
+                if (r>=40) continue;
+                for (int nj = 0; nj<atom_j.ncount; nj++){
+                    vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
+                    vec3 ndelta =  ni_realpos - nj_realpos + delta;
+                    float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
+                    if (rn<=BONDR){
+                        bonded = 1.0;
+                    }
+                }
+            }
+            In.atoms[i].nodes[ni].bonded = bonded;
+            //In.atoms[i].color = vec4(1.0);
+        }
+        return;
+    }
+
 
 
     v_i = atom_i.v.xyz;
@@ -361,6 +391,17 @@ void main()
                     if (rn>BONDR && rn < BONDR*2 ){
                         f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
                     }
+                    if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
+                        //f3+= k* atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF/rn;
+                        f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
+                    }
+
+                    if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].q + atom_j.nodes[nj].q==0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
+                        f3+= atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF/rn;
+//                        f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
+                    }
+
+
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;
                     vec3 v1 = normalize(ni_realpos);

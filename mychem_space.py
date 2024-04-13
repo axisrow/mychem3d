@@ -22,7 +22,7 @@ class Space:
         self.INTERACT_KOEFF= 1.0
         self.ROTA_KOEFF = 10
         self.REPULSION1 = -3
-        self.REPULSION_KOEFF1 = 10
+        self.REPULSION_KOEFF1 = 7
         self.REPULSION2 = 6
         self.REPULSION_KOEFF2= 0.4
         self.MASS_KOEFF = 5.0
