@@ -29,6 +29,7 @@ class mychemApp():
         sim_menu = tk.Menu(self.menu_bar, tearoff=False)
         sim_menu.add_command(label="Go/Pause", accelerator="Space",command=self.handle_space)
         sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
+        sim_menu.add_command(label="Invert velocities", accelerator="Alt+i",command=self.handle_invert)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",variable=self.space.shake, command=self.handle_shake)
         #sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
         sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_g)
@@ -70,6 +71,7 @@ class mychemApp():
         #self.root.bind("<KeyRelease>", self.handle_keyrelease)
         self.root.bind("<space>", self.handle_space)
         self.root.bind("<Alt-r>", self.handle_reset)
+        self.root.bind("<Alt-i>", self.handle_invert)
         self.root.bind("<Alt-n>", self.file_new)
         self.root.bind("<Alt-o>", self.file_open)
         self.root.bind("<Alt-s>", self.file_save)
@@ -345,7 +347,14 @@ class mychemApp():
         self.space.load_data(self.resetdata)
         self.space.atoms2compute()
         self.status_bar.set("Reset to previos loaded")
-    
+
+    def handle_invert(self,event=None):
+        self.space.compute2atoms()
+        for a in self.space.atoms:
+            a.v = -a.v
+            a.rotv = -a.rotv
+        self.space.atoms2compute()
+
     def handle_add_atom2(self,event=None):
         self.handle_add_atom(keysym=event.keysym)
 
