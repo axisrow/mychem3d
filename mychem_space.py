@@ -572,10 +572,6 @@ class Space:
                 self.merge_atoms.append(aa)
             else:
                 self.appendatom(aa)
-        if merge:
-            self.autospinset(self.merge_atoms)			
-        else:
-            self.autospinset(self.atoms)    
 
 
 

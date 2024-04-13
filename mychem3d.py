@@ -128,7 +128,6 @@ class mychemApp():
     def firstrun(self):
         print("firstruns")
         if self.glframe.initok:
-            self.space.autospinset(self.space.atoms)
             self.space.atoms2compute()
             self.space.pause = False
         else:
@@ -383,12 +382,10 @@ class mychemApp():
         z = gl.glReadPixels(event.x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
         (x,y,z) = glm.unProject(glm.vec3(event.x, y,z),self.glframe.view,self.glframe.projection, (0,0,self.glframe.width,self.glframe.height))
         pos = glm.vec3(x,y,z) / self.glframe.factor
-        print(pos)
         near_atom_i= -1
         for i in range(0,N):
              a = self.space.atoms[i] 
              d = glm.distance(a.pos,  pos)
-             print(d)
              if d<=a.r+1:
                  near_atom_i=i
         if near_atom_i != -1:

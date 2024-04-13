@@ -141,6 +141,17 @@ class AppOgl(OpenGLFrame):
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
 
+        #spin set
+        gl.glUseProgram(self.gpu_code)
+        gl.glUniform1i(self.loc["stage"],1)
+        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+        gl.glUniform1i(self.loc["stage"],3)
+        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+
+
+
 
 
     def ssbo2atoms(self):

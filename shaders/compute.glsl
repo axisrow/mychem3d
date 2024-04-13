@@ -38,7 +38,7 @@ float ktab[6][6] = {  {0.5, 1.5, 1.0, 1.0, 0.1, 1.0},
                       {1.5, 0.5, 1.0, 1.5, 2.0, 1.0},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0},
                       {1.0, 1.5, 1.0, 1.5, 0.1, 1.0},
-                      {1.0, 2.0, 1.0, 1.0, 1.0, 1.0},
+                      {0.1, 2.0, 0.1, 0.1, 1.0, 0.1},
                       {1.0, 1.0, 1.0, 1.0, 0.1, 1.0} };
 
 float getk(float t1 , float t2){
@@ -248,8 +248,32 @@ void main()
     }
 
     if(stage==3){   //autospinset
-
-
+        for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+            vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
+            if (atom_i.nodes[ni].spin ==0){
+                for (int j=0;j<i;j++){  //half matrix
+                    Atom atom_j = In.atoms[j];
+                    pos_j = atom_j.pos.xyz;
+                    delta = pos_i - pos_j;
+                    r =     distance(pos_i, pos_j);
+                    if (r==0) continue;
+                    for (int nj = 0; nj<atom_j.ncount; nj++){
+                        vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
+                        vec3 ndelta =  ni_realpos - nj_realpos + delta;
+                        float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
+                        if (rn<BONDR){
+                            if (atom_j.nodes[nj].spin !=0){
+                                In.atoms[i].nodes[ni].spin = - atom_j.nodes[nj].spin;
+                            }
+                            else {
+                                In.atoms[i].nodes[ni].spin = 1;
+                                In.atoms[j].nodes[nj].spin = -1;
+                            }
+                        }
+                    }
+                }
+            }
+        }                
     }
 
 
