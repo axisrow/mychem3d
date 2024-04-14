@@ -352,7 +352,7 @@ class mychemApp():
         self.space.compute2atoms()
         for a in self.space.atoms:
             a.v = -a.v
-            a.rotv = -a.rotv
+            a.rotv = glm.inverse(a.rotv)
         self.space.atoms2compute()
 
     def handle_add_atom2(self,event=None):
@@ -387,7 +387,7 @@ class mychemApp():
             return
         #print("coord ", event.x, event.y)
         #print("size ", self.glframe.winfo_width(), self.glframe.winfo_height() ) 
-
+        ctrl = event.state & 4
         if not self.space.pause: self.sim_pause()
         N = len(self.space.atoms)
         y = self.glframe.height - event.y
@@ -401,7 +401,10 @@ class mychemApp():
              if d<=a.r+1:
                  near_atom_i=i
         if near_atom_i != -1:
-            self.space.selected_atoms = [near_atom_i]
+            if ctrl:
+                self.space.selected_atoms.append(near_atom_i)
+            else:
+                self.space.selected_atoms = [near_atom_i]
             self.space.select_mode = 1
         else:
             self.space.select_mode = 0
