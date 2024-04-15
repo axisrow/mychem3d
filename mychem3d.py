@@ -77,6 +77,7 @@ class mychemApp():
         self.root.bind("<Alt-o>", self.file_open)
         self.root.bind("<Alt-s>", self.file_save)
         self.root.bind("<Button-1>", self.handle_mouseb1)
+        self.root.bind("<Button-2>", self.handle_mouseb2)
         self.root.bind("<Return>", self.handle_enter)
         self.root.bind("<Escape>", self.handle_escape)
         self.root.bind("<s>", self.handle_shake)
@@ -392,6 +393,7 @@ class mychemApp():
             self.space.merge_atoms = []
 
     def handle_doubleclick(self,event):
+        print("double click")
         if self.merge_mode:
             self.handle_enter(event)
             return
@@ -411,12 +413,16 @@ class mychemApp():
              if d<=a.r+1:
                  near_atom_i=i
         if near_atom_i != -1:
+            if near_atom_i in self.space.selected_atoms:
+                self.handle_enter(event)
+                return
             if ctrl:
                 self.space.selected_atoms.append(near_atom_i)
             else:
                 self.space.selected_atoms = [near_atom_i]
             self.space.select_mode = 1
         else:
+            self.space.selected_atoms = []
             self.space.select_mode = 0
 
     def handle_enter(self,event:tk.Event):
@@ -430,6 +436,7 @@ class mychemApp():
                 #a.unbond()  
             for m in self.space.merge_atoms:
                 self.space.atoms.remove(m)
+            self.space.selected_atoms = []
             self.space.merge_rot = glm.quat()
             self.space.merge_center = self.space.get_mergeobject_center()
             self.space.merge_pos = glm.vec3(self.space.merge_center)
@@ -461,6 +468,12 @@ class mychemApp():
         self.lastX = event.x
         self.lastY = event.y
 
+    def handle_mouseb2(self,event:tk.Event):
+        if self.space.select_mode:
+            self.handle_enter(event)
+
+        
+        
 
 
         
