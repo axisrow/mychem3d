@@ -78,5 +78,30 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
     else:
        bi2 = ni2
     a1.nodes[bi1].q = -1
+    a1.nodes[bi1].spin = -1
     a2.nodes[bi2].q = 1
+    a2.nodes[bi2].spin = 1
     return True
+
+
+
+class UndoStack:
+    def __init__(self, limit=10):
+        self.stack = []
+        self.limit = limit
+
+    def push(self, data):
+        print("push to undostack")
+        if len(self.stack) >= self.limit:
+            self.stack.pop(0)  
+        self.stack.append(data)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.stack.pop()
+        else:
+            return None
+
+    def is_empty(self):
+        return len(self.stack) == 0
+    

@@ -10,7 +10,7 @@ from PIL import ImageGrab
 from mychem_atom import Atom
 from mychem_space import Space
 from mychem_gl import AppOgl
-from mychem_functions import OnOff
+from mychem_functions import OnOff,UndoStack
 import glm
 import random
 import OpenGL.GL as gl
@@ -56,6 +56,7 @@ class mychemApp():
         self.root = tk.Tk()
         self.root.title("MyChem 3D")
         self.space = Space()
+        self.undostack = UndoStack(limit=30)
         self.init_menu()
         self.lastX = 300
         self.lastY = 300
@@ -87,6 +88,7 @@ class mychemApp():
         self.root.bind("l", self.file_merge_recent)
         self.root.bind("<Alt-l>", self.handle_random_recent)
         self.root.bind("<Alt-g>", self.handle_g)
+        self.root.bind("<Control-z>", self.handle_undo)
         self.root.bind("0", self.handle_zero)
         self.root.bind("<b>", self.handle_bondlock)
         #self.root.bind("<FocusIn>"), self.handle_focusin
@@ -123,6 +125,13 @@ class mychemApp():
     def handle_resize(self, event):
         print(event)
 
+    def handle_undo(self,event):
+        data = self.undostack.pop()
+        if data is not None:
+            self.space.load_data(data)
+            self.space.atoms2compute()
+            self.status_bar.set('Undo')
+        
 
     def setHeat(self, value):
         self.space.heat = float(value)
@@ -290,6 +299,7 @@ class mychemApp():
         if not self.recentdata:
             return
         self.sim_pause()
+        self.undostack.push(self.space.make_export())
         self.space.load_data(self.recentdata, merge=True)
         (center,distant) = self.space.get_atoms_distant(self.space.merge_atoms)
         for i in range(0,10):
@@ -413,6 +423,7 @@ class mychemApp():
         if self.space.select_mode==1:
             self.space.select_mode = 0
             self.sim_pause()
+            self.undostack.push(self.space.make_export())
             for i in self.space.selected_atoms:
                 a = self.space.atoms[i]
                 self.space.merge_atoms.append(a)
@@ -426,6 +437,7 @@ class mychemApp():
             self.space.atoms2compute()
             return
         if self.merge_mode:
+            self.undostack.push(self.space.make_export())
             self.merge_mode = False 
             self.space.merge2atoms()
             self.space.atoms2compute()
