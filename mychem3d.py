@@ -413,12 +413,15 @@ class mychemApp():
              if d<=a.r+1:
                  near_atom_i=i
         if near_atom_i != -1:
-            if near_atom_i in self.space.selected_atoms:
-                self.handle_enter(event)
-                return
             if ctrl:
-                self.space.selected_atoms.append(near_atom_i)
+                if near_atom_i in self.space.selected_atoms:
+                    self.space.selected_atoms.remove(near_atom_i)    
+                else:
+                    self.space.selected_atoms.append(near_atom_i)
             else:
+                if near_atom_i in self.space.selected_atoms:
+                    self.handle_enter(event)
+                    return
                 self.space.selected_atoms = [near_atom_i]
             self.space.select_mode = 1
         else:
