@@ -204,6 +204,19 @@ class Space:
          return center
 
 
+    def selected2merge(self):
+        for i in self.selected_atoms:
+                a = self.atoms[i]
+                self.merge_atoms.append(a)
+                #a.unbond()  
+        for m in self.merge_atoms:
+            self.atoms.remove(m)
+        self.selected_atoms = []
+        self.merge_rot = glm.quat()
+        self.merge_center = self.get_mergeobject_center()
+        self.merge_pos = glm.vec3(self.merge_center)
+
+
     def get_atoms_distant(self,atoms=None):
          if atoms==None:
               atoms = self.atoms

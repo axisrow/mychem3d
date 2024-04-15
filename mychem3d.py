@@ -10,7 +10,7 @@ from PIL import ImageGrab
 from mychem_atom import Atom
 from mychem_space import Space
 from mychem_gl import AppOgl
-from mychem_functions import OnOff,UndoStack
+from mychem_functions import OnOff,UndoStack,bond_atoms
 import glm
 import random
 import OpenGL.GL as gl
@@ -82,6 +82,7 @@ class mychemApp():
         self.root.bind("<Button-2>", self.handle_mouseb2)
         self.root.bind("<Return>", self.handle_enter)
         self.root.bind("<Escape>", self.handle_escape)
+        self.root.bind("<Delete>", self.handle_delete)
         self.root.bind("<s>", self.handle_shake)
         self.root.bind("x", self.handle_mode)
         self.root.bind("y", self.handle_mode)
@@ -90,11 +91,12 @@ class mychemApp():
         self.root.bind("g", self.handle_mode)
         self.root.bind("m", self.file_merge)
         self.root.bind("l", self.file_merge_recent)
+        self.root.bind("b", self.handle_bond)
         self.root.bind("<Alt-l>", self.handle_random_recent)
         self.root.bind("<Alt-g>", self.handle_g)
         self.root.bind("<Control-z>", self.handle_undo)
         self.root.bind("0", self.handle_zero)
-        self.root.bind("<b>", self.handle_bondlock)
+        #self.root.bind("<b>", self.handle_bondlock)
         #self.root.bind("<FocusIn>"), self.handle_focusin
         self.glframe = AppOgl(self.root, width=1024, height=600)
         self.glframe.bind("<B1-Motion>", self.handle_mouse1move)
@@ -135,7 +137,7 @@ class mychemApp():
             self.space.load_data(data)
             self.space.atoms2compute()
             self.status_bar.set('Undo')
-        
+
 
     def setHeat(self, value):
         self.space.heat = float(value)
@@ -186,6 +188,10 @@ class mychemApp():
 
 
     def handle_mode(self,event=None):
+        if self.space.select_mode:
+           self.space.selected2merge()
+           self.space.atoms2compute()
+           self.merge_mode = True
         if not self.merge_mode: return
         if event.keysym == "r":
            self.ttype = "r" + self.ttype[1]
@@ -354,7 +360,16 @@ class mychemApp():
             f.close()
             self.status_bar.set("File saved")
                                             
-
+    def handle_bond(self,event=None):
+        if self.space.select_mode==1 and len(self.space.selected_atoms)==2:
+            r= bond_atoms(self.space.atoms[self.space.selected_atoms[0]],
+                       self.space.atoms[self.space.selected_atoms[1]]
+                       )
+            if r: 
+                self.status_bar.set("Bond atoms ok")
+                self.space.atoms2compute()
+            else: 
+                self.status_bar.set("Bond atoms fail")
                 
 
 
@@ -417,6 +432,19 @@ class mychemApp():
             self.merge_mode = False
             self.space.merge_atoms = []
 
+    def handle_delete(self,event):
+        if self.merge_mode:
+            self.merge_mode = False
+            self.space.merge_atoms = []
+        if self.space.select_mode:
+            self.space.selected2merge()
+            self.space.merge_atoms = []
+            #self.merge_mode = True
+            self.space.atoms2compute()
+
+    
+
+
     def handle_doubleclick(self,event):
         print("double click")
         if self.merge_mode:
@@ -453,21 +481,14 @@ class mychemApp():
             self.space.selected_atoms = []
             self.space.select_mode = 0
 
+
+    
     def handle_enter(self,event:tk.Event):
         if self.space.select_mode==1:
             self.space.select_mode = 0
             self.sim_pause()
             self.undostack.push(self.space.make_export())
-            for i in self.space.selected_atoms:
-                a = self.space.atoms[i]
-                self.space.merge_atoms.append(a)
-                #a.unbond()  
-            for m in self.space.merge_atoms:
-                self.space.atoms.remove(m)
-            self.space.selected_atoms = []
-            self.space.merge_rot = glm.quat()
-            self.space.merge_center = self.space.get_mergeobject_center()
-            self.space.merge_pos = glm.vec3(self.space.merge_center)
+            self.space.selected2merge()
             self.merge_mode = True
             self.space.atoms2compute()
             return

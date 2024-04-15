@@ -63,7 +63,7 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
     bi2 = 0
     if ni1==-1:
         for i in range(0, len(a1.nodes)):
-            if not a1.nodes[i].bonded and a1.nodes[i].q==0 :
+            if not a1.nodes[i].bonded:
                 bi1 = i
                 break
         else: return False
@@ -71,12 +71,13 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
        bi1 = ni1
     if ni2==-1:
         for i in range(0, len(a2.nodes)):
-            if not a2.nodes[i].bonded and a2.nodes[i].q==0:
+            if not a2.nodes[i].bonded:
                 bi2 = i
                 break
         else: return False
     else:
        bi2 = ni2
+    print("bi1bi2" , bi1,bi2)       
     a1.nodes[bi1].q = -1
     a1.nodes[bi1].spin = -1
     a2.nodes[bi2].q = 1
