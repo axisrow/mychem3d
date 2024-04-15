@@ -392,13 +392,12 @@ void main()
                         f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
                     }
                     if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
-                        //f3+= k* atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF/rn;
                         f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
                     }
 
                     if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].q + atom_j.nodes[nj].q==0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
-                        f3+= atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF/rn;
-//                        f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
+                        f3+= atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF2/rn;
+
                     }
 
 
