@@ -501,31 +501,33 @@ class Space:
             return N
 
 
-    def make_export(self):
+    def make_export(self, atoms=None):
+        if atoms==None:
+            atoms=self.atoms
         frame = {}
         frame["vers"] = "1.0"
         frame["time"] = self.t
         frame["atoms"] = []
-        N = len(self.atoms)
+        N = len(atoms)
         for i in range(0,N):
-            if self.atoms[i].color == (0,0,0): continue    #spec color for remove atoms on save
+            if atoms[i].color == (0,0,0): continue    #spec color for remove atoms on save
             atom = {}
-            atom["id"] = self.atoms[i].id
-            atom["type"] = self.atoms[i].type
-            atom["x"] = round(self.atoms[i].pos.x,4)
-            atom["y"] = round(self.atoms[i].pos.y,4)
-            atom["z"] = round(self.atoms[i].pos.z,4)
+            atom["id"] = atoms[i].id
+            atom["type"] = atoms[i].type
+            atom["x"] = round(atoms[i].pos.x,4)
+            atom["y"] = round(atoms[i].pos.y,4)
+            atom["z"] = round(atoms[i].pos.z,4)
             #atom["f"] = round(self.atoms[i].f,4)
             #atom["f2"] = round(self.atoms[i].f2,4)
-            atom["rot"] = self.atoms[i].rot.to_tuple()
-            atom["vx"] = round(self.atoms[i].v.x,4)
-            atom["vy"] = round(self.atoms[i].v.y,4)
-            atom["vz"] = round(self.atoms[i].v.z,4)
-            atom["q"] = self.atoms[i].q
-            atom["m"] = self.atoms[i].m
-            atom["r"] = self.atoms[i].r
+            atom["rot"] = atoms[i].rot.to_tuple()
+            atom["vx"] = round(atoms[i].v.x,4)
+            atom["vy"] = round(atoms[i].v.y,4)
+            atom["vz"] = round(atoms[i].v.z,4)
+            atom["q"] = atoms[i].q
+            atom["m"] = atoms[i].m
+            atom["r"] = atoms[i].r
             atom["nodes"] = []
-            for n in self.atoms[i].nodes:
+            for n in atoms[i].nodes:
                  node ={}
                  node["q"]=n.q
                  atom["nodes"].append(node)

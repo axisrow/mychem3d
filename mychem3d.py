@@ -25,6 +25,7 @@ class mychemApp():
         file_menu.add_command(label="Merge recent", accelerator="l", command=self.file_merge_recent)
         file_menu.add_command(label="Merge recent random x10", accelerator="Alt+l", command=self.handle_random_recent)
         file_menu.add_command(label="Save", accelerator="Alt+s", command=self.file_save)
+        file_menu.add_command(label="Save selected", accelerator="Ctrl+Alt+s", command=self.file_save_selected)
         file_menu.add_command(label="Exit", command=self.file_exit)
         sim_menu = tk.Menu(self.menu_bar, tearoff=False)
         sim_menu.add_command(label="Go/Pause", accelerator="Space",command=self.handle_space)
@@ -76,6 +77,7 @@ class mychemApp():
         self.root.bind("<Alt-n>", self.file_new)
         self.root.bind("<Alt-o>", self.file_open)
         self.root.bind("<Alt-s>", self.file_save)
+        self.root.bind("<Control-Alt-s>", self.file_save_selected)
         self.root.bind("<Button-1>", self.handle_mouseb1)
         self.root.bind("<Button-2>", self.handle_mouseb2)
         self.root.bind("<Return>", self.handle_enter)
@@ -86,6 +88,7 @@ class mychemApp():
         self.root.bind("z", self.handle_mode)
         self.root.bind("r", self.handle_mode)
         self.root.bind("g", self.handle_mode)
+        self.root.bind("m", self.file_merge)
         self.root.bind("l", self.file_merge_recent)
         self.root.bind("<Alt-l>", self.handle_random_recent)
         self.root.bind("<Alt-g>", self.handle_g)
@@ -334,7 +337,29 @@ class mychemApp():
         f.close()
         self.status_bar.set("File saved")
 
+    def file_save_selected(self,event=None):
+        if self.space.select_mode==1 and len(self.space.selected_atoms)>0:
+            atoms = []
+            for i in self.space.selected_atoms:
+                atoms.append(self.space.atoms[i])
+            center = self.space.get_atoms_center(atoms)                
+            for a in atoms:
+                a.pos -= center
+            fileName = tk.filedialog.asksaveasfilename(title="Save As", filetypes=(("JSON files", "*.json"), ("All Files", "*.*")))
+            if not (fileName.endswith(".json") or fileName.endswith(".JSON")):
+                fileName+=".json"
+            f = open(fileName, "w")
+            export = self.space.make_export(atoms)
+            f.write(json.dumps(export))
+            f.close()
+            self.status_bar.set("File saved")
+                                            
+
+                
+
+
     def file_exit(self,event=None):
+        self.root.destroy()
         pass
 
     def handle_cursor(self,event=None):

@@ -27,7 +27,9 @@ Controls:
 Selection atoms
 1. molecule selection mode
     double-click an atom, then use the mouse wheel to add neighboring atoms to the selection
-    enter - go to merge mode with selected atoms
+    ctrl + double-click  - append/remove to/from selection
+    enter or middle-button or double-click on selection - go to merge mode with selected atoms
+    ctrl + alt + s - save selected atoms
 
 
 
