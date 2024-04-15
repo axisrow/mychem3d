@@ -29,7 +29,10 @@ Selection atoms
     double-click an atom, then use the mouse wheel to add neighboring atoms to the selection
     ctrl + double-click  - append/remove to/from selection
     enter or middle-button or double-click on selection - go to merge mode with selected atoms
+    also "r" and "g" - go to merge mode with move and rotation
+    <delete> - delete selected
     ctrl + alt + s - save selected atoms
+    "b" - try to bond two selected atoms (run before sometime for actual bonded state)
 
 
 
