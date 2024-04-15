@@ -208,6 +208,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
             self.loc.update( {"nodeindex": gl.glGetUniformLocation(self.shader, "nodeindex") })
+            self.loc.update( {"lightPos": gl.glGetUniformLocation(self.shader, "lightPos") })
             
 
 
@@ -242,6 +243,10 @@ class AppOgl(OpenGLFrame):
         self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,10.0)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
+        gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0],
+                                            self.cameraPos.y+self.view[1,0],
+                                            self.cameraPos.z+self.view[2,0])
+
 
         #render merge_atom
         if len(self.space.merge_atoms)>0:

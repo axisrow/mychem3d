@@ -4,11 +4,13 @@ in vec3 ObjectColor;
 in vec3 Normal;
 in vec3 FragPos;
 
+uniform vec3 lightPos;
+
 void main()
 {
 //    color = vec4(1,1,1,1);
 
-    vec3 lightPos = vec3(1.0f,1.0f,1.0f);
+//    vec3 lightPos = vec3(1.0f,1.0f,1.0f);
     vec3 lightColor = vec3(1.0f,1.0f,1.0f);
     float ambientStrength = 0.5f;
     vec3 ambient = ambientStrength * lightColor;
