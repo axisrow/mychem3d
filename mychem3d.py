@@ -191,6 +191,7 @@ class mychemApp():
         if self.space.select_mode:
            self.space.selected2merge()
            self.space.atoms2compute()
+           self.space.select_mode = False
            self.merge_mode = True
         if not self.merge_mode: return
         if event.keysym == "r":
@@ -601,7 +602,8 @@ class mychemApp():
                                 new_selected.append(j)
                 self.space.selected_atoms = new_selected.copy()
             else:
-                self.space.selected_atoms.pop()
+                if len(self.space.selected_atoms)>0:
+                    self.space.selected_atoms.pop()
                 if len(self.space.selected_atoms)==0:
                     self.space.select_mode=0
          
