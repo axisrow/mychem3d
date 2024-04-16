@@ -243,9 +243,9 @@ class AppOgl(OpenGLFrame):
         self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,10.0)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
-        gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0],
-                                            self.cameraPos.y+self.view[1,0],
-                                            self.cameraPos.z+self.view[2,0])
+        gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0]+self.view[0,1],
+                                            self.cameraPos.y+self.view[1,0]+self.view[1,1],
+                                            self.cameraPos.z+self.view[2,0]+self.view[2,1])
 
 
         #render merge_atom
