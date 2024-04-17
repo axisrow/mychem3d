@@ -690,7 +690,7 @@ class OptionsFrame():
         a = tk.Toplevel()
         a.title("Fine tuning (options)")
         a.resizable(0, 0)
-        a.geometry('420x400')
+        a.geometry('420x600')
         #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
         #self.frame.pack()
         self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
@@ -730,8 +730,24 @@ class OptionsFrame():
         self.massk_slider.grid(row=6,column=1)
         self.massk_slider.set(self.space.MASS_KOEFF)
 
+        self.label7 = tk.Label(a, text= "Container size X").grid(row=7,column=0)
+        self.sizex_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_size)
+        self.sizex_slider.grid(row=7,column=1)
+        self.sizex_slider.set(int(self.space.WIDTH/100))
 
-        self.checkbox = tk.Checkbutton(a, text="GPU Compute", variable=self.space.gpu_compute,command=self.on_checkbox).grid(row=7,column=0)
+        self.label8 = tk.Label(a, text= "Container size Y").grid(row=8,column=0)
+        self.sizey_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_size)
+        self.sizey_slider.grid(row=8,column=1)
+        self.sizey_slider.set(int(self.space.HEIGHT/100))
+
+        self.label9 = tk.Label(a, text= "Container size Z").grid(row=9,column=0)
+        self.sizez_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_size)
+        self.sizez_slider.grid(row=9,column=1)
+        self.sizez_slider.set(int(self.space.DEPTH/100))
+
+
+
+        #self.checkbox = tk.Checkbutton(a, text="GPU Compute", variable=self.space.gpu_compute,command=self.on_checkbox).grid(row=7,column=0)
 
         #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
 
@@ -770,6 +786,15 @@ class OptionsFrame():
     def set_massk(self,value):
         self.space.MASS_KOEFF = float(value)
 
+    def set_size(self,value):
+        print(self.space.box)
+        sx = self.sizex_slider.get()
+        sy = self.sizey_slider.get()
+        sz = self.sizez_slider.get()
+        self.space.setSize(sx*100, sy*100, sz*100)
+        self.space.glframe.updateContainerSize()
+
+    
 
 if __name__ == '__main__':
     mychemApp().run()

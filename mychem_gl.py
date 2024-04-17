@@ -230,6 +230,14 @@ class AppOgl(OpenGLFrame):
 
         self.init_loc()
 
+    def updateContainerSize(self):
+        if not self.containerMesh: return
+        model =  glm.mat4()
+        model =  glm.scale(model,self.space.box/glm.vec3(1/self.factor))
+        model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
+        model =  glm.translate(model, glm.vec3(1, 1, 1))
+        self.containerMesh.modelmatrix = model
+
     def render(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
        
@@ -240,7 +248,7 @@ class AppOgl(OpenGLFrame):
                 )
         self.cameraFront = glm.normalize(front)
         self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
-        self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,10.0)
+        self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,20.0)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
         gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0]+self.view[0,1],

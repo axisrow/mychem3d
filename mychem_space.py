@@ -9,7 +9,7 @@ import tkinter as tk
 import time
 
 class Space:
-    def __init__(self,width=1000,height=1000,depth=1000):
+    def __init__(self,width=1500,height=1000,depth=1000):
         self.gpu_compute =tk.BooleanVar()
         self.gpu_compute.set(True)
         self.pause = False
@@ -68,6 +68,7 @@ class Space:
         self.HEIGHT=height
         self.DEPTH=depth
         self.box = glm.vec3(self.WIDTH, self.HEIGHT, self.DEPTH)
+        print("box size =  ",self.box)
         self.merge_pos = self.box/2
 
 
