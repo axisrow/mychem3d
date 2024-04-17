@@ -49,6 +49,8 @@ class Space:
         self.gravity.set(False)
         self.shake= tk.BooleanVar()
         self.shake.set(False)
+        self.softbox = tk.BooleanVar()
+        self.softbox.set(True)
         self.SHAKE_KOEFF = 0.5
         self.competitive = True
         self.redox = tk.BooleanVar()

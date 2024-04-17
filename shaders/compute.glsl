@@ -12,6 +12,7 @@ uniform int bondlock;
 uniform int gravity;
 uniform int redox;
 uniform int shake;
+uniform int softbox;
 
 //uniform float frame_time;
 float BONDR = 4;
@@ -127,36 +128,62 @@ vec3 rotate_vector(vec3 v, vec4 r)
 void limits(inout vec3 pos,  inout vec3 v, in float radius){
     v = clamp(v , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
 
+    if (softbox==1) {
+        if (pos.x > WIDTH-radius){
+            v.x -= 0.005 ;
+        }
 
-    if (pos.x > WIDTH-radius){
-        pos.x = WIDTH-radius;
-        v.x = -v.x ;
-    }
+        if (pos.y > HEIGHT-radius){
+            v.y -= 0.005;
+        }
 
-    if (pos.y > HEIGHT-radius){
-        pos.y = HEIGHT-radius;
-        v.y = - v.y ;
-    }
+        if (pos.z > DEPTH-radius){
+            v.z -= 0.005;
+        }
 
-    if (pos.z > DEPTH-radius){
-        pos.z = DEPTH-radius;
-        v.z = - v.z ;
-    }
+        if (pos.x < radius){
+            v.x += 0.005;
+        }
 
-    if (pos.x < radius){
-        pos.x = radius;
-        v.x = - v.x ;
-    }
+        if (pos.y < radius){
+            v.y += 0.005;
+        }
 
-    if (pos.y < radius){
-        pos.y = radius;
-        v.y = - v.y ;
+        if (pos.z < radius){
+            v.z += 0.005;
+        }
     }
+    else {
+            if (pos.x > WIDTH-radius){
+                pos.x = WIDTH-radius;
+                v.x = -v.x ;
+            }   
 
-    if (pos.z < radius){
-        pos.z = radius;
-        v.z = -v.z ;
-    }
+            if (pos.y > HEIGHT-radius){
+                pos.y = HEIGHT-radius;
+                v.y = - v.y ;
+            }
+
+            if (pos.z > DEPTH-radius){
+                pos.z = DEPTH-radius;
+                v.z = - v.z ;
+            }
+
+            if (pos.x < radius){
+                pos.x = radius;
+                v.x = - v.x ;
+            }
+
+            if (pos.y < radius){
+                pos.y = radius;
+                v.y = - v.y ;
+            }
+
+            if (pos.z < radius){
+                pos.z = radius;
+                v.z = -v.z ;
+            }
+    }        
 }
 
 
@@ -396,7 +423,7 @@ void main()
                     }
 
                     if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].q + atom_j.nodes[nj].q==0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
-                        f3+= atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF2/rn;
+                        f3+= atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF2/rn/rn;
 
                     }
 
