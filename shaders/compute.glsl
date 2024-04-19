@@ -129,7 +129,13 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
     v = clamp(v , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
 
     if (softbox==1) {
-        if (pos.x > WIDTH){
+        vec3 outlim;
+        outlim = pos - box;
+        outlim = clamp(outlim,vec3(0.0),vec3(100.0));
+        v -= outlim * 0.005;
+        outlim = clamp(pos, vec3(-100.0), vec3(0.0));
+        v -= outlim * 0.005;
+        /*if (pos.x > WIDTH){
             v.x -= 0.005*(pos.x - WIDTH) ;
         }
 
@@ -151,7 +157,7 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 
         if (pos.z < 0){
             v.z += 0.005 * (0 - pos.z );
-        }
+        }*/
     }
     else {
             if (pos.x > WIDTH-radius){
