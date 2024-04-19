@@ -177,9 +177,6 @@ class AppOgl(OpenGLFrame):
             for i in range(0,5-len(a.nodes)):
                 offset+= ctypes.sizeof(NodeC)
 
-    def numpy2ssbo(self):
-        self.space.numpy2atoms()
-        self.atoms2ssbo()
 
 
 
@@ -289,7 +286,6 @@ class AppOgl(OpenGLFrame):
                     self.nodeMesh.draw(self.shader)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        #if self.space.gpu_compute.get():
         gl.glBindVertexArray(self.atomMesh.VAO )
         # render computed atoms
         gl.glUniform1i(self.loc["mode"],1)
@@ -325,7 +321,7 @@ class AppOgl(OpenGLFrame):
 
         # gpu compute atoms
         gl.glBindVertexArray(self.atomMesh.VAO )
-        if not self.space.pause and self.space.gpu_compute.get():
+        if not self.space.pause:
             gl.glUseProgram(self.gpu_code)
             gl.glUniform1i(self.loc["bondlock"],self.space.bondlock.get())
             gl.glUniform3fv(self.loc["box"], 1, glm.value_ptr(self.space.box))
@@ -386,11 +382,6 @@ class AppOgl(OpenGLFrame):
         """Render a single frame"""
         
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        if not self.space.pause and not self.space.gpu_compute.get():
-            for i in range(0,self.space.update_delta):
-                self.space.t+=1
-                n = self.space.compute()
-                self.numpy2ssbo()
         self.render()
         if self.space.recording.get() and not self.space.pause:
             pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)

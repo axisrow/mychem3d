@@ -690,7 +690,7 @@ class OptionsFrame():
         a = tk.Toplevel()
         a.title("Fine tuning (options)")
         a.resizable(0, 0)
-        a.geometry('420x600')
+        a.geometry('420x500')
         #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
         #self.frame.pack()
         self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
@@ -745,24 +745,6 @@ class OptionsFrame():
         self.sizez_slider.grid(row=9,column=1)
         self.sizez_slider.set(int(self.space.DEPTH/100))
 
-
-
-        #self.checkbox = tk.Checkbutton(a, text="GPU Compute", variable=self.space.gpu_compute,command=self.on_checkbox).grid(row=7,column=0)
-
-        #checkbox = tk.Checkbutton(a, text="Show Q", variable=self.space.show_q).grid(row=4,column=0)
-
-    def on_checkbox(self):
-        print('on checkbox')
-        if self.space.gpu_compute.get():
-            #self.space.numpy2atoms()
-            self.glframe.atoms2ssbo()
-        else:
-            if len(self.space.atoms)>300:
-                print("Too much atoms!")
-                self.space.gpu_compute.set(True) 
-            else:
-                self.space.atoms2numpy()
-
     def set_delta(self,value):
         self.space.update_delta = int(value)
 
@@ -787,7 +769,6 @@ class OptionsFrame():
         self.space.MASS_KOEFF = float(value)
 
     def set_size(self,value):
-        print(self.space.box)
         sx = self.sizex_slider.get()
         sy = self.sizey_slider.get()
         sz = self.sizez_slider.get()
