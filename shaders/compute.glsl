@@ -311,35 +311,6 @@ void main()
         return;
     }
 
-    if (stage==4){
-        for (int ni = 0; ni<atom_i.ncount; ni++ ) {
-            vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
-            float bonded = 0.0;
-            for (int jj=1;jj<=Near.indexes[i][0];jj++){
-                int j = Near.indexes[i][jj];
-                Atom atom_j = In.atoms[j];
-                pos_j = atom_j.pos.xyz;
-                delta = pos_i - pos_j;
-                r =     distance(pos_i, pos_j);
-//                if (r==0) continue;
-                if (r>=40) continue;
-                for (int nj = 0; nj<atom_j.ncount; nj++){
-                    vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
-                    vec3 ndelta =  ni_realpos - nj_realpos + delta;
-                    float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
-                    if (rn<=BONDR){
-                        bonded = 1.0;
-                    }
-                }
-            }
-            In.atoms[i].nodes[ni].bonded = bonded;
-            //In.atoms[i].color = vec4(1.0);
-        }
-        return;
-    }
-
-
-
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
@@ -366,6 +337,7 @@ void main()
             }    
     }
 
+    float bondcheck[5]= {0.0,0.0,0.0,0.0,0.0};
 
     for (int jj=1;jj<=Near.indexes[i][0];jj++){
         int j = Near.indexes[i][jj];
@@ -376,10 +348,8 @@ void main()
         r = distance(pos_i, pos_j);
         if (r==0) continue;
 
-        //if (r<300){
-            f1= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
-            F += delta/r*f1;  
-        //}
+        f1= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
+        F += delta/r*f1;  
 
         if (r<40) {
              f2 = 0;
@@ -393,7 +363,6 @@ void main()
              //nodes   
              float rn;
              vec3 nF,ndelta;
-             vec3 allnF = vec3(0,0,0);  
              for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
                 float ni_q=atom_i.nodes[ni].q;
@@ -414,6 +383,7 @@ void main()
                         int canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q);
                         atom_i.nodes[ni].q=ni_q;
                         if (atom_i.nodes[ni].spin !=0 && atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 && canbond ==1){
+                            bondcheck[ni]=1.0;
                             f3 = -rn* BOND_KOEFF*k;
                             //v_i *=0.5;
                         }
@@ -454,10 +424,15 @@ void main()
                 
             }
             //F += allnF;
-        } //if r <100
+        } //if r <40
 
     } //forj
-    
+
+    for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+        atom_i.nodes[ni].bonded = bondcheck[ni];
+    }
+
+
     //totalrot = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));    
     //atom_i.rotv = normalize(qmul(totalrot, atom_i.rotv));
     atom_i.rotv = totalrot;

@@ -351,9 +351,9 @@ class AppOgl(OpenGLFrame):
                         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
-                    gl.glUniform1i(self.loc["stage"],4) #bond state
-                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+#                    gl.glUniform1i(self.loc["stage"],4) #bond state
+                    #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                    #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
                     gl.glUniform1i(self.loc["stage"],5)  #main
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
