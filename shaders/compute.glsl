@@ -129,28 +129,28 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
     v = clamp(v , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
 
     if (softbox==1) {
-        if (pos.x > WIDTH-radius){
-            v.x -= 0.005 ;
+        if (pos.x > WIDTH){
+            v.x -= 0.005*(pos.x - WIDTH) ;
         }
 
-        if (pos.y > HEIGHT-radius){
-            v.y -= 0.005;
+        if (pos.y > HEIGHT){
+            v.y -= 0.005 *(pos.y - HEIGHT);
         }
 
-        if (pos.z > DEPTH-radius){
-            v.z -= 0.005;
+        if (pos.z > DEPTH){
+            v.z -= 0.005 * (pos.z - DEPTH);
         }
 
-        if (pos.x < radius){
-            v.x += 0.005;
+        if (pos.x < 0){
+            v.x += 0.005 * (0 - pos.x );
         }
 
-        if (pos.y < radius){
-            v.y += 0.005;
+        if (pos.y < 0){
+            v.y += 0.005 * (0 - pos.y );
         }
 
-        if (pos.z < radius){
-            v.z += 0.005;
+        if (pos.z < 0){
+            v.z += 0.005 * (0 - pos.z );
         }
     }
     else {
