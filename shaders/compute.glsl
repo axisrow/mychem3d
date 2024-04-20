@@ -23,7 +23,7 @@ uniform float INTERACT_KOEFF2=1.0;
 uniform float ROTA_KOEFF;
 float REPULSION1 = -3;
 uniform float REPULSION_KOEFF1;
-float REPULSION2 = 10;
+float REPULSION2 = 40;
 uniform float REPULSION_KOEFF2;
 uniform float MASS_KOEFF;
 uniform float NEARDIST;
@@ -338,7 +338,6 @@ void main()
         return;
     }
 
-
     v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
@@ -385,7 +384,7 @@ void main()
              if (r<(sumradius+REPULSION1))
                 f2 = 1/r*  REPULSION_KOEFF1;
              else if (r<(sumradius+REPULSION2))
-                f2 = 1/r* REPULSION_KOEFF2;
+                f2 = REPULSION_KOEFF2/r/r/r;
              F += delta/r*f2;
 
              //nodes   
@@ -419,7 +418,7 @@ void main()
                             f3 = 1/rn;
                         }
                     }
-                    if (rn>BONDR && rn < BONDR*2 ){
+                    if (rn>BONDR && rn < BONDR*2.0 ){
                         f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
                     }
                     if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
@@ -458,6 +457,16 @@ void main()
 
     for (int ni = 0; ni<atom_i.ncount; ni++ ) {
         atom_i.nodes[ni].bonded = bondcheck[ni];
+/*        if (atom_i.nodes[ni].bonded==0 && length(atom_i.v)>1.60) {
+            if (rand(v_i.xy)>=0.5) {
+                    atom_i.nodes[ni].q = -1;
+                    atom_i.animate = 500;
+            }
+            else {
+                atom_i.nodes[ni].q = -1;
+                atom_i.animate = 500;
+            }
+        }*/
     }
 
 

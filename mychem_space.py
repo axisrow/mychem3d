@@ -22,7 +22,7 @@ class Space:
         self.REPULSION1 = -3
         self.REPULSION_KOEFF1 = 7
         self.REPULSION2 = 6
-        self.REPULSION_KOEFF2= 0.4
+        self.REPULSION_KOEFF2= 20.0
         self.MASS_KOEFF = 5.0
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
