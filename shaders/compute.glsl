@@ -378,13 +378,17 @@ void main()
         f1= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
         F += delta/r*f1;  
 
+        f2 = REPULSION_KOEFF2/r/r/r;
+        F += delta/r*f2;
+
+
         if (r<40) {
              f2 = 0;
              float sumradius = atom_i.r + atom_j.r;
              if (r<(sumradius+REPULSION1))
                 f2 = 1/r*  REPULSION_KOEFF1;
-             else if (r<(sumradius+REPULSION2))
-                f2 = REPULSION_KOEFF2/r/r/r;
+//             else if (r<(sumradius+REPULSION2))
+//                f2 = REPULSION_KOEFF2/r/r/r;
              F += delta/r*f2;
 
              //nodes   

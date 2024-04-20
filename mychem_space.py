@@ -227,6 +227,7 @@ class Space:
             for n in atoms[i].nodes:
                  node ={}
                  node["q"]=n.q
+                 node["spin"]=n.spin
                  atom["nodes"].append(node)
                  
             frame["atoms"].append(atom)
@@ -265,6 +266,8 @@ class Space:
             if "nodes" in a:
                  for n in a["nodes"]:
                     aa.nodes[ni].q= n["q"]
+                    if "spin" in n:
+                        aa.nodes[ni].spin= n["spin"]
                     ni+=1
             if merge:
                 aa.space = self

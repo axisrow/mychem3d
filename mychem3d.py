@@ -189,6 +189,7 @@ class mychemApp():
 
     def handle_mode(self,event=None):
         if self.space.select_mode:
+           self.undostack.push(self.space.make_export())
            self.space.selected2merge()
            self.space.atoms2compute()
            self.space.select_mode = False
@@ -438,6 +439,7 @@ class mychemApp():
             self.merge_mode = False
             self.space.merge_atoms = []
         if self.space.select_mode:
+            self.undostack.push(self.space.make_export())
             self.space.selected2merge()
             self.space.merge_atoms = []
             #self.merge_mode = True
