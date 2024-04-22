@@ -225,13 +225,14 @@ class Space:
             atom["q"] = atoms[i].q
             atom["m"] = atoms[i].m
             atom["r"] = atoms[i].r
+            atom["fixed"] = atoms[i].fixed
             atom["nodes"] = []
             for n in atoms[i].nodes:
                  node ={}
                  node["q"]=n.q
                  node["spin"]=n.spin
                  atom["nodes"].append(node)
-                 
+
             frame["atoms"].append(atom)
         return frame
 
@@ -265,6 +266,8 @@ class Space:
 #            if not "version" in j:
 #                 aa.f= 2*pi - aa.f
             ni = 0
+            if "fixed" in a:
+                aa.fixed = a["fixed"]
             if "nodes" in a:
                  for n in a["nodes"]:
                     aa.nodes[ni].q= n["q"]

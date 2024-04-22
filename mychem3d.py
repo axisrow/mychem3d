@@ -21,6 +21,7 @@ class mychemApp():
         file_menu = tk.Menu(self.menu_bar, tearoff=False)
         file_menu.add_command(label="New", accelerator="Alt+n",command=self.file_new)
         file_menu.add_command(label="Open", accelerator="o", command=self.file_open)
+        file_menu.add_command(label="Import SDF (limited)", accelerator="", command=self.file_import)
         file_menu.add_command(label="Merge", accelerator="m", command=self.file_merge)
         file_menu.add_command(label="Merge recent", accelerator="l", command=self.file_merge_recent)
         file_menu.add_command(label="Merge recent random x10", accelerator="Alt+l", command=self.handle_random_recent)
@@ -82,6 +83,7 @@ class mychemApp():
         self.root.bind("<Control-Alt-s>", self.file_save_selected)
         self.root.bind("<Button-1>", self.handle_mouseb1)
         self.root.bind("<Button-2>", self.handle_mouseb2)
+        self.root.bind("<Button-3>", self.handle_mouseb3)
         self.root.bind("<Return>", self.handle_enter)
         self.root.bind("<Escape>", self.handle_escape)
         self.root.bind("<Delete>", self.handle_delete)
@@ -94,6 +96,8 @@ class mychemApp():
         self.root.bind("m", self.file_merge)
         self.root.bind("l", self.file_merge_recent)
         self.root.bind("b", self.handle_bond)
+        self.root.bind("f", self.handle_f)
+        self.root.bind("u", self.handle_u)
         self.root.bind("<Alt-l>", self.handle_random_recent)
         self.root.bind("<Alt-g>", self.handle_g)
         self.root.bind("<Control-z>", self.handle_undo)
@@ -305,6 +309,8 @@ class mychemApp():
         self.status_bar.set("File loaded")
         f.close()
 
+
+
     def file_merge(self,event=None, path=None):
         self.sim_pause()
         if path:
@@ -327,6 +333,101 @@ class mychemApp():
         #self.canvas.configure(cursor="hand2")
         self.status_bar.set("Merging mode")
         f.close()
+
+    def acr2type(self, acr):
+        if acr=="H": return 1
+        if acr=="O": return 2
+        if acr=="N": return 3
+        if acr=="C": return 4
+        if acr=="P": return 5
+        if acr=="S": return 6
+        print("unknown atom's type")
+        return None
+
+    def load_sdf(self, f, atoms):
+        natoms = 0
+        nlinks = 0
+        atoms_counter =0
+        links_counter =0
+        #data = 
+        counter = 0
+        result = True
+        for l in f:
+            counter+=1
+            if counter<3: continue
+            if counter==4:
+                sp = l.split()
+                natoms = int(sp[0])
+                nlinks = int(sp[1])
+                print(f"Loading: atoms:{natoms} links:{nlinks} ")
+                if natoms>100000 or nlinks>100000: 
+                    print(" too many natoms or links!")
+                    result = False
+                    break
+                atoms_counter = natoms
+                links_counter = nlinks
+                continue
+            if counter>4 and atoms_counter>0:
+                atoms_counter -= 1
+                sp = l.split()
+                print(f"x={float(sp[0])} y={sp[1]} z={sp[2]} type={sp[3]}")
+                x = float(sp[0])*12
+                y = float(sp[1])*12
+                z = float(sp[2])*12
+                type = self.acr2type(sp[3])
+                if type==None: 
+                    print("Error in string ", counter)
+                    result = False
+                    a = Atom(x,y,z,1)
+                    a.color = glm.vec3(0,0,0)
+                else:
+                    a = Atom(x,y,z,type)
+                a.fixed = 1.0
+                atoms.append(a)
+            if (counter>4+natoms) and links_counter>0:
+                links_counter -= 1
+                sp = l.split()
+                n1 = int(sp[0])-1
+                n2 = int(sp[1])-1
+                bt = int(sp[2])
+                for k in range(0,bt):
+                    print(n1,n2)
+                    bond_atoms(atoms[n1],atoms[n2])
+        
+        return result
+
+# https://www.molinstincts.com/
+    def file_import(self,event=None, path=None):
+        self.sim_pause()
+        if path:
+            print(path)
+            fileName=path
+        else:
+            fileName = filedialog.askopenfilename(title="Select file", filetypes=(("SDF", "*.sdf"), ("All Files", "*.*")))
+            if not fileName:	
+                return
+        f =  open(fileName,"r")		
+        self.space.merge_atoms = []
+#        try:
+        result = self.load_sdf(f,self.space.merge_atoms)
+        f.close()
+        mergedata = self.space.make_export(self.space.merge_atoms)
+#        except Exception as e:
+#            print(e)
+#            print("Fail to load sdf")
+
+
+        self.recentdata = mergedata
+        self.merge_mode=True
+        self.space.select_mode = False
+        self.space.merge_center = self.space.get_mergeobject_center()
+        self.space.atoms2compute()
+        if result:
+            self.status_bar.set("Imported")
+        else:
+            self.status_bar.set("Imported with errors")
+
+
 
 
     def file_merge_recent(self,event=None):
@@ -394,7 +495,32 @@ class mychemApp():
             f.write(json.dumps(export))
             f.close()
             self.status_bar.set("File saved")
-                                            
+
+    def handle_f(self,event):
+        print("fixed selected atoms")
+        if self.space.select_mode:
+            self.space.compute2atoms()
+            for s in self.space.selected_atoms:
+                self.space.atoms[s].fixed = True
+            self.space.atoms2compute()
+            self.status_bar.set("fixed selected atoms")
+
+    def handle_u(self,event):
+        print("Unfixed selected atoms")
+        if self.space.select_mode:
+            self.space.compute2atoms()
+            for s in self.space.selected_atoms:
+                self.space.atoms[s].fixed = False
+            self.space.atoms2compute()
+            self.status_bar.set("Unfixed selected atoms")
+    
+    def handle_mouseb3(self,event=None):
+        if self.space.select_mode and len(self.space.selected_atoms)==1:
+            self.space.compute2atoms()
+            for n in self.space.atoms[self.space.selected_atoms[0]].nodes:
+                print(f'node spin={n.spin} q={n.q}')
+
+
     def handle_bond(self,event=None):
         if self.space.select_mode==1 and len(self.space.selected_atoms)==2:
             r= bond_atoms(self.space.atoms[self.space.selected_atoms[0]],

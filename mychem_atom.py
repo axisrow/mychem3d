@@ -52,7 +52,8 @@ class AtomC(Structure):
         ("rotv", c_float*4),
         ("animate", c_float),
         ("q",  c_float),
-        ("_pad1", c_float*2),
+        ("fixed", c_float),
+        ("_pad1", c_float*1),
         ("color", c_float*4),
         ]
     def to_ctypes(self, a):
@@ -64,6 +65,7 @@ class AtomC(Structure):
         self.r = a.r
         self.m = a.m
         self.ncount = len(a.nodes)
+        self.fixed = float(a.fixed)
         self.rot[0]= a.rot.x
         self.rot[1]= a.rot.y
         self.rot[2]= a.rot.z

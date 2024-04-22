@@ -71,6 +71,7 @@ struct Atom
     vec4 rotv;
     float animate;
     float q;
+    float fxd;
     vec4 color;
     Node nodes[5];
 };
@@ -306,12 +307,13 @@ void main()
                         }
                     }
                 }
+                if (In.atoms[i].nodes[ni].spin==0) In.atoms[i].nodes[ni].spin=1;
             }
         }                
         return;
     }
 
-    if (stage==4){
+    if (stage==4){ // bonded state set
         for (int ni = 0; ni<atom_i.ncount; ni++ ) {
             vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
             float bonded = 0.0;
@@ -506,7 +508,9 @@ void main()
 
 //next
     v_i += F/(atom_i.m*MASS_KOEFF);
+    if (atom_i.fxd==1)  v_i = vec3(0.0);
     pos_i += v_i;
+
     atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
     
 //limits    

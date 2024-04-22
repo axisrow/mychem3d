@@ -145,12 +145,17 @@ class AppOgl(OpenGLFrame):
 
         #spin set
         gl.glUseProgram(self.gpu_code)
-        gl.glUniform1i(self.loc["stage"],1)
+        gl.glUniform1i(self.loc["stage"],1) # rpos of nodes and atom q
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-        gl.glUniform1i(self.loc["stage"],3)
+        gl.glUniform1i(self.loc["stage"],3) #autospinset
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+
+        gl.glUniform1i(self.loc["stage"],4)   # bonded state
+        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+
 
 
 
@@ -314,7 +319,7 @@ class AppOgl(OpenGLFrame):
                 model =  glm.mat4()
                 model =  glm.translate(model, a.pos * self.factor  )
                 model =  glm.scale(model, glm.vec3(a.r * self.factor*1.1))
-                self.atomMesh.color = (1,0,0)
+                self.atomMesh.color = (0,1.0,0)
                 self.atomMesh.modelmatrix = model
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
                 self.atomMesh.draw(self.shader)
@@ -344,15 +349,15 @@ class AppOgl(OpenGLFrame):
             for i in range(0,self.space.update_delta):
                 self.space.t+=1
                 if not self.space.pause:
-                    gl.glUniform1i(self.loc["stage"],1)
+                    gl.glUniform1i(self.loc["stage"],1) #calc q and rpos of nodes
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
                         self.nearflag = False
-                        gl.glUniform1i(self.loc["stage"],2)
+                        gl.glUniform1i(self.loc["stage"],2)   #calc near atoms  and far field
                         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-                        gl.glUniform1i(self.loc["stage"],4)
+                        gl.glUniform1i(self.loc["stage"],4)   # bonded state
                         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
