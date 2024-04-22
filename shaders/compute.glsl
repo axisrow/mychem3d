@@ -193,7 +193,7 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 }
 
 
-int shift_q(in float type1, in float type2, inout float q1, inout float q2){
+bool shift_q(in float type1, in float type2, inout float q1, inout float q2, inout float s1, inout float s2){
     float etable[11]=float[](5,500,1,4,400,6,600,3,2,200,100);
     int i1,i2;
     for(int i=0;i<etable.length();i++){
@@ -209,30 +209,30 @@ int shift_q(in float type1, in float type2, inout float q1, inout float q2){
         }
     }
     if (i1>i2){
-        if (q1== 0 && q2== 0 ){ q1=-1; q2= 1; return 1;}  //1
-        if (q1== 0 && q2==-1 ){ q1=-1; q2= 0; return 0;}  //2
-        if (q1== 0 && q2== 1 ){ q1= 0; q2= 1; return 0;}  //3
-        if (q1==-1 && q2== 0 ){ q1=-1; q2= 0; return 0;}
-        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return 0;}
-        if (q1==-1 && q2== 1 ){ q1=-1; q2= 1; return 1;}
-        if (q1== 1 && q2== 0 ){ q1= 0; q2= 1; return 0;}
-        if (q1== 1 && q2==-1 ){ q1=-1; q2= 1; return 1;}   //8
-        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return 0;}   //9
+        if (q1== 0 && q2== 0 ){ q1=-1; q2= 1; return true;}  //1  shift 1
+        if (q1== 0 && q2==-1 ){ q1=-1; q2= 0; s2=-s1; return false;}  //2  shift 1
+        if (q1== 0 && q2== 1 ){ q1= 0; q2= 1; return false;}  //3
+        if (q1==-1 && q2== 0 ){ q1=-1; q2= 0; return false;}
+        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return false;}
+        if (q1==-1 && q2== 1 ){ q1=-1; q2= 1; return true;}
+        if (q1== 1 && q2== 0 ){ q1= 0; q2= 1; s1=s2; return false;} //shift 1
+        if (q1== 1 && q2==-1 ){ q1=-1; q2= 1; return true;}   //8  shift 2
+        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return false;}   //9
     }
     if (i1==i2){
-        if (q1+q2==0) { q1=0; q2=0; return 1;}
-        else return 0;
+        if (q1+q2==0) { q1=0; q2=0; return true;}
+        else return false;
     }
     if (i1<i2){
-        if (q1== 0 && q2== 0 ){ q1= 1; q2=-1; return 1;}  //1
-        if (q1== 0 && q2==-1 ){ q1= 0; q2=-1; return 0;}  //2
-        if (q1== 0 && q2== 1 ){ q1= 1; q2= 0; return 0;}  //3
-        if (q1==-1 && q2== 0 ){ q1= 0; q2=-1; return 0;}
-        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return 0;}
-        if (q1==-1 && q2== 1 ){ q1= 1; q2=-1; return 1;}
-        if (q1== 1 && q2== 0 ){ q1= 1; q2= 0; return 0;}
-        if (q1== 1 && q2==-1 ){ q1= 1; q2=-1; return 1;}   //8
-        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return 0;}   //9
+        if (q1== 0 && q2== 0 ){ q1= 1; q2=-1; return true;}  //1 shift
+        if (q1== 0 && q2==-1 ){ q1= 0; q2=-1; return false;}  //2
+        if (q1== 0 && q2== 1 ){ q1= 1; q2= 0; s2=s1; return false;}  //3 shift
+        if (q1==-1 && q2== 0 ){ q1= 0; q2=-1; s1=-s2; return false;}  // shift
+        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return false;}
+        if (q1==-1 && q2== 1 ){ q1= 1; q2=-1; return true;}   //shift
+        if (q1== 1 && q2== 0 ){ q1= 1; q2= 0; return false;} 
+        if (q1== 1 && q2==-1 ){ q1= 1; q2=-1; return true;}   //8
+        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return false;}   //9
     }
 }
 
@@ -397,6 +397,7 @@ void main()
              for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
                 float ni_q=atom_i.nodes[ni].q;
+                float ni_spin = atom_i.nodes[ni].spin;
                 for (int nj = 0; nj<atom_j.ncount; nj++){
                     vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
                     ndelta =  ni_realpos - nj_realpos + delta;
@@ -405,32 +406,35 @@ void main()
 
                     //r2n = ndelta.x*ndelta
                     float nj_q=atom_j.nodes[nj].q;
+                    float nj_spin=atom_j.nodes[nj].spin;
                     if (rn == 0) continue;
                     f3 = 0;
                     float k = getk(atom_i.type, atom_j.type);
+                    
                     //node interact
                     //if (rn<=BONDR ){
                     if (rn<=BONDR ){                        
-                        int canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q);
+                        bool canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q, ni_spin, nj_spin);
                         atom_i.nodes[ni].q=ni_q;
-                        if (atom_i.nodes[ni].spin !=0 && atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 && canbond ==1){
+                        atom_i.nodes[ni].spin = ni_spin;
+                        if (ni_spin + nj_spin==0 && canbond){
                             bondcheck[ni]=1.0;
                             f3 = -rn* BOND_KOEFF*k;
                             //v_i *=0.5;
                         }
                         else {
-                            f3 = 1/rn;
+                            f3 = 5.0;
                         }
                     }
-                    if (rn>BONDR && rn < BONDR*2.0 ){
-                        f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
+                    if (rn>BONDR && rn < BONDR*1.5 ){
+                        f3+= k* ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                     }
-                    if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
-                        f3+= k* atom_i.nodes[ni].spin * atom_j.nodes[nj].spin * INTERACT_KOEFF2/rn/rn;
+                    if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  ni_spin + nj_spin==0 ){
+                        f3+= k* ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                     }
 
-                    if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 &&  atom_i.nodes[ni].q + atom_j.nodes[nj].q==0 &&  atom_i.nodes[ni].spin + atom_j.nodes[nj].spin==0 ){
-                        f3+= atom_i.nodes[ni].q * atom_j.nodes[nj].q * INTERACT_KOEFF2/rn/rn;
+                    if (atom_i.nodes[ni].bonded == 0.0 && atom_j.nodes[nj].bonded==0.0 && ni_q + nj_q==0 &&  ni_spin + nj_spin ==0 ){
+                        f3+= ni_q * nj_q * INTERACT_KOEFF2/rn/rn;
 
                     }
 
