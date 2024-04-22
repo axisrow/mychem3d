@@ -32,6 +32,8 @@ class Space:
         self.recordtime = 0
         self.recording = tk.BooleanVar()
         self.recording.set(False)
+        self.record_data = tk.BooleanVar()
+        self.record_data.set(False)
         self.atoms = []	
         self.g = 0.001
         self.newatom = None

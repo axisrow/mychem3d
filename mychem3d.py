@@ -35,7 +35,9 @@ class mychemApp():
         #sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
         sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_g)
         sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
-        sim_menu.add_checkbutton(label="Recording",variable=self.space.recording, command=self.handle_recording)
+        sim_menu.add_checkbutton(label="Record image",variable=self.space.recording, command=self.handle_recording)
+        sim_menu.add_checkbutton(label="Record data",variable=self.space.record_data, command=self.handle_record_data)
+        sim_menu.add_command(label="Clear records", command=self.handle_clear_records)
         add_menu = tk.Menu(self.menu_bar, tearoff=False)
         add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
         add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
@@ -125,6 +127,9 @@ class mychemApp():
         self.glframe.status_bar = self.status_bar
         if not os.path.exists('output'):
             os.makedirs('output')
+        if not os.path.exists('output/data'):
+            os.makedirs('output/data')
+
 
         self.status_bar.set('Ready')
 
@@ -179,6 +184,34 @@ class mychemApp():
         if event:
             self.space.recording.set(not self.space.recording.get())
         self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
+
+    def handle_record_data(self,event=None):
+        if event:
+            self.space.record_data.set(not self.space.record_data.get())
+            if not os.path.exists('output/data'):
+                os.makedirs('output/data')
+        self.status_bar.set("Recording dataframes to disk is "+ OnOff(self.space.record_data))
+
+    def handle_clear_records(self,event=None):
+            print("Delete records")
+            self.glframe.rframes = 0
+            directory_to_clean = 'output/'
+            for filename in os.listdir(directory_to_clean):
+                file_path = os.path.join(directory_to_clean, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print("Не удалось удалить {}".format(file_path), e)
+
+            directory_to_clean = 'output/data/'
+            for filename in os.listdir(directory_to_clean):
+                file_path = os.path.join(directory_to_clean, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print("Не удалось удалить {}".format(file_path), e)
         
     def handle_space(self,event=None):
         if self.space.pause:

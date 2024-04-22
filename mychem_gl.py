@@ -6,7 +6,7 @@ from pyopengltk import OpenGLFrame
 import numpy as np
 import glm
 import random
-from PIL import Image
+from PIL import Image,ImageDraw
 from math import sin,cos,sqrt,pi
 import time
 from mychem_functions import make_sphere_vert,make_cube2
@@ -15,6 +15,7 @@ from mychem_atom import Node,AtomC,NodeC
 from array import array
 from mesh import Mesh
 import threading
+import json
 
 class AppOgl(OpenGLFrame):
     def set_space(self,space):
@@ -386,21 +387,37 @@ class AppOgl(OpenGLFrame):
     def recordframe(self,pix,rframes):
         img = Image.frombytes("RGB", (self.width,self.height), pix)
         img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
+        img3 = ImageDraw.Draw(img2)
+        img3.text((10,10),str(rframes))
         img2.save("output/frame"+str(rframes)+".png")
         
-
+    def recorddata(self,rframes):
+        data = self.space.make_export()
+        f = open("output/data/frame"+str(rframes)+".json","w")
+        f.write(json.dumps(data))
+        f.close()
 
     def redraw(self):
         """Render a single frame"""
         
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         self.render()
-        if self.space.recording.get() and not self.space.pause:
-            pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
-            thread = threading.Thread(target=self.recordframe,args=(pix,self.rframes))
-            thread.daemon = True
-            thread.start()
+        if (self.space.recording.get() or self.space.record_data.get()) and not self.space.pause:
+            if self.space.recording.get():
+                pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+                thread = threading.Thread(target=self.recordframe,args=(pix,self.rframes))
+                thread.daemon = True
+                thread.start()
+            if self.space.record_data.get():
+                self.space.compute2atoms()
+                thread = threading.Thread(target=self.recorddata,args=(self.rframes,))
+                thread.daemon = True
+                thread.start()
             self.rframes+=1
+
+            
+            
+
 
 
 #        if self.nframes%50==0:
