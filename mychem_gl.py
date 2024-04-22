@@ -14,6 +14,7 @@ from mychem_data import cube_vertices
 from mychem_atom import Node,AtomC,NodeC
 from array import array
 from mesh import Mesh
+import threading
 
 class AppOgl(OpenGLFrame):
     def set_space(self,space):
@@ -382,6 +383,12 @@ class AppOgl(OpenGLFrame):
         if 'd' in self.keypressed:
               self.cameraPos += glm.normalize(glm.cross(self.cameraFront, self.cameraUp)) * cameraSpeed
 
+    def recordframe(self,pix,rframes):
+        img = Image.frombytes("RGB", (self.width,self.height), pix)
+        img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
+        img2.save("output/frame"+str(rframes)+".png")
+        
+
 
     def redraw(self):
         """Render a single frame"""
@@ -390,9 +397,9 @@ class AppOgl(OpenGLFrame):
         self.render()
         if self.space.recording.get() and not self.space.pause:
             pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
-            img = Image.frombytes("RGB", (self.width,self.height), pix)
-            img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
-            img2.save("output/frame"+str(self.rframes)+".png")
+            thread = threading.Thread(target=self.recordframe,args=(pix,self.rframes))
+            thread.daemon = True
+            thread.start()
             self.rframes+=1
 
 
