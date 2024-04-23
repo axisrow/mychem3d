@@ -356,9 +356,8 @@ class mychemApp():
             counter+=1
             if counter<3: continue
             if counter==4:
-                sp = l.split()
-                natoms = int(sp[0])
-                nlinks = int(sp[1])
+                natoms = int(l[:3])
+                nlinks = int(l[3:6])
                 print(f"Loading: atoms:{natoms} links:{nlinks} ")
                 if natoms>100000 or nlinks>100000: 
                     print(" too many natoms or links!")
@@ -371,9 +370,9 @@ class mychemApp():
                 atoms_counter -= 1
                 sp = l.split()
                 print(f"x={float(sp[0])} y={sp[1]} z={sp[2]} type={sp[3]}")
-                x = float(sp[0])*12
-                y = float(sp[1])*12
-                z = float(sp[2])*12
+                x = float(sp[0])*11
+                y = float(sp[1])*11
+                z = float(sp[2])*11
                 type = self.acr2type(sp[3])
                 if type==None: 
                     print("Error in string ", counter)
@@ -386,13 +385,14 @@ class mychemApp():
                 atoms.append(a)
             if (counter>4+natoms) and links_counter>0:
                 links_counter -= 1
-                sp = l.split()
-                n1 = int(sp[0])-1
-                n2 = int(sp[1])-1
-                bt = int(sp[2])
-                for k in range(0,bt):
-                    print(n1,n2)
-                    bond_atoms(atoms[n1],atoms[n2])
+                #sp = l.split()
+                n1 = int(l[:3])-1
+                n2 = int(l[3:6])-1
+                bt = int(l[6:9])
+                if bt<=3:
+                    for k in range(0,bt):
+                        #print(n1,n2)
+                        bond_atoms(atoms[n1],atoms[n2])
         
         return result
 
