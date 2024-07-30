@@ -870,9 +870,9 @@ class OptionsFrame():
         self.repulsek1_slider.set(int(self.space.REPULSION_KOEFF1))
 
         self.label3 = tk.Label(a, text= "Repulsion koeff2").grid(row=3,column=0)
-        self.repulsek2_slider = tk.Scale(a, from_=1, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_repulsek2)
+        self.repulsek2_slider = tk.Scale(a, from_=0, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_repulsek2)
         self.repulsek2_slider.grid(row=3,column=1)
-        self.repulsek2_slider.set(self.space.REPULSION_KOEFF2)
+        self.repulsek2_slider.set(int(self.space.REPULSION_KOEFF2))
         
         self.label4 = tk.Label(a, text= "Bond koeff").grid(row=4,column=0)
         self.bondk_slider = tk.Scale(a, from_=1, to=300, length=300,orient=tk.HORIZONTAL,command=self.set_bondk)
