@@ -9,7 +9,7 @@ import random
 from PIL import Image,ImageDraw
 from math import sin,cos,sqrt,pi
 import time
-from mychem_functions import make_sphere_vert,make_cube2
+from mychem_functions import make_sphere_vert,make_cube2,print_bytes_with_highlights
 from mychem_data import cube_vertices
 from mychem_atom import Node,AtomC,NodeC
 from array import array
@@ -119,6 +119,7 @@ class AppOgl(OpenGLFrame):
             a_data = bytearray()
         datasize = len(a_data)
         a_data = np.array(a_data,dtype=np.byte)
+#        print_bytes_with_highlights(a_data,[(ctypes.sizeof(AtomC)+9*4,4)])
         print(f"  buffer size={datasize}")
         self.atoms_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
@@ -152,6 +153,10 @@ class AppOgl(OpenGLFrame):
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
+        gl.glUniform1i(self.loc["stage"],2) #nearatoms
+        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+
         gl.glUniform1i(self.loc["stage"],4)   # bonded state
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
@@ -167,7 +172,10 @@ class AppOgl(OpenGLFrame):
         asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
         a_data8 = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, self.N*asize)
+        #print_bytes_with_highlights(a_data8,[(ctypes.sizeof(AtomC)+9*4,4)])
         print("  getbuffersubdata size=", self.N*asize)
+        #print("sizeof AtomC", ctypes.sizeof(AtomC))
+        #print("sizeof NodeC", ctypes.sizeof(NodeC))
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
         offset = 0
         for i in range(0,self.N):
@@ -357,15 +365,13 @@ class AppOgl(OpenGLFrame):
                         gl.glUniform1i(self.loc["stage"],2)   #calc near atoms  and far field
                         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-                        gl.glUniform1i(self.loc["stage"],4)   # bonded state
-                        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                        #gl.glUniform1i(self.loc["stage"],4)   # bonded state
+                        #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                        #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
-
-
-#                    gl.glUniform1i(self.loc["stage"],4) #bond state
-                    #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    gl.glUniform1i(self.loc["stage"],4) #bond state
+                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
                     gl.glUniform1i(self.loc["stage"],5)  #main
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
@@ -438,7 +444,6 @@ class AppOgl(OpenGLFrame):
         if throttle>0:
             time.sleep(throttle)
         self.nframes += 1
-                
 #        print("fps",self.nframes / tm, end="\r" )
         if self.nframes%50 == 0:
             if self.framedelta!=0:

@@ -17,7 +17,6 @@ class NodeC(Structure):
         self.pos[3] = 0
         self.q = n.q 
         self.bonded = float(n.bonded)
-        print(self.bonded)
         #self.pair = float(space.get_index_by_node(n.pair))
         self.spin = float(n.spin)
     
