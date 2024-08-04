@@ -64,6 +64,7 @@ class mychemApp():
         self.init_menu()
         self.lastX = 300
         self.lastY = 300
+        self.motion = False
     #    self.root.bind('<Configure>', self.handle_resize)
         self.root.bind("1", self.handle_add_atom2)
         self.root.bind("2", self.handle_add_atom2)
@@ -107,7 +108,7 @@ class mychemApp():
         self.glframe = AppOgl(self.root, width=1024, height=600)
         self.glframe.bind("<B1-Motion>", self.handle_mouse1move)
         self.glframe.bind("<Motion>", self.handle_motion)
-        self.glframe.bind("<Double-Button-1>", self.handle_doubleclick)
+        self.glframe.bind("<ButtonRelease-1>", self.handle_release1)
         self.glframe.bind("<MouseWheel>", self.handle_scroll)
 
         print("glframe created")
@@ -174,6 +175,7 @@ class mychemApp():
         self.space.pause = False
         self.glframe.start = time.time()
         self.glframe.nframes = 0
+        self.space.select_mode = False
         self.status_bar.set("Running")
 
     def sim_pause(self):
@@ -607,15 +609,19 @@ class mychemApp():
     
 
 
-    def handle_doubleclick(self,event):
-        print("double click")
+    def handle_release1(self,event):
+        print("release1")
+        if self.motion:
+            self.motion = False
+            return
         if self.merge_mode:
             self.handle_enter(event)
             return
         #print("coord ", event.x, event.y)
         #print("size ", self.glframe.winfo_width(), self.glframe.winfo_height() ) 
         ctrl = event.state & 4
-        if not self.space.pause: self.sim_pause()
+        
+        self.space.compute2atoms()
         N = len(self.space.atoms)
         y = self.glframe.height - event.y
         z = gl.glReadPixels(event.x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
@@ -628,6 +634,7 @@ class mychemApp():
              if d<=a.r+1:
                  near_atom_i=i
         if near_atom_i != -1:
+            if not self.space.pause: self.sim_pause()
             if ctrl:
                 if near_atom_i in self.space.selected_atoms:
                     self.space.selected_atoms.remove(near_atom_i)    
@@ -690,8 +697,8 @@ class mychemApp():
         
 
     def handle_mouse1move(self,event:tk.Event):
+        self.motion = True
         shift = event.state & 1
-
         offsetx = event.x - self.lastX 
         offsety = event.y - self.lastY
         self.lastX = event.x
