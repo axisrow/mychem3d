@@ -17,6 +17,7 @@ class NodeC(Structure):
         self.pos[3] = 0
         self.q = n.q 
         self.bonded = float(n.bonded)
+        print(self.bonded)
         #self.pair = float(space.get_index_by_node(n.pair))
         self.spin = float(n.spin)
     
@@ -228,5 +229,15 @@ class Atom():
     def calc_node_positions(self):
         for n in self.nodes:
             n.pos = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(self.r,0,0)
+    
+    def info(self):
+        print("type=", self.type)
+        bs = ""
+        for n in self.nodes:
+            if n.bonded: 
+                bs+="1"
+            else: 
+                bs+="0"
+        print("bonds="+bs)     
 
 
