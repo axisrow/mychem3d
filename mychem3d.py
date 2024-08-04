@@ -34,7 +34,7 @@ class mychemApp():
         sim_menu.add_command(label="Invert velocities", accelerator="Alt+i",command=self.handle_invert)
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",variable=self.space.shake, command=self.handle_shake)
         #sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
-        sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_g)
+        sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_gravity)
         sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         sim_menu.add_checkbutton(label="Record image",variable=self.space.recording, command=self.handle_recording)
         sim_menu.add_checkbutton(label="Record data",variable=self.space.record_data, command=self.handle_record_data)
@@ -89,18 +89,18 @@ class mychemApp():
         self.root.bind("<Escape>", self.handle_escape)
         self.root.bind("<Delete>", self.handle_delete)
         self.root.bind("<s>", self.handle_shake)
-        self.root.bind("x", self.handle_mode)
-        self.root.bind("y", self.handle_mode)
-        self.root.bind("z", self.handle_mode)
-        self.root.bind("r", self.handle_mode)
-        self.root.bind("g", self.handle_mode)
+        self.root.bind("x", self.handle_movemode)
+        self.root.bind("y", self.handle_movemode)
+        self.root.bind("z", self.handle_movemode)
+        self.root.bind("r", self.handle_movemode)
+        self.root.bind("g", self.handle_movemode)
         self.root.bind("m", self.file_merge)
         self.root.bind("l", self.file_merge_recent)
         self.root.bind("b", self.handle_bond)
-        self.root.bind("f", self.handle_f)
-        self.root.bind("u", self.handle_u)
+        self.root.bind("f", self.handle_fix)
+        self.root.bind("u", self.handle_unfix)
         self.root.bind("<Alt-l>", self.handle_random_recent)
-        self.root.bind("<Alt-g>", self.handle_g)
+        self.root.bind("<Alt-g>", self.handle_gravity)
         self.root.bind("<Control-z>", self.handle_undo)
         self.root.bind("0", self.handle_zero)
         #self.root.bind("<b>", self.handle_bondlock)
@@ -226,7 +226,7 @@ class mychemApp():
             self.sim_pause()
 
 
-    def handle_mode(self,event=None):
+    def handle_movemode(self,event=None):
         if self.space.select_mode:
            self.undostack.push(self.space.make_export())
            self.space.selected2merge()
@@ -266,7 +266,7 @@ class mychemApp():
         print(self.space.redox.get())
         self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox.get()))
 
-    def handle_g(self,event=None):
+    def handle_gravity(self,event=None):
         if event:
             self.space.gravity.set(not self.space.gravity.get())
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
@@ -498,7 +498,7 @@ class mychemApp():
             f.close()
             self.status_bar.set("File saved")
 
-    def handle_f(self,event):
+    def handle_fix(self,event):
         print("fixed selected atoms")
         if self.space.select_mode:
             self.space.compute2atoms()
@@ -507,7 +507,7 @@ class mychemApp():
             self.space.atoms2compute()
             self.status_bar.set("fixed selected atoms")
 
-    def handle_u(self,event):
+    def handle_unfix(self,event):
         print("Unfixed selected atoms")
         if self.space.select_mode:
             self.space.compute2atoms()
