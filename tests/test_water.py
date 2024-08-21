@@ -20,7 +20,7 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.setSize(1400,1000,100)
-    for i in range(0,3000):
+    for i in range(0,2000):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         z = random.randint(0,space.DEPTH)        
         space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
         #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
-    space.update_delta = 20
+    space.update_delta = 10
     space.REPULSION_KOEFF2 = 10.0
     space.INTERACT_KOEFF = 3.0
     space.MASS_KOEFF = 5
@@ -43,3 +43,5 @@ if __name__ == '__main__':
 #300 - 1delta 40 fps
 #2000 - 1delta 14,34 
 #2000 - 5 delta 3,89
+#2000 - 5 delta 29 fps  6000 atoms
+#2000 - 10 delta 20 fps 6000 atoms

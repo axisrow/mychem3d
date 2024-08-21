@@ -34,7 +34,7 @@ if __name__ == '__main__':
         z = random.randint(0,space.DEPTH)
         space.merge_from_file("examples/aldehyde/glycolaldehyde.json",x,y,z,rot)
 
-    space.update_delta = 5
+    space.update_delta = 10
      #space.recording = True
     #space.INTERACT_KOEFF = 1
     #space.REPULSION_KOEFF2=50000
@@ -49,4 +49,6 @@ if __name__ == '__main__':
 #300 - 26 fps update_delta=5    nodesinter 40  near field 300, <`0000 atoms
 #300 - 36 fps update_delta=5    nodesinter 40  near field 200,  atoms
 #300 - 23 fps update_delta=5    nodesinter 40  near field 200, 3600 atoms
+#300 - 40.5 fps update_delta=5    nodesinter 40  near field 200, 3600 atoms 
+#300 - 27-29 fps update_delta=10    nodesinter 40  near field 200, 3600 atoms 
 
