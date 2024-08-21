@@ -12,7 +12,6 @@ uniform int bondlock;
 uniform int gravity;
 uniform int redox;
 uniform int shake;
-uniform int softbox;
 
 //uniform float frame_time;
 float BONDR = 4;
@@ -133,68 +132,12 @@ vec3 rotate_vector(vec3 v, vec4 r)
 void limits(inout vec3 pos,  inout vec3 v, in float radius){
     v = clamp(v , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
 
-    if (softbox==1) {
-        vec3 outlim;
-        outlim = pos - box;
-        outlim = clamp(outlim,vec3(0.0),vec3(100.0));
-        v -= outlim * 0.005;
-        outlim = clamp(pos, vec3(-100.0), vec3(0.0));
-        v -= outlim * 0.005;
-        /*if (pos.x > WIDTH){
-            v.x -= 0.005*(pos.x - WIDTH) ;
-        }
-
-        if (pos.y > HEIGHT){
-            v.y -= 0.005 *(pos.y - HEIGHT);
-        }
-
-        if (pos.z > DEPTH){
-            v.z -= 0.005 * (pos.z - DEPTH);
-        }
-
-        if (pos.x < 0){
-            v.x += 0.005 * (0 - pos.x );
-        }
-
-        if (pos.y < 0){
-            v.y += 0.005 * (0 - pos.y );
-        }
-
-        if (pos.z < 0){
-            v.z += 0.005 * (0 - pos.z );
-        }*/
-    }
-    else {
-            if (pos.x > WIDTH-radius){
-                pos.x = WIDTH-radius;
-                v.x = -v.x ;
-            }   
-
-            if (pos.y > HEIGHT-radius){
-                pos.y = HEIGHT-radius;
-                v.y = - v.y ;
-            }
-
-            if (pos.z > DEPTH-radius){
-                pos.z = DEPTH-radius;
-                v.z = - v.z ;
-            }
-
-            if (pos.x < radius){
-                pos.x = radius;
-                v.x = - v.x ;
-            }
-
-            if (pos.y < radius){
-                pos.y = radius;
-                v.y = - v.y ;
-            }
-
-            if (pos.z < radius){
-                pos.z = radius;
-                v.z = -v.z ;
-            }
-    }        
+    vec3 outlim;
+    outlim = pos - box;
+    outlim = clamp(outlim,vec3(0.0),vec3(100.0));
+    v -= outlim * 0.005;
+    outlim = clamp(pos, vec3(-100.0), vec3(0.0));
+    v -= outlim * 0.005;
 }
 
 
