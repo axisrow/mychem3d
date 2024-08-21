@@ -36,10 +36,11 @@ class AppOgl(OpenGLFrame):
         #gl.glEnable (gl.GL_LINE_SMOOTH);    
         #gl.glfwWindowHint(gl.GLFW_SAMPLES, 4);
         #gl.glEnable(gl.GL_MULTISAMPLE); 
+        self.iconic = False
         self.nearatomsmax = 5000
         self.LOCALSIZEX = 64
         self.nearflag = False
-
+    
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
         compute_shader = open("shaders/compute.glsl","r").read()
@@ -334,6 +335,7 @@ class AppOgl(OpenGLFrame):
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
         gl.glUseProgram(0)
 
+    def compute(self):
         # gpu compute atoms
         gl.glBindVertexArray(self.atomMesh.VAO )
         if not self.space.pause:
@@ -411,8 +413,9 @@ class AppOgl(OpenGLFrame):
     def redraw(self):
         """Render a single frame"""
         
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        #gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         self.render()
+        self.compute()
         if (self.space.recording.get() or self.space.record_data.get()) and not self.space.pause:
             if self.space.recording.get():
                 pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
