@@ -145,6 +145,12 @@ class AppOgl(OpenGLFrame):
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
 
+        self.rpos_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.rpos_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , gl.GL_DYNAMIC_DRAW);
+
+
         #spin set
         gl.glUseProgram(self.gpu_code)
         gl.glUniform1i(self.loc["stage"],1) # rpos of nodes and atom q

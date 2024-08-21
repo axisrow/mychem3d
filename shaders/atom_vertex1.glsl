@@ -2,7 +2,6 @@
 
 struct Node {
     vec4 pos;
-    vec4 rpos;  //real position
     float q;
     float bonded;
     float pair;
@@ -32,6 +31,12 @@ layout(std430, binding=0) buffer atoms_in
 {
     Atom atoms[];
 } In;
+
+layout(std430, binding=4) buffer rpos_buffer
+{
+    vec4 rpos[][6];
+};
+
 
 //layout(std430, binding=0) buffer atoms_in
 
@@ -96,7 +101,7 @@ void main()
         float factor = 0.001;
         Atom currentAtom = In.atoms[gl_InstanceID];
         //vec3 nodepos = rotate_vector(currentAtom.nodes[nodeindex].pos.xyz, currentAtom.rot);
-        vec3 nodepos = currentAtom.nodes[nodeindex].rpos.xyz;
+        vec3 nodepos = rpos[gl_InstanceID][nodeindex].xyz;
         nodepos += currentAtom.pos.xyz;
         vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
         gl_Position = projection * view * vposition;

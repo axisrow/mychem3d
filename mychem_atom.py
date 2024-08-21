@@ -5,7 +5,6 @@ import glm
 class NodeC(Structure):
     _fields_ = [
         ("pos", c_float*4),
-        ("rpos", c_float*4),
         ("q", c_float),
         ("bonded", c_float),
         ("pair", c_float),

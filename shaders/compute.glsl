@@ -52,7 +52,6 @@ float getk(float t1 , float t2){
 // Structure of the ball data
 struct Node {
     vec4 pos;
-    vec4 rpos;  //real position
     float q;
     float bonded;
     float pair;
@@ -91,11 +90,16 @@ layout(std430, binding=2) buffer near_atoms
     int indexes[][NEARATOMSMAX];
 } Near;
 
-
 layout(std430, binding=3) buffer far_field
 {
     vec4 F;
 } Far;
+
+layout(std430, binding=4) buffer rpos_buffer
+{
+    vec4 rpos[][6];
+};
+
 
 
 int i = int(gl_GlobalInvocationID);
@@ -244,7 +248,7 @@ void main()
     if (stage==1){  //calc q and rpos of nodes
        In.atoms[i].q=0;
        for (int ni = 0; ni<In.atoms[i].ncount; ni++ ) {
-                In.atoms[i].nodes[ni].rpos.xyz = rotate_vector(In.atoms[i].nodes[ni].pos.xyz, In.atoms[i].rot);
+                rpos[i][ni].xyz = rotate_vector(In.atoms[i].nodes[ni].pos.xyz, In.atoms[i].rot);
                 In.atoms[i].q+= In.atoms[i].nodes[ni].q;
        } 
        return;
@@ -284,7 +288,7 @@ void main()
 
     if(stage==3){   //autospinset
         for (int ni = 0; ni<atom_i.ncount; ni++ ) {
-            vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
+            vec3 ni_realpos = rpos[i][ni].xyz;
             if (atom_i.nodes[ni].spin ==0){
                 for (int j=0;j<i;j++){  //half matrix
                     Atom atom_j = In.atoms[j];
@@ -293,7 +297,7 @@ void main()
                     r =     distance(pos_i, pos_j);
                     if (r==0) continue;
                     for (int nj = 0; nj<atom_j.ncount; nj++){
-                        vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
+                        vec3 nj_realpos = rpos[j][nj].xyz;
                         vec3 ndelta =  ni_realpos - nj_realpos + delta;
                         float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                         if (rn<BONDR){
@@ -315,7 +319,7 @@ void main()
 
     if (stage==4){ // bonded state set
         for (int ni = 0; ni<atom_i.ncount; ni++ ) {
-            vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
+            vec3 ni_realpos = rpos[i][ni].xyz;
             float bonded = 0.0;
             for (int jj=1;jj<=Near.indexes[i][0];jj++){
                 int j = Near.indexes[i][jj];
@@ -326,7 +330,7 @@ void main()
 //                if (r==0) continue;
                 if (r>=40) continue;
                 for (int nj = 0; nj<atom_j.ncount; nj++){
-                    vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
+                    vec3 nj_realpos = rpos[j][nj].xyz;
                     vec3 ndelta =  ni_realpos - nj_realpos + delta;
                     float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                     if (rn<=BONDR){
@@ -397,11 +401,11 @@ void main()
              float rn;
              vec3 nF,ndelta;
              for (int ni = 0; ni<atom_i.ncount; ni++ ) {
-                vec3 ni_realpos = atom_i.nodes[ni].rpos.xyz;
+                vec3 ni_realpos = rpos[i][ni].xyz;
                 float ni_q=atom_i.nodes[ni].q;
                 float ni_spin = atom_i.nodes[ni].spin;
                 for (int nj = 0; nj<atom_j.ncount; nj++){
-                    vec3 nj_realpos = atom_j.nodes[nj].rpos.xyz;
+                    vec3 nj_realpos = rpos[j][nj].xyz;
                     ndelta =  ni_realpos - nj_realpos + delta;
                     rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                     nF = vec3(0.0,0.0,0.0);
