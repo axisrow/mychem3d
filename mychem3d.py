@@ -176,6 +176,7 @@ class mychemApp():
         self.glframe.start = time.time()
         self.glframe.nframes = 0
         self.space.select_mode = 0
+        self.space.selected_atoms = []
         self.status_bar.set("Running")
 
     def sim_pause(self):
@@ -232,6 +233,7 @@ class mychemApp():
            self.space.selected2merge()
            self.space.atoms2compute()
            self.space.select_mode = 0
+           self.space.selected_atoms = []
            self.merge_mode = True
         if not self.merge_mode: return
         if event.keysym == "r":
@@ -295,6 +297,7 @@ class mychemApp():
         self.space.merge_rot = glm.quat()
         self.space.merge_atoms = []
         self.space.select_mode = 0
+        self.space.selected_atoms = []
         self.merge_mode = False
         self.space.atoms2compute()
         self.status_bar.set("New file")
@@ -328,8 +331,8 @@ class mychemApp():
         self.recentdata = mergedata
         #self.resetdata = mergedata 
         self.space.select_mode=0
+        self.space.selected_atoms = []
         self.merge_mode=True
-        self.space.select_mode = 0
         self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
         #self.space.atoms2compute()
@@ -423,6 +426,7 @@ class mychemApp():
         self.recentdata = mergedata
         self.merge_mode=True
         self.space.select_mode = 0
+        self.space.selected_atoms = []
         self.space.merge_center = self.space.get_mergeobject_center()
         self.space.atoms2compute()
         if result:
@@ -440,6 +444,7 @@ class mychemApp():
         self.merge_atoms = []
         self.merge_mode=True
         self.select_mode=0
+        self.space.selected_atoms = []
         self.space.load_data(self.recentdata, merge=True)
         #self.space.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
@@ -452,6 +457,7 @@ class mychemApp():
         self.undostack.push(self.space.make_export())
         self.space.load_data(self.recentdata, merge=True)
         self.space.select_mode = 0
+        self.space.selected_atoms = []
         (center,distant) = self.space.get_atoms_distant(self.space.merge_atoms)
         for i in range(0,10):
             self.space.merge_atoms = []
@@ -578,6 +584,7 @@ class mychemApp():
     def handle_add_atom(self,keysym=""):
         self.sim_pause()
         self.space.select_mode = 0
+        self.space.selected_atoms = []
         self.space.merge_pos.x +=25
         self.merge_mode = True
         self.ttype = "mx"
@@ -665,6 +672,7 @@ class mychemApp():
             self.space.selected2merge()
             self.merge_mode = True
             self.space.atoms2compute()
+            self.space.selected_atoms = []
             return
         if self.merge_mode:
             self.undostack.push(self.space.make_export())
