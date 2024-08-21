@@ -50,3 +50,4 @@ if __name__ == '__main__':
 # 4.2 fps and drop
 # 3.25 fps
 # 1000 delta5, 0,88 
+# 400 delta 5, 10.44

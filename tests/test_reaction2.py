@@ -17,7 +17,7 @@ if __name__ == '__main__':
 #    random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(1000,500,1000)
+    space.setSize(1000,300,300)
     time.sleep(1)
     for i in range(0,240):
             #makealcohol(space,random.randint(100,900),random.randint(100,900),random.randint(100,900),3)

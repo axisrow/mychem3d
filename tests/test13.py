@@ -38,9 +38,11 @@ space = App.space
 a = Atom(450,500,500,2,f=0, f2=0, r=6,m=1)
 #a.nodes[0].q = -1
 a.nodes[1].q = 1
+a.nodes[1].spin = 1
 #a2 = Atom(519,500,500,1,pi, f2=pi/4)
 a2 = Atom(560,520,500,1,f=pi/3, f2=0,r=6,m=1)
 a2.nodes[0].q = -1
+a2.nodes[0].spin = -1
 a3 = Atom(650,530,500,1,f=pi, f2=0,r=6,m=1)
 a3.nodes[0].q = -1
 

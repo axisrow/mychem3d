@@ -367,7 +367,7 @@ if __name__ == '__main__':
     #makeplane(space,400)
     #makeplane(space,500)
     #makealkane(space,500,300,700,60)
-    makecarboxylic(space,500,500,500,60)
+    makecarboxylic(space,500,500,500,10)
     #makeplane(space,600)
     #makealcohol(space,500,400,500,10)
     #makealcohol(space,600,100,600,30)
