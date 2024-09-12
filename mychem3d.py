@@ -141,7 +141,6 @@ class mychemApp():
 
     def handle_resize(self, event):
         print(event)
-        self.glframe.update_uniforms = True
 
     def handle_undo(self,event):
         data = self.undostack.pop()
@@ -264,17 +263,20 @@ class mychemApp():
         if event:
             self.space.shake.set(not self.space.shake.get())
         self.status_bar.set("Random shake is "+ OnOff(self.space.shake.get()))
+        self.glframe.update_uniforms = True
 
     def handle_redox(self,event=None):
         if event:
             self.space.redox.set(not self.space.redox.get())
         print(self.space.redox.get())
         self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox.get()))
+        self.glframe.update_uniforms = True
 
     def handle_gravity(self,event=None):
         if event:
             self.space.gravity.set(not self.space.gravity.get())
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
+        self.glframe.update_uniforms = True
 
     def handle_animate_unbond(self,event=None):
         if event:
@@ -294,6 +296,7 @@ class mychemApp():
         if event:
             self.space.bondlock.set(not self.space.bondlock.get())
         self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock.get()))
+        self.glframe.update_uniforms = True
 
 
     def file_new(self,event=None):
