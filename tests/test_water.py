@@ -1,4 +1,5 @@
 import random
+import time
 from re import S
 import sys, os
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -19,20 +20,24 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(1400,1000,100)
-    for i in range(0,2000):
+    space.setSize(400,400,100)
+    for i in range(0,1000):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
         y = random.randint(0,space.HEIGHT)
         z = random.randint(0,space.DEPTH)        
-        space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
+        i=space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
+        for n in range(0,3):
+            color = space.atoms[i+n].color
+            space.atoms[i+n].color=color[0:3] + (0.2,)
         #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
     space.update_delta = 10
-    space.REPULSION_KOEFF2 = 10.0
-    space.INTERACT_KOEFF = 3.0
+    #space.REPULSION_KOEFF2 = 10.0
+    #space.INTERACT_KOEFF = 3.0
     space.MASS_KOEFF = 5
     space.NEARDIST=100
+    space.tranparentmode= True
      #space.recording = True
     #space.appendmixer(1)
     #space.redox.set(True)

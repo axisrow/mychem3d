@@ -26,6 +26,14 @@ class AppOgl(OpenGLFrame):
         gl.glViewport(0, 0, self.width, self.height)
         gl.glClearColor(0.3, 0.3, 0.3, 0.0)
         gl.glEnable(gl.GL_DEPTH_TEST)
+        #glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+        #glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+        gl.glBlendEquation(gl.GL_FUNC_ADD)
+        gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE,gl.GL_ZERO)
+        #gl.glBlendEquation(gl.GL_)
+        
+        
+
         #gl.glEnable(gl.GL_CULL_FACE);
         #gl.glCullFace(gl.GL_FRONT); 
         #gl.glFrontFace(gl.GL_CW) 
@@ -40,6 +48,7 @@ class AppOgl(OpenGLFrame):
         self.nearatomsmax = 5000
         self.LOCALSIZEX = 64
         self.nearflag = False
+        self.drawnodes = True
     
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
@@ -145,10 +154,23 @@ class AppOgl(OpenGLFrame):
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
 
+        # real pos buffer
         self.rpos_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.rpos_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , gl.GL_DYNAMIC_DRAW);
+
+        self.q_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.q_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, self.q_buffer);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
+
+
+        self.qshift_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.qshift_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, self.qshift_buffer);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*6, None , gl.GL_DYNAMIC_DRAW);
+
 
 
         #spin set
@@ -160,6 +182,7 @@ class AppOgl(OpenGLFrame):
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
+        gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
         gl.glUniform1i(self.loc["stage"],2) #nearatoms
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
@@ -167,7 +190,6 @@ class AppOgl(OpenGLFrame):
         gl.glUniform1i(self.loc["stage"],4)   # bonded state
         gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-
 
 
 
@@ -228,6 +250,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
             self.loc.update( {"nodeindex": gl.glGetUniformLocation(self.shader, "nodeindex") })
             self.loc.update( {"lightPos": gl.glGetUniformLocation(self.shader, "lightPos") })
+            self.loc.update( {"transparency": gl.glGetUniformLocation(self.shader, "transparency") })
             
 
 
@@ -244,7 +267,7 @@ class AppOgl(OpenGLFrame):
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
         model =  glm.translate(model, glm.vec3(1, 1, 1))
 
-        self.containerMesh.color = (1,1,1)
+        self.containerMesh.color = (1,1,1,1)
         self.containerMesh.modelmatrix = model
 
         self.init_loc()
@@ -274,6 +297,13 @@ class AppOgl(OpenGLFrame):
                                             self.cameraPos.y+self.view[1,0]+self.view[1,1],
                                             self.cameraPos.z+self.view[2,0]+self.view[2,1])
 
+        # draw container            
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
+        self.containerMesh.drawQuads(self.shader)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+
+        gl.glEnable(gl.GL_CULL_FACE)
+        gl.glCullFace(gl.GL_FRONT)
 
         #render merge_atom
         if len(self.space.merge_atoms)>0:
@@ -300,31 +330,41 @@ class AppOgl(OpenGLFrame):
                     model =  glm.translate(pos)
                     model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
                     if n.bonded:
-                        self.nodeMesh.color = (0.0,1.0,0.0) 
+                        self.nodeMesh.color = (0.0,1.0,0.0,1.0) 
                     else:
-                        self.nodeMesh.color = (1.0,1.0,1.0) 
+                        self.nodeMesh.color = (1.0,1.0,1.0,1.0) 
                     self.nodeMesh.modelmatrix = model
                     self.nodeMesh.draw(self.shader)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-        gl.glBindVertexArray(self.atomMesh.VAO )
         # render computed atoms
+        self.atomMesh.bind()
+        if self.space.tranparentmode:
+            gl.glUniform1i(self.loc["transparency"],1)
         gl.glUniform1i(self.loc["mode"],1)
         gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+        if self.drawnodes:
+            gl.glUniform1i(self.loc["mode"],2)
+            self.nodeMesh.bind()
+            for i in range(0,5):
+                    gl.glUniform1i(self.loc["nodeindex"],i)
+                    gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
 
-        gl.glUniform1i(self.loc["mode"],2)
-        gl.glBindVertexArray(self.nodeMesh.VAO )
-        for i in range(0,5):
-                gl.glUniform1i(self.loc["nodeindex"],i)
-                gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
+        #draw transparent atoms after opaque
+        if self.space.tranparentmode:
+            gl.glEnable(gl.GL_BLEND)
+            self.atomMesh.bind()
+            gl.glUniform1i(self.loc["transparency"],2)
+            gl.glUniform1i(self.loc["mode"],1)
+            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+            gl.glUniform1i(self.loc["transparency"],0)
+            gl.glDisable(gl.GL_BLEND)
+        
 
         gl.glUniform1i(self.loc["mode"],0)
         gl.glBindVertexArray( 0 )
 
-        # draw container            
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
-        self.containerMesh.drawQuads(self.shader)
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+
 
         #render selection
         if self.space.select_mode==1:
@@ -333,16 +373,18 @@ class AppOgl(OpenGLFrame):
                 model =  glm.mat4()
                 model =  glm.translate(model, a.pos * self.factor  )
                 model =  glm.scale(model, glm.vec3(a.r * self.factor*1.1))
-                self.atomMesh.color = (0,1.0,0)
+                self.atomMesh.color = (0,1.0,0,1.0)
                 self.atomMesh.modelmatrix = model
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
                 self.atomMesh.draw(self.shader)
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+        
+        gl.glDisable(gl.GL_CULL_FACE);
         gl.glUseProgram(0)
 
     def compute(self):
         # gpu compute atoms
-        gl.glBindVertexArray(self.atomMesh.VAO )
+        self.atomMesh.bind()
         if not self.space.pause:
             gl.glUseProgram(self.gpu_code)
             gl.glUniform1i(self.loc["bondlock"],self.space.bondlock.get())
@@ -375,9 +417,9 @@ class AppOgl(OpenGLFrame):
                         #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
                         #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
-                    gl.glUniform1i(self.loc["stage"],4) #bond state
-                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    #gl.glUniform1i(self.loc["stage"],4) #bond state
+                    #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                    #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
                     gl.glUniform1i(self.loc["stage"],5)  #main
                     gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
@@ -420,6 +462,7 @@ class AppOgl(OpenGLFrame):
         #gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         self.render()
         self.compute()
+
         if (self.space.recording.get() or self.space.record_data.get()) and not self.space.pause:
             if self.space.recording.get():
                 pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)

@@ -342,11 +342,11 @@ class mychemApp():
 
     def acr2type(self, acr):
         if acr=="H": return 1
-        if acr=="O": return 2
-        if acr=="N": return 3
-        if acr=="C": return 4
-        if acr=="P": return 5
-        if acr=="S": return 6
+        if acr=="O": return 8
+        if acr=="N": return 7
+        if acr=="C": return 6
+        if acr=="P": return 15
+        if acr=="S": return 16
         print("unknown atom's type")
         return None
 
@@ -506,6 +506,8 @@ class mychemApp():
             f.write(json.dumps(export))
             f.close()
             self.status_bar.set("File saved")
+            self.space.select_mode = 0
+            self.space.selected_atoms = []
 
     def handle_fix(self,event):
         print("fixed selected atoms")
@@ -528,8 +530,10 @@ class mychemApp():
     def handle_mouseb3(self,event=None):
         if self.space.select_mode and len(self.space.selected_atoms)==1:
             self.space.compute2atoms()
+            q = self.space.atoms[self.space.selected_atoms[0]].q
+            print(f'atom q = {q}')
             for n in self.space.atoms[self.space.selected_atoms[0]].nodes:
-                print(f'node spin={n.spin} q={n.q}')
+                print(f'node spin={n.spin} q={n.q} type={n.type} bonded={n.bonded}') 
 
 
     def handle_bond(self,event=None):
@@ -589,7 +593,8 @@ class mychemApp():
         self.merge_mode = True
         self.ttype = "mx"
         if keysym in ["1","2","3","4","5","6"]:
-            createtype = int(keysym)
+            table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
+            createtype = table[int(keysym)]
             a = Atom(500,500,500,createtype)
         self.space.merge_atoms = [a]
         self.space.merge_center = self.space.get_mergeobject_center()    
@@ -608,6 +613,7 @@ class mychemApp():
 
     def handle_delete(self,event):
         if self.merge_mode:
+            self.undostack.push(self.space.make_export())
             self.merge_mode = False
             self.space.merge_atoms = []
         if self.space.select_mode:
@@ -675,6 +681,7 @@ class mychemApp():
             self.space.selected_atoms = []
             return
         if self.merge_mode:
+            self.space.compute2atoms()
             self.undostack.push(self.space.make_export())
             self.merge_mode = False 
             self.space.merge2atoms()

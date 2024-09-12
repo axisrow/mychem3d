@@ -16,11 +16,11 @@ import glm
 #
 if __name__ == '__main__':
 #
-    random.seed(1)
+    random.seed(2)
     App = mychemApp()
     space = App.space
     space.setSize(2000,200,1000)
-    for i in range(0,300):
+    for i in range(0,1):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
@@ -34,11 +34,10 @@ if __name__ == '__main__':
         z = random.randint(0,space.DEPTH)
         space.merge_from_file("examples/aldehyde/glycolaldehyde.json",x,y,z,rot)
 
-    space.update_delta = 10
+    space.update_delta = 1
      #space.recording = True
     #space.INTERACT_KOEFF = 1
     #space.REPULSION_KOEFF2=50000
-    space.appendmixer(1)
     #space.redox.set(True)
     space.pause = True
     App.run()

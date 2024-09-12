@@ -18,8 +18,8 @@ def action1(space):
             f = random.random()*2*pi
             rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
             dx = 30
-            dy = 50
-            dz = 50
+            dy = 0
+            dz = 0
             i1=space.merge_from_file("examples/simple/OH.json",x+dx,y+dz,z+dy,rot)
             space.atoms[i1].nodes[1].q=-1
 #        for i in range(0,20):
@@ -42,7 +42,7 @@ def action1(space):
             #i4=space.merge_from_file("examples/aminoacids/asparagine.json",x+dx,y+dy,z+dz,rot)
 
 
-            for i in range(0,2):
+            for i in range(0,0):
                 f = random.random()*pi
                 rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
                 dx = random.randint(-50,50)
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     #space.INTERACT_KOEFF = 0.3
     #space.BOND_KOEFF = 0.4
 #    space.ROTA_KOEFF = 1
-#    space.REPULSION_KOEFF2=0.0
+    space.REPULSION_KOEFF2=5
     space.update_delta = 10
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)

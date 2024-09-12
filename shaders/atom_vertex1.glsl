@@ -4,7 +4,7 @@ struct Node {
     vec4 pos;
     float q;
     float bonded;
-    float pair;
+    float type;
     float spin;
 };
 
@@ -44,7 +44,7 @@ layout(std430, binding=4) buffer rpos_buffer
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 
-uniform vec3 objectColor;
+uniform vec4 objectColor;
 uniform int mode;
 uniform int nodeindex;
 uniform mat4 model;
@@ -57,7 +57,7 @@ out AtomData {
 
 //out vec4 atom_position;
 out vec3 Normal;
-out vec3 ObjectColor;
+out vec4 ObjectColor;
 out vec3 FragPos;  
 
 //out Atom currentAtom;
@@ -89,17 +89,18 @@ void main()
 //        if (currentAtom.pos.x != 515.0){
 //            bug = true;
 //        }
-        ObjectColor = currentAtom.color.xyz;
+        ObjectColor = currentAtom.color;
         if (bug){
-            ObjectColor = vec3(1,0,0);
+            ObjectColor = vec4(1,0,0,1);
         }
-        if (currentAtom.animate>0) ObjectColor = vec3(0,1,0);
+        if (currentAtom.animate>0) ObjectColor = vec4(0,1,0,1);
         FragPos = vposition.xyz;
         Normal = normal;
     }
     if (mode==2) { //nodes
         float factor = 0.001;
         Atom currentAtom = In.atoms[gl_InstanceID];
+        float alpha = currentAtom.color.w;
         //vec3 nodepos = rotate_vector(currentAtom.nodes[nodeindex].pos.xyz, currentAtom.rot);
         vec3 nodepos = rpos[gl_InstanceID][nodeindex].xyz;
         nodepos += currentAtom.pos.xyz;
@@ -110,13 +111,16 @@ void main()
         //float bonded = currentAtom.nodes[nodeindex].bonded;
         // node charge and spin color
         if (q==0){
-            if (spin==1) ObjectColor = vec3(0.5,0.5,0.5); 
-            if (spin==-1) ObjectColor = vec3(1.0,1.0,1.0);
+            if (spin==1) ObjectColor = vec4(0.5,0.5,0.5,alpha); 
+            if (spin==-1) ObjectColor = vec4(1.0,1.0,1.0,alpha);
         }
         else{
-            if (q==1) ObjectColor = vec3(1.0,0.0,0.0); 
-            if (q==-1) ObjectColor = vec3(0.0,0.0,252/256.0);
+            if (q==1) ObjectColor = vec4(1.0,0.0,0.0,alpha); 
+            if (q==-1) ObjectColor = vec4(0.0,0.0,252/256.0,alpha);
         }
+
+        if(currentAtom.nodes[nodeindex].type==2)
+            ObjectColor = vec4(30/256.0,144/255.0,1.0, alpha); 
 
         //if (bonded==1) ObjectColor= ObjectColor/2;
         //else ObjectColor = vec3(1,1,1);

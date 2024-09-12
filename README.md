@@ -36,7 +36,7 @@ Selection atoms
 
 
 
-Do not view video parallel to use this simulator, the simulation may hang
+Do not watch video parallel to runing this simulator or iconize it, the simulation may hang
 
 
 Some examples:

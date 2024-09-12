@@ -4,6 +4,7 @@ from math import sqrt,sin,cos,pi,acos
 import numpy as np
 import random
 from mychem_atom import Atom
+from mychem_gl import AppOgl
 import glm
 import tkinter as tk
 import time
@@ -14,13 +15,12 @@ class Space:
         self.ucounter = 0
         self.setSize(width,height,depth)
         self.debug = False
-        self.ATOMRADIUS = 10
         self.BOND_KOEFF = 0.2
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 1.0
         self.ROTA_KOEFF = 10
-        self.REPULSION1 = -3
-        self.REPULSION_KOEFF1 = 7
+        self.REPULSION1 = -6
+        self.REPULSION_KOEFF1 = 5
         self.REPULSION2 = 6
         self.REPULSION_KOEFF2= 20.0
         self.MASS_KOEFF = 5.0
@@ -36,10 +36,7 @@ class Space:
         self.record_data.set(False)
         self.atoms = []	
         self.g = 0.001
-        self.newatom = None
-        self.createtype=4
         self.createf = 0
-        self.standard = True
         self.merge_atoms = []
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
@@ -57,11 +54,10 @@ class Space:
         self.segmented_redox = True
         self.bondlock =tk.BooleanVar()
         self.bondlock.set(False)
-        self.linear_field = False
         self.update_delta= 5
-        self.show_q = False
         self.action = None
         self.fdata = open('data.txt',"w")
+        self.tranparentmode = False
 
     def setSize(self, width,height,depth):
         self.WIDTH=width
@@ -78,7 +74,7 @@ class Space:
 
     def appendmixer(self,n=1):
         for i in range(0,n):
-            m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),100,r=30)
+            m = Atom(random.randint(1,self.WIDTH),random.randint(1,self.HEIGHT),random.randint(1,self.DEPTH),666)
             m.space = self
             m.v = glm.vec3(random.random(),random.random(),random.random())
             m.m = 100
@@ -153,6 +149,7 @@ class Space:
          
 
     def atoms2compute(self):
+        self.glframe: AppOgl
         t = time.time()
         print("atoms2compute gpu")
         self.glframe.atoms2ssbo()
@@ -202,7 +199,7 @@ class Space:
         if atoms==None:
             atoms=self.atoms
         frame = {}
-        frame["vers"] = "1.0"
+        frame["vers"] = "1.1"
         frame["time"] = self.t
         frame["atoms"] = []
         N = len(atoms)
@@ -211,6 +208,7 @@ class Space:
             atom = {}
             atom["id"] = atoms[i].id
             atom["type"] = atoms[i].type
+            atom["color"] = atoms[i].color
             atom["x"] = round(atoms[i].pos.x,4)
             atom["y"] = round(atoms[i].pos.y,4)
             atom["z"] = round(atoms[i].pos.z,4)
@@ -237,30 +235,29 @@ class Space:
     def load_data(self, j, merge=False, zerospeed=True):
         if not merge: 
             self.atoms = []
+        vers = j["vers"]
         for a in j["atoms"]:
             type = a["type"]
+            if vers=="1.0":
+                update = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16, 100:666 }
+                type = update[type]
             #if type==100: continue
             if "z" in a:
                 z = a["z"]
                 vz = a["vz"]
                 rot = glm.quat(a["rot"])
-            else:
-                z = 500
-                vz = 0
-                if type==4: type=400
-                if type==2: type=200
-                if type==5: type=500
-                if type==6: type=600
-                rot = glm.quat(glm.vec3(0,0,-a["f"]))
-            aa = Atom(a["x"],a["y"],z, type=type, r=a["r"] )
-            if zerospeed and type!=100:
+            aa = Atom(a["x"],a["y"],z, type=type )
+            aa.r = a["r"]
+            if zerospeed and type!=666:
                 aa.v= glm.vec3(0,0,0) 
             else:
                 aa.v = glm.vec3(a["vx"],a["vy"],vz)
             aa.rot = rot
             aa.calc_node_positions()
-            aa.q=a["q"]
+#            aa.q=a["q"]
             aa.m=a["m"]
+            if "color" in a:
+                aa.color = a["color"]
 #            if not "version" in j:
 #                 aa.f= 2*pi - aa.f
             ni = 0
@@ -268,7 +265,7 @@ class Space:
                 aa.fixed = a["fixed"]
             if "nodes" in a:
                  for n in a["nodes"]:
-                    aa.nodes[ni].q= n["q"]
+                    aa.nodes[ni].q= 0 # n["q"]
                     if "spin" in n:
                         aa.nodes[ni].spin= n["spin"]
                     ni+=1

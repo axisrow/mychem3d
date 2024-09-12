@@ -19,8 +19,8 @@ def create_sphere(radius, num_segments):
             normal_data.append(glm.normalize(glm.vec3(x,y,z)))
 
             if i < num_segments and j < num_segments:
-                first = i * (num_segments + 1) + j
-                second = first + num_segments + 1
+                first = i * (num_segments + 1) + j 
+                second = first + num_segments + 1 
                 index_data.extend([first, second, first + 1, second, second + 1, first + 1])
     
     return vertex_data, index_data, normal_data
@@ -63,7 +63,7 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
     bi2 = 0
     if ni1==-1:
         for i in range(0, len(a1.nodes)):
-            if not a1.nodes[i].bonded:
+            if not a1.nodes[i].bonded and a1.nodes[i].type<=1:
                 bi1 = i
                 break
         else: return False
@@ -71,7 +71,7 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
        bi1 = ni1
     if ni2==-1:
         for i in range(0, len(a2.nodes)):
-            if not a2.nodes[i].bonded:
+            if not a2.nodes[i].bonded and a2.nodes[i].type<=1:
                 bi2 = i
                 break
         else: return False

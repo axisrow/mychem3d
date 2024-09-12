@@ -25,11 +25,14 @@ class Mesh():
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0)
 
         pass
+    def bind(self):
+        gl.glBindVertexArray(self.VAO)
+        
     def draw(self, shader):
         gl.glBindVertexArray(self.VAO)
         objcol_loc = gl.glGetUniformLocation(shader, "objectColor")
         model_loc = gl.glGetUniformLocation(shader, "model")
-        gl.glUniform3f(objcol_loc,self.color[0],self.color[1],self.color[2])
+        gl.glUniform4f(objcol_loc,self.color[0],self.color[1],self.color[2], self.color[3])
         gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/6))
     
@@ -37,7 +40,7 @@ class Mesh():
         gl.glBindVertexArray(self.VAO)
         objcol_loc = gl.glGetUniformLocation(shader, "objectColor")
         model_loc = gl.glGetUniformLocation(shader, "model")
-        gl.glUniform3f(objcol_loc,self.color[0],self.color[1],self.color[2])
+        gl.glUniform4f(objcol_loc,self.color[0],self.color[1],self.color[2],self.color[3])
         gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
         gl.glDrawArrays(gl.GL_QUADS, 0, int(self.vertices.size/6))
 
