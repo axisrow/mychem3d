@@ -3,8 +3,6 @@
 layout(local_size_x=LOCALSIZEX, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
-// Some examples:
-//uniform vec2 screen_size;
 uniform int stage;
 uniform vec3 box;
 uniform int iTime;
@@ -12,6 +10,7 @@ uniform int bondlock;
 uniform int gravity;
 uniform int redox;
 uniform int shake;
+uniform int animate_unbond;
 
 //uniform float frame_time;
 float BONDR = 4;
@@ -31,24 +30,10 @@ float HEIGHT = box.y;
 float DEPTH = box.z;
 
 
-//(5,1,4,6,3,2);
-float ktab[6][6] = {  {0.5, 1.5, 1.0, 1.0, 0.1, 1.0},
-                      {1.5, 0.5, 1.0, 1.5, 2.0, 1.0},
-                      {1.0, 1.0, 1.0, 1.0, 0.1, 1.0},
-                      {1.0, 1.5, 1.0, 1.5, 0.1, 1.0},
-                      {0.1, 2.0, 0.1, 0.1, 1.0, 0.1},
-                      {1.0, 1.0, 1.0, 1.0, 0.1, 1.0} };
-
 float tbl_elneg[18]= float[] (0, 2.2, 0.0, 0.0, 0.0,
                                 0.0, 2.55, 3.04, 3.44,
                                 0.0,  0.0,  0.93, 0.0,
                                 0.0,  0.0,  2.19, 2.58, 3.16);
-
-//float tbl_ncount
-
-float getk(float t1 , float t2){
-    return ktab[int(t1-1.0)][int(t2-1.0)];
-}
 
 
 // Structure of the ball data
@@ -76,6 +61,7 @@ struct Atom
     vec4 color;
     Node nodes[5];
 };
+
 // Input buffer
 layout(std430, binding=0) buffer atoms_in
 {
@@ -102,10 +88,10 @@ layout(std430, binding=4) buffer rpos_buffer
     vec4 rpos[][6];
 };
 
-layout(std430, binding=5) buffer q_buffer
-{
-    float qbuffer[];
-};
+//layout(std430, binding=5) buffer q_buffer
+//{
+    //float qbuffer[];
+//};
 
 layout(std430, binding=6) buffer qs_buffer
 {
@@ -113,13 +99,6 @@ layout(std430, binding=6) buffer qs_buffer
 };
 
 
-
-int i = int(gl_GlobalInvocationID);
-// Output buffer
-//layout(std430, binding=1) buffer atoms_out
-//{
-    //Atom atoms[];
-//} Out;
 
 float rand(vec2 co){
     return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
@@ -154,75 +133,26 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
 }
 
 
-
-bool shift_q(in float type1, in float type2, inout float q1, inout float q2, inout float s1, inout float s2){
-    float etable[6]=float[](5,1,4,6,3,2);
-    int i1,i2;
-    for(int i=0;i<etable.length();i++){
-        if (etable[i]==type1){
-            i1 = i;
-            //break;
-        }
-    }
-    for(int i=0;i<etable.length();i++){
-        if (etable[i]==type2){
-            i2 = i;
-            //break;
-        }
-    }
-    if (i1>i2){
-        if (q1== 0 && q2== 0 ){ q1=-1; q2= 1; return true;}  //1  shift 1
-        if (q1== 0 && q2==-1 ){ q1=-1; q2= 0; s2=-s1; return false;}  //2  shift 1
-        if (q1== 0 && q2== 1 ){ q1= 0; q2= 1; return false;}  //3
-        if (q1==-1 && q2== 0 ){ q1=-1; q2= 0; return false;}
-        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return false;}
-        if (q1==-1 && q2== 1 ){ q1=-1; q2= 1; return true;}
-        if (q1== 1 && q2== 0 ){ q1= 0; q2= 1; s1=s2; return false;} //shift 1
-        if (q1== 1 && q2==-1 ){ q1=-1; q2= 1; return true;}   //8  shift 2
-        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return false;}   //9
-    }
-    if (i1==i2){
-        if (q1+q2==0) { q1=0; q2=0; return true;}
-        else return false;
-    }
-    if (i1<i2){
-        if (q1== 0 && q2== 0 ){ q1= 1; q2=-1; return true;}  //1 shift
-        if (q1== 0 && q2==-1 ){ q1= 0; q2=-1; return false;}  //2
-        if (q1== 0 && q2== 1 ){ q1= 1; q2= 0; s2=s1; return false;}  //3 shift
-        if (q1==-1 && q2== 0 ){ q1= 0; q2=-1; s1=-s2; return false;}  // shift
-        if (q1==-1 && q2==-1 ){ q1=-1; q2=-1; return false;}
-        if (q1==-1 && q2== 1 ){ q1= 1; q2=-1; return true;}   //shift
-        if (q1== 1 && q2== 0 ){ q1= 1; q2= 0; return false;} 
-        if (q1== 1 && q2==-1 ){ q1= 1; q2=-1; return true;}   //8
-        if (q1== 1 && q2== 1 ){ q1= 1; q2= 1; return false;}   //9
-    }
-}
-
-
+int i = int(gl_GlobalInvocationID);
 
 void main()
 {
-    if (stage==1){  //calc q and rpos of nodes
+    if (stage==1){  //calc atom q and rpos of nodes
        //In.atoms[i].q=0;
        float q = 0; 
        for (int ni = 0; ni<In.atoms[i].ncount; ni++ ) {
                 rpos[i][ni].xyz = rotate_vector(In.atoms[i].nodes[ni].pos.xyz, In.atoms[i].rot);
                 q += qshift_buffer[i][ni] + In.atoms[i].nodes[ni].q;
-                qshift_buffer[i][ni] = 0;
                 
        } 
        In.atoms[i].q = q;
        return;
     }
 
-    Atom atom_i;
-    vec3 pos_i,v_i;
-    //float r;   //distance between atoms
-    //vec3 delta,delta2;  //coordinates delta
-    //float f1,f2;
-    vec3 F;
-    atom_i = In.atoms[i];
-    pos_i= atom_i.pos.xyz;
+    vec3 F;  
+
+    Atom atom_i = In.atoms[i];
+    vec3 pos_i= atom_i.pos.xyz;
 
     if (stage==2){ //calc near atoms  and far field
         int index = 0;
@@ -326,7 +256,7 @@ void main()
         return;
     }
 
-    v_i = atom_i.v.xyz;
+    vec3 v_i = atom_i.v.xyz;
     //In.atoms[i].pos.x +=rand(atom_i.pos.yz);
 
     F = vec3(0.0,0.0,0.0);
@@ -371,7 +301,7 @@ void main()
             float f2 = REPULSION_KOEFF2/r/r/r;
             F += delta/r*f2;
 
-            if (r<40) {
+            if (r<60) {
                 float f2 = 0;
                 float sumradius = atom_i.r + atom_j.r;
                 f2 = float(r<(sumradius+REPULSION1)) * (1/r*  REPULSION_KOEFF1) ;
@@ -423,15 +353,14 @@ void main()
                         float nj_q=atom_j.nodes[nj].q;
                         float nj_spin=atom_j.nodes[nj].spin;
                         if (rn == 0) continue;
-                        float q = tbl_elneg[int(atom_j.type)] - tbl_elneg[int(atom_i.type)];
+                        float edelta = tbl_elneg[int(atom_j.type)] - tbl_elneg[int(atom_i.type)];
                         
                         if (rn<=BONDR  ){                        
                             //bool canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q, ni_spin, nj_spin);
                             //atom_i.nodes[ni].spin = ni_spin;
                             if (ni_spin + nj_spin==0 && ni_q + nj_q == 0){
-                                qshift_buffer[i][ni]=0.3*q + 0.1*(atom_j.q-atom_i.q);
+                                qshift_buffer[i][ni]=0.3*edelta + 0.1*(atom_j.q-atom_i.q);
                                 atom_i.nodes[ni].q = 0;
-                                atom_i.nodes[ni].bonded=1.0;
                                 bondcheck[ni]=1.0;
                                 f3 = -rn* BOND_KOEFF;
                                 //v_i *=0.5;
@@ -444,11 +373,11 @@ void main()
                         float nj_bonded = atom_j.nodes[nj].bonded;
                         if (rn>BONDR && rn < BONDR*1.5  ){
                             
-                            f3+= abs(q) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
+                            f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                         }
                         
                         if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0 ){
-                            f3+= abs(q) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
+                            f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                         }
                 
                         if (ni_bonded == 0.0 && nj_bonded==0.0 && ni_q + nj_q==0 &&  ni_spin + nj_spin ==0 ){
@@ -513,14 +442,29 @@ void main()
                     }
                 } //nj 
                 
-             } //if r <40
+             } //for ni
 
-        } //for jj
+        } //if r<40
 
-    } //for ni
+    } //for jj
 
     for (int ni = 0; ni<atom_i.ncount; ni++ ) {
+        float old = atom_i.nodes[ni].bonded;
         atom_i.nodes[ni].bonded = bondcheck[ni];
+        if (old==1.0 && atom_i.nodes[ni].bonded==0.0) {  //unbond
+            if (animate_unbond==1) {
+                atom_i.animate = 500;                    
+            }                
+            if(qshift_buffer[i][ni]>0){
+                atom_i.nodes[ni].q= 1;
+            }
+            if(qshift_buffer[i][ni]<0){
+                atom_i.nodes[ni].q=-1;
+            }
+            qshift_buffer[i][ni] = 0;
+        }
+
+
     }
 
 

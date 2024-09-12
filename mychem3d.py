@@ -35,6 +35,7 @@ class mychemApp():
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",variable=self.space.shake, command=self.handle_shake)
         #sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
         sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_gravity)
+        sim_menu.add_checkbutton(label="Animate unbond", accelerator="", variable=self.space.animate_unbond, command=self.handle_animate_unbond)
         sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         sim_menu.add_checkbutton(label="Record image",variable=self.space.recording, command=self.handle_recording)
         sim_menu.add_checkbutton(label="Record data",variable=self.space.record_data, command=self.handle_record_data)
@@ -140,6 +141,7 @@ class mychemApp():
 
     def handle_resize(self, event):
         print(event)
+        self.glframe.update_uniforms = True
 
     def handle_undo(self,event):
         data = self.undostack.pop()
@@ -152,6 +154,7 @@ class mychemApp():
     def setHeat(self, value):
         self.space.heat = float(value)
         self.status_bar.set('heat = ' + str(value))
+        self.glframe.update_uniforms = True
 
     def firstrun(self):
         print("firstruns")
@@ -272,6 +275,13 @@ class mychemApp():
         if event:
             self.space.gravity.set(not self.space.gravity.get())
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
+
+    def handle_animate_unbond(self,event=None):
+        if event:
+            self.space.animate_unbond.set(not self.space.animate_unbond.get())
+        self.status_bar.set("Unbond animate is "+ OnOff(self.space.animate_unbond.get()))
+        self.glframe.update_uniforms = True
+
 
     def handle_zero(self,event=None):
         self.space.compute2atoms()
@@ -938,23 +948,29 @@ class OptionsFrame():
 
     def set_interk(self,value):
         self.space.INTERACT_KOEFF=float(value)/100.0
+        self.glframe.update_uniforms=True
 
     def set_repulsek1(self,value):
         self.space.REPULSION_KOEFF1 =float(value)
+        self.glframe.update_uniforms=True
 
     def set_repulsek2(self,value):
         self.space.REPULSION_KOEFF2=float(value)
+        self.glframe.update_uniforms=True
 
     def set_bondk(self,value):
         self.space.BOND_KOEFF =float(value)/100
+        self.glframe.update_uniforms=True
 
     def set_rotk(self,value):
 
         self.space.ROTA_KOEFF = float(value)
 #        print("rota =",self.space.ROTA_KOEFF)
+        self.glframe.update_uniforms=True
     
     def set_massk(self,value):
         self.space.MASS_KOEFF = float(value)
+        self.glframe.update_uniforms=True
 
     def set_size(self,value):
         sx = self.sizex_slider.get()
@@ -962,6 +978,7 @@ class OptionsFrame():
         sz = self.sizez_slider.get()
         self.space.setSize(sx*100, sy*100, sz*100)
         self.space.glframe.updateContainerSize()
+        self.glframe.update_uniforms=True
 
     
 

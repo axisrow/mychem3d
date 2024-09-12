@@ -21,7 +21,7 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.setSize(400,400,100)
-    for i in range(0,1000):
+    for i in range(0,800):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)

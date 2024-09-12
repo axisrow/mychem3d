@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     space.update_delta = 10
      #space.recording = True
-    #space.INTERACT_KOEFF = 1
+    #space.INTERACT_KOEFF = 1 
     #space.REPULSION_KOEFF2=50000
     space.appendmixer(1)
     #space.redox.set(True)

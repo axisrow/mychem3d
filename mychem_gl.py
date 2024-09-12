@@ -49,6 +49,7 @@ class AppOgl(OpenGLFrame):
         self.LOCALSIZEX = 64
         self.nearflag = False
         self.drawnodes = True
+        self.update_uniforms = True
     
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
@@ -192,7 +193,7 @@ class AppOgl(OpenGLFrame):
         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
 
-
+        self.set_compute_uniforms()
 
 
     def ssbo2atoms(self):
@@ -241,10 +242,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"MASS_KOEFF": gl.glGetUniformLocation(self.gpu_code, "MASS_KOEFF") })
             self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
             self.loc.update( {"HEAT": gl.glGetUniformLocation(self.gpu_code, "HEAT") })
-            #view_loc = gl.glGetUniformLocation(self.shader, "view")
-            #proj_loc = gl.glGetUniformLocation(self.shader, "projection")
-            #mode_loc = gl.glGetUniformLocation(self.shader, "mode")
-            #nodeindex_loc = gl.glGetUniformLocation(self.shader, "nodeindex")
+            self.loc.update( {"animate_unbond": gl.glGetUniformLocation(self.gpu_code, "animate_unbond") })
             self.loc.update( {"view": gl.glGetUniformLocation(self.shader, "view") })
             self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
@@ -382,10 +380,8 @@ class AppOgl(OpenGLFrame):
         gl.glDisable(gl.GL_CULL_FACE);
         gl.glUseProgram(0)
 
-    def compute(self):
-        # gpu compute atoms
-        self.atomMesh.bind()
-        if not self.space.pause:
+
+    def set_compute_uniforms(self):
             gl.glUseProgram(self.gpu_code)
             gl.glUniform1i(self.loc["bondlock"],self.space.bondlock.get())
             gl.glUniform3fv(self.loc["box"], 1, glm.value_ptr(self.space.box))
@@ -401,6 +397,18 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
             gl.glUniform1f(self.loc["HEAT"],self.space.heat)
+            gl.glUniform1i(self.loc["animate_unbond"],self.space.animate_unbond.get())
+            print("set compute vars")
+
+    def compute(self):
+        # gpu compute atoms
+        self.atomMesh.bind()
+
+        if self.update_uniforms:
+            self.set_compute_uniforms()
+            self.update_uniforms=False
+        if not self.space.pause:
+            gl.glUseProgram(self.gpu_code)
 
             for i in range(0,self.space.update_delta):
                 self.space.t+=1

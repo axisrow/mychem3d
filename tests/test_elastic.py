@@ -17,7 +17,10 @@ def action1(space):
         (x,y,z) = (500,500,500)
         space.merge_from_file("examples/alkane/30ane.json",x,y,z)
 
-        a = Atom(750,700,500,2)
+        (x,y,z) = (500,500,540)
+        space.merge_from_file("examples/alkane/30ane.json",x,y,z)
+
+        a = Atom(750,700,500,8)
         a.v = glm.vec3(-1,0,0)
         space.appendatom(a)
 
@@ -42,7 +45,7 @@ if __name__ == '__main__':
     space.action = action1
     space.INTERACT_KOEFF = 0.1
     space.BOND_KOEFF = 0.2
-    space.ROTA_KOEFF = 0.000001
+    #space.ROTA_KOEFF = 0.000001
     #space.REPULSION_KOEFF1=30
     space.REPULSION_KOEFF2=0.2
     space.update_delta = 10

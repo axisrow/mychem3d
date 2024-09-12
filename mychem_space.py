@@ -54,6 +54,9 @@ class Space:
         self.segmented_redox = True
         self.bondlock =tk.BooleanVar()
         self.bondlock.set(False)
+        self.animate_unbond =tk.BooleanVar()
+        self.animate_unbond.set(False)
+
         self.update_delta= 5
         self.action = None
         self.fdata = open('data.txt',"w")
