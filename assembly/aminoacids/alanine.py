@@ -23,7 +23,7 @@ def action1(space):
 
     if space.t==1000: # +C
         space.compute2atoms()
-        a1 = Atom(500,500,480,4)
+        a1 = Atom(500,500,480,6)
         space.appendatom(a1)
         bond_atoms(space.atoms[i0], a1)
         space.atoms2compute()

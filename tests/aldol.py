@@ -22,6 +22,7 @@ def action1(space):
             dz = 0
             i1=space.merge_from_file("examples/simple/OH.json",x+dx,y+dz,z+dy,rot)
             space.atoms[i1].nodes[1].q=-1
+            space.atoms[i1].nodes[1].spin=-1
 #        for i in range(0,20):
 #            f = random.random()*pi
 #            rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
@@ -42,7 +43,7 @@ def action1(space):
             #i4=space.merge_from_file("examples/aminoacids/asparagine.json",x+dx,y+dy,z+dz,rot)
 
 
-            for i in range(0,0):
+            for i in range(0,3):
                 f = random.random()*pi
                 rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
                 dx = random.randint(-50,50)

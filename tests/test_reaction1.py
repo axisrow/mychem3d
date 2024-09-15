@@ -19,7 +19,7 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(2000,200,1000)
+    space.setSize(2000,1000,200)
     for i in range(0,300):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
@@ -36,11 +36,12 @@ if __name__ == '__main__':
 
     space.update_delta = 10
      #space.recording = True
-    #space.INTERACT_KOEFF = 1 
-    #space.REPULSION_KOEFF2=50000
+    space.INTERACT_KOEFF = 0.1
+    space.REPULSION_KOEFF2=50
     space.appendmixer(1)
     #space.redox.set(True)
     space.pause = True
+    space.highlight_unbond.set(True)
     App.run()
 #
 #

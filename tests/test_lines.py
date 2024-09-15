@@ -14,11 +14,11 @@ def makelines(space,y):
      for i in range(100,900,13):
           for j in range(200,900,100):
                if k%2==0:
-                    a = Atom(i,y,j,2,m=16,r=8)
+                    a = Atom(i,y,j,8)
                     f = glm.radians(40)
                     a.rot = glm.quat(cos(f/2), glm.vec3(0,0,1)* sin(f/2))
                else:
-                    a = Atom(i,y+11,j,2,m=16,r=8)
+                    a = Atom(i,y+11,j,8)
                     f = glm.radians(40+180)
                     a.rot = glm.quat(cos(f/2), glm.vec3(0,0,1)* sin(f/2))
                a.calc_node_positions()

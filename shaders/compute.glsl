@@ -10,7 +10,7 @@ uniform int bondlock;
 uniform int gravity;
 uniform int redox;
 uniform int shake;
-uniform int animate_unbond;
+uniform int highlight_unbond;
 
 //uniform float frame_time;
 float BONDR = 4;
@@ -19,6 +19,7 @@ uniform float ATTRACT_KOEFF;
 uniform float INTERACT_KOEFF;
 uniform float INTERACT_KOEFF2=1.0;
 uniform float ROTA_KOEFF;
+uniform float CONUS_KOEFF = 0.866;
 float REPULSION1 = -6;
 uniform float REPULSION_KOEFF1;
 uniform float REPULSION_KOEFF2;
@@ -55,7 +56,7 @@ struct Atom
     float ncount;
     vec4 rot;
     vec4 rotv;
-    float animate;
+    float highlight;
     float q;
     float fxd;
     vec4 color;
@@ -87,11 +88,6 @@ layout(std430, binding=4) buffer rpos_buffer
 {
     vec4 rpos[][6];
 };
-
-//layout(std430, binding=5) buffer q_buffer
-//{
-    //float qbuffer[];
-//};
 
 layout(std430, binding=6) buffer qs_buffer
 {
@@ -127,7 +123,7 @@ void limits(inout vec3 pos,  inout vec3 v, in float radius){
     vec3 outlim;
     outlim = pos - box;
     outlim = clamp(outlim,vec3(0.0),vec3(100.0));
-    v -= outlim * 0.005;
+    v -= outlim * 0.005 ;
     outlim = clamp(pos, vec3(-100.0), vec3(0.0));
     v -= outlim * 0.005;
 }
@@ -142,7 +138,10 @@ void main()
        float q = 0; 
        for (int ni = 0; ni<In.atoms[i].ncount; ni++ ) {
                 rpos[i][ni].xyz = rotate_vector(In.atoms[i].nodes[ni].pos.xyz, In.atoms[i].rot);
-                q += qshift_buffer[i][ni] + In.atoms[i].nodes[ni].q;
+                q += qshift_buffer[i][ni]; 
+                if (In.atoms[i].nodes[ni].type != 2.0 ) { 
+                    q += In.atoms[i].nodes[ni].q;
+                }
                 
        } 
        In.atoms[i].q = q;
@@ -181,7 +180,7 @@ void main()
         for (int ni = 0; ni<atom_i.ncount; ni++ ) {
             vec3 ni_realpos = rpos[i][ni].xyz;
             float ni_type = atom_i.nodes[ni].type;
-            if (ni_type>1) continue;
+            //if (ni_type>1) continue;
             if (atom_i.nodes[ni].spin ==0){
                 for (int j=0;j<i;j++){  //half matrix
                     Atom atom_j = In.atoms[j];
@@ -192,19 +191,7 @@ void main()
                     for (int nj = 0; nj<atom_j.ncount; nj++){
                         vec3 nj_realpos = rpos[j][nj].xyz;
                         float nj_type = atom_j.nodes[nj].type;
-                        if (nj_type>1) continue;
-                        /*if (ni_type==1){
-                            float rn = distance(pos_i , pos_j + nj_realpos);
-                            vec3 ndelta =  pos_i - (pos_j + nj_realpos);
-                            if (rn==0) continue;
-                            ni_realpos = -ndelta/rn * atom_i.r;
-                        }
-                        if (nj_type==1){
-                            float rn = distance(pos_i + ni_realpos, pos_j);
-                            vec3 ndelta =  (pos_i + ni_realpos)-pos_j ;
-                            if (rn==0.0) continue;
-                            nj_realpos = ndelta/rn * atom_j.r;
-                        } */                       
+                        //if (nj_type>1) continue;
                         vec3 ndelta =  ni_realpos - nj_realpos + delta;
                         float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                         if (rn<BONDR){
@@ -213,8 +200,17 @@ void main()
                                 In.atoms[i].nodes[ni].spin = - atom_j.nodes[nj].spin;
                             }
                             else {
-                                In.atoms[i].nodes[ni].spin = 1;
-                                In.atoms[j].nodes[nj].spin = -1;
+                                //randspin
+                                if (rand(atom_i.pos.xy)>=0.5){
+                                    In.atoms[i].nodes[ni].spin = 1;
+                                    In.atoms[j].nodes[nj].spin = -1;
+                                }
+                                else {
+                                    In.atoms[i].nodes[ni].spin = -1;
+                                    In.atoms[j].nodes[nj].spin = 1;
+                                }
+
+
                             }
                         }
                     }
@@ -263,8 +259,8 @@ void main()
     vec4 totalrot = vec4(0.0, 0.0, 0.0, 1.0);
 
     
-//  animate
-    if (atom_i.animate >0) atom_i.animate-=1;
+//  highlight
+    if (atom_i.highlight >0) atom_i.highlight-=1;
 
     //random redox 
     if (redox==1){
@@ -272,14 +268,14 @@ void main()
                 if (rand(v_i.xy)>=0.9994) {
                     atom_i.nodes[0].q = 1;
                     atom_i.nodes[0].spin = 1;
-                    atom_i.animate = 500;                    
+                    atom_i.highlight = 500;                    
                 }
             }
             if (pos_i.x>WIDTH-300){
                 if (rand(v_i.xy)>=0.9994) {
                     atom_i.nodes[0].q = -1;
                     atom_i.nodes[0].spin = -1;
-                    atom_i.animate = 500;
+                    atom_i.highlight = 500;
                 }
             }    
     }
@@ -295,16 +291,21 @@ void main()
             float r = distance(pos_i, pos_j);
             if (r==0) continue;
 
-            float f1= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
+            float f1,f2;
+
+            f1= atom_i.q*atom_j.q*INTERACT_KOEFF/r;
             F += delta/r*f1;  
 
-            float f2 = REPULSION_KOEFF2/r/r/r;
+            f2 = REPULSION_KOEFF2/r/r/r;
             F += delta/r*f2;
 
             if (r<60) {
-                float f2 = 0;
                 float sumradius = atom_i.r + atom_j.r;
-                f2 = float(r<(sumradius+REPULSION1)) * (1/r*  REPULSION_KOEFF1) ;
+                if (r<(sumradius+REPULSION1) ){
+                   f2 =  REPULSION_KOEFF1/r ;
+                   //atom_i.highlight = 50;
+                }
+
                 F += delta/r*f2;
 
             //nodes
@@ -318,119 +319,67 @@ void main()
                 for (int nj = 0; nj<atom_j.ncount; nj++){
                     float nj_type = atom_j.nodes[nj].type;
                     vec3 nj_realpos = rpos[j][nj].xyz;
+                    float nj_bonded = atom_j.nodes[nj].bonded;
+                    float nj_q=atom_j.nodes[nj].q;
+                    float nj_spin=atom_j.nodes[nj].spin;
+
                     float f3 = 0;
                     //node interact
-                    if (ni_type!=2.0 && nj_type!=2.0){
-                        /*if (ni_type==1){
-                            float rn = distance(pos_i , pos_j + nj_realpos);
-                            vec3 ndelta =  pos_i - (pos_j + nj_realpos);
-                            if (rn==0) continue;
-                            ni_realpos = -ndelta/rn * atom_i.r;
-                        }
+                    float rn;
+                    vec3 ndelta;
 
-                        if (nj_type==1){
-                            float rn = distance(pos_i + ni_realpos, pos_j);
-                            vec3 ndelta =  (pos_i + ni_realpos)-pos_j ;
-                            if (rn==0.0) continue;
-                            nj_realpos = ndelta/rn * atom_j.r;
-                        }*/
-
-                        float rn;
-                        vec3 ndelta;
-                        /*if (atom_i.type==1){
-                            //float rn_2 = distance(pos_i , pos_j + nj_realpos);
-                            vec3 ndelta_2 =  pos_i - (pos_j + nj_realpos);
-                            //if (rn==0) continue;
-                            vec3 ni_realpos_2 = - normalize(ndelta_2) * atom_i.r;
-                            ndelta =  ni_realpos_2 - nj_realpos + delta;
-                            rn = distance(pos_i + ni_realpos_2, pos_j + nj_realpos);
-                        }
-                        else {*/
-                            ndelta =  ni_realpos - nj_realpos + delta;
-                            rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
-                        //} 
-
-                        float nj_q=atom_j.nodes[nj].q;
-                        float nj_spin=atom_j.nodes[nj].spin;
+                    //if (ni_type!=2.0 && nj_type!=2.0){
+                        ndelta =  ni_realpos - nj_realpos + delta;
+                        rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                         if (rn == 0) continue;
                         float edelta = tbl_elneg[int(atom_j.type)] - tbl_elneg[int(atom_i.type)];
                         
                         if (rn<=BONDR  ){                        
-                            //bool canbond = shift_q(atom_i.type, atom_j.type, ni_q,nj_q, ni_spin, nj_spin);
-                            //atom_i.nodes[ni].spin = ni_spin;
-                            if (ni_spin + nj_spin==0 && ni_q + nj_q == 0){
+                            if (ni_spin + nj_spin==0 && ni_q + nj_q == 0 && ni_type!=2 && nj_type!=2){
                                 qshift_buffer[i][ni]=0.3*edelta + 0.1*(atom_j.q-atom_i.q);
                                 atom_i.nodes[ni].q = 0;
                                 bondcheck[ni]=1.0;
                                 f3 = -rn* BOND_KOEFF;
-                                //v_i *=0.5;
+                                //v_i *=0.01;
                             }
                             else {
-                                f3 = 2.0;
+                                f3 = 0.1;
                             }
                         }
+
+
                         
-                        float nj_bonded = atom_j.nodes[nj].bonded;
                         if (rn>BONDR && rn < BONDR*1.5  ){
-                            
                             f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                         }
                         
-                        if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0 ){
+                        if (rn>1.0 && ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0  ){
                             f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                         }
-                
-                        if (ni_bonded == 0.0 && nj_bonded==0.0 && ni_q + nj_q==0 &&  ni_spin + nj_spin ==0 ){
+                                        
+                        if (rn>1.0 && ni_bonded == 0.0 && nj_bonded==0.0 && ni_q + nj_q==0 && ni_spin + nj_spin==0 ){ 
                             f3+= ni_q * nj_q * INTERACT_KOEFF2/rn/rn;
                         }
                         
-                        F += ndelta/rn*f3;
-                    }
+                        //hydrogen bond, node to atom
+                        if (ni_bonded==0.0 && atom_j.type==1.0){
+                                nj_realpos = vec3(0);
+                                ndelta =  ni_realpos - nj_realpos + delta;
+                                rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
+                                float conus_i  = dot(ni_realpos,-delta)/atom_i.r/length(delta);
+                                if(rn>1.0 && rn< 40 &&  conus_i>CONUS_KOEFF){   //rn>BONDR &&
+                                    f3+= atom_j.q* ni_q  * INTERACT_KOEFF/rn;
+                                    //atom_i.highlight = 2;                    
+                                    
+                                }
+                        } 
 
-
-
-
-/*
-                    else if(ni_type==2.0 && nj_type==1.0){
-                        float rn = distance(pos_i + ni_realpos, pos_j);
-                        vec3 ndelta =  (pos_i + ni_realpos)-pos_j ;
-                        if (rn==0.0) continue;
-                        nj_realpos = ndelta/rn * atom_j.r;
-                        ndelta =  ni_realpos - nj_realpos + delta;
-                        rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
-                        if (rn==0.0) continue;
-                        if (rn<BONDR*1.0){
-                        //f3 = - rn * BOND_KOEFF*0.1 ;
-                            f3 = - rn * BOND_KOEFF *0.1;
-                            F += ndelta/rn*f3;
-                        }
-                    } 
-*/
-                    /*else if(ni_type==1.0 && nj_type==2.0){
-                        
-                        float rn = distance(pos_i , pos_j + nj_realpos);
-                        vec3 ndelta =  pos_i - (pos_j + nj_realpos);
-                        if (rn==0) continue;
-
-                        ni_realpos = -ndelta/rn * atom_i.r;
-                        rn = distance(pos_i + ni_realpos , pos_j + nj_realpos);
-                        float nj_q=atom_j.nodes[nj].q;
-                        ndelta =  ( pos_i + ni_realpos) - (pos_j + nj_realpos);
-                        if (rn==0) continue;
-                        if (rn<BONDR*1.0){
-                            //atom_i.color.xyz=vec3(1.0,0.0,0.0);    
-                            f3 = - rn * BOND_KOEFF * 0.1 ;
-                            F += ndelta/rn*f3;
-                        }
-                    }*/
-
-                    //if(nj==0){
-//
-                    //}
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;
+                    vec3 target_direction2 = pos_j - pos_i;
+                    // nice self-align without +nj_realpos, but broke bonds, sigma&pi?
                     vec3 v1 = normalize(ni_realpos);
-                    vec3 v2 = normalize(target_direction);
+                    vec3 v2 = normalize(mix(target_direction,target_direction2,0.1));
                     if (v1!=v2){
                             float dt = dot(v1,v2);
                             dt = clamp(dt,-1,1);
@@ -440,20 +389,62 @@ void main()
                             vec4 rot = normalize(vec4(sin(angle/2.0)* axis,cos(angle/2.0) )); // quat
                             totalrot = qmul(rot, totalrot);
                     }
+
+
+                    
+
+                    /*ndelta =  (pos_j + nj_realpos) - (pos_i + ni_realpos);
+                    vec3 ndelta2 = (pos_j  + nj_realpos) - (pos_i);
+                    if (f3==0) continue;
+                    vec3 ff = normalize(ndelta)*f3;
+                    float cf =  dot(ff,ndelta2)/abs(f3);
+                    F += normalize(ndelta2)*cf;*/
+
+
+                    F += ndelta/rn*f3;
+
                 } //nj 
                 
-             } //for ni
+            } //for ni
+
+            //hydrogen bond atom to node
+            if (atom_i.type==1){ 
+                for (int nj = 0; nj<atom_j.ncount; nj++){
+                    float nj_bonded = atom_j.nodes[nj].bonded;
+                    if (nj_bonded==1.0) continue;
+                    //float nj_type = atom_j.nodes[nj].type;
+                    vec3 nj_realpos = rpos[j][nj].xyz;
+                    float nj_q=atom_j.nodes[nj].q;
+                    float nj_spin=atom_j.nodes[nj].spin;
+        
+                    //ni_realpos =  vec3(0);
+                    vec3 ndelta =  pos_i - (pos_j + nj_realpos);
+                    float rn = distance(pos_i, pos_j + nj_realpos);
+                    float conus_j  = dot(nj_realpos, delta)/length(delta)/atom_j.r;
+                    //if (rn==0) continue;
+                    if(rn>1  && rn< 40 && conus_j>CONUS_KOEFF){   //rn>BONDR &&
+                                    float f3= atom_i.q* nj_q  * INTERACT_KOEFF/rn;
+                                    F += ndelta/rn*f3;                                    
+                                    //atom_i.highlight = 2;
+                    }
+                }
+            }
+
 
         } //if r<40
 
+
+
     } //for jj
+
+
 
     for (int ni = 0; ni<atom_i.ncount; ni++ ) {
         float old = atom_i.nodes[ni].bonded;
         atom_i.nodes[ni].bonded = bondcheck[ni];
         if (old==1.0 && atom_i.nodes[ni].bonded==0.0) {  //unbond
-            if (animate_unbond==1) {
-                atom_i.animate = 500;                    
+            if (highlight_unbond==1) {
+                atom_i.highlight = 50;                    
             }                
             if(qshift_buffer[i][ni]>0){
                 atom_i.nodes[ni].q= 1;
@@ -474,7 +465,7 @@ void main()
 
 
  // mixer
-    if (atom_i.type==100){
+    if (atom_i.type==666){
         if (v_i!= vec3(0.0,0.0,0.0))
             v_i = normalize(v_i);
     }
@@ -495,16 +486,20 @@ void main()
    //F += Far.F.xyz*0.01;
 
 //next
-    v_i += F/(atom_i.m*MASS_KOEFF);
+    vec3 a = F/(atom_i.m*MASS_KOEFF);
+    v_i += a;
     if (atom_i.fxd==1)  v_i = vec3(0.0);
     pos_i += v_i;
 
     atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
+
+// 
+//   if (length(v_i)>length(atom_i.v.xyz)+0.05)
+//        atom_i.highlight=5;
     
 //limits    
     limits(pos_i,v_i,atom_i.r); //borders of container
-    
-
+ 
     atom_i.v.xyz = v_i;
     atom_i.pos.xyz = pos_i;
     Out.atoms[i] = atom_i;

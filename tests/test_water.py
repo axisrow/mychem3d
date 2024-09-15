@@ -21,7 +21,7 @@ if __name__ == '__main__':
     App = mychemApp()
     space = App.space
     space.setSize(400,400,100)
-    for i in range(0,800):
+    for i in range(0,400):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
@@ -34,13 +34,14 @@ if __name__ == '__main__':
         #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
     space.update_delta = 10
     #space.REPULSION_KOEFF2 = 10.0
-    #space.INTERACT_KOEFF = 3.0
+    space.INTERACT_KOEFF = 0.5
     space.MASS_KOEFF = 5
     space.NEARDIST=100
     space.tranparentmode= True
      #space.recording = True
     #space.appendmixer(1)
     #space.redox.set(True)
+    space.highlight_unbond.set(True)
     App.run()
 #
 #

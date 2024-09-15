@@ -88,6 +88,7 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
 
 
 
+
 class UndoStack:
     def __init__(self, limit=10):
         self.stack = []
@@ -108,6 +109,31 @@ class UndoStack:
     def is_empty(self):
         return len(self.stack) == 0
     
+
+def double_info(a1, a2):
+    print("A1")
+    a1.info()
+    print("A2")
+    a1.info()
+    delta = a1.pos - a2.pos
+    print(f"Delta = {delta}, Distance={glm.length(delta):.3f}")
+    print(f"R1 = {a1.r}, R2= {a2.r}, sumrad = {a1.r+a2.r} ")
+    print("node distance:")
+    bondedinfo = ""
+    for ni in range(len(a1.nodes)):
+        nodei = a1.nodes[ni]
+        str = ""
+        for nj in range(len(a2.nodes)):
+            nodej = a2.nodes[nj]
+            rposi = a1.rot * nodei.pos
+            rposj = a2.rot * nodej.pos
+            rn = glm.length(rposi-rposj+a1.pos-a2.pos)
+            str += f"{rn:.4f} "
+            if rn<4:
+                bondedinfo+=f"rn {ni}, {nj}  spins: {nodei.spin}, {nodej.spin} q: {nodei.q}, {nodej.q} bonded: {nodei.bonded}, {nodej.bonded} \r\n"
+        print(str)
+    print(bondedinfo)
+
 
 
 def print_bytes_with_highlights(byte_array, highlights):

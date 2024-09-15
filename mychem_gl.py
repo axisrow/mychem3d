@@ -161,16 +161,11 @@ class AppOgl(OpenGLFrame):
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
         gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , gl.GL_DYNAMIC_DRAW);
 
-        self.q_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.q_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 5, self.q_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
-
 
         self.qshift_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.qshift_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, self.qshift_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*6, None , gl.GL_DYNAMIC_DRAW);
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , gl.GL_DYNAMIC_DRAW); #additional *4 bugcheck 
 
 
 
@@ -208,11 +203,13 @@ class AppOgl(OpenGLFrame):
         #print("sizeof NodeC", ctypes.sizeof(NodeC))
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
         offset = 0
+        self.space.Ek = 0
         for i in range(0,self.N):
             a = self.space.atoms[i]
             abytearray = a_data8[offset:offset+ctypes.sizeof(AtomC)]
             ac = AtomC.from_buffer(abytearray)
             ac.from_ctypes(a)
+            self.space.Ek += a.m*glm.dot(a.v,a.v)/2.0
             offset+= ctypes.sizeof(AtomC)
             for n in a.nodes:
                 nbytearray = a_data8[offset:offset+ctypes.sizeof(NodeC)]
@@ -242,7 +239,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"MASS_KOEFF": gl.glGetUniformLocation(self.gpu_code, "MASS_KOEFF") })
             self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
             self.loc.update( {"HEAT": gl.glGetUniformLocation(self.gpu_code, "HEAT") })
-            self.loc.update( {"animate_unbond": gl.glGetUniformLocation(self.gpu_code, "animate_unbond") })
+            self.loc.update( {"highlight_unbond": gl.glGetUniformLocation(self.gpu_code, "highlight_unbond") })
             self.loc.update( {"view": gl.glGetUniformLocation(self.shader, "view") })
             self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
@@ -397,7 +394,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
             gl.glUniform1f(self.loc["HEAT"],self.space.heat)
-            gl.glUniform1i(self.loc["animate_unbond"],self.space.animate_unbond.get())
+            gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond.get())
             print("set compute vars")
 
     def compute(self):

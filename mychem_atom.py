@@ -52,7 +52,7 @@ class AtomC(Structure):
         ("ncount", c_float),
         ("rot", c_float*4),
         ("rotv", c_float*4),
-        ("animate", c_float),
+        ("highlight", c_float),
         ("q",  c_float),
         ("fixed", c_float),
         ("_pad1", c_float*1),
@@ -77,7 +77,7 @@ class AtomC(Structure):
         self.rotv[1]= a.rotv.y
         self.rotv[2]= a.rotv.z
         self.rotv[3]= a.rotv.w
-        self.animate = 0.0
+        self.highlight = 0.0
         self.color[0:4]= a.color
 
     def from_ctypes(self,a):
@@ -119,7 +119,7 @@ class Atom():
             self.m=1
             n1 = Node(self)
             n1.f = 0
-            n1.type = 0
+            n1.type = 1
             self.nodes.append(n1)
   
         if self.type==6:
@@ -140,7 +140,7 @@ class Atom():
         if self.type==7:
             self.color = (0.5,0.5,0.5,1.0)
             self.m=14
-            self.r=9
+            self.r=10
             for i in range(0,3):
                 n = Node(self)
                 n.f = 2*pi/3.0*i
@@ -148,6 +148,7 @@ class Atom():
                 self.nodes.append(n)
             n = Node(self)    
             n.type =2 
+            n.q=-1
             n.f = 0
             n.f2 = glm.radians(-90)
             self.nodes.append(n)
@@ -156,7 +157,7 @@ class Atom():
 
         if self.type==8:
             self.color = (1.0,0.0,0.0,1.0)
-            self.r=8
+            self.r=9
             self.m=16
             (n1,n2,n3,n4) = (Node(self),Node(self),Node(self),Node(self))
             n1.f = 0
@@ -166,9 +167,11 @@ class Atom():
             n3.f = glm.radians(52.0)
             n3.f2 = glm.radians(120) 
             n3.type = 2
+            n3.q = -1
             n4.f = glm.radians(52.0)
             n4.f2 = glm.radians(-120) 
             n4.type = 2
+            n4.q = -1
             self.nodes.extend([n1,n2,n3,n4])
 
 
@@ -185,7 +188,7 @@ class Atom():
         if self.type==15: #P
             self.color = (128/255,64/255,48/255,1.0)
             self.m= 31
-            self.r = 12
+            self.r = 18
             (n1,n2,n3,n4,n5) = (Node(self),Node(self),Node(self),Node(self),Node(self))
             n1.f = 0
             n1.f2 = 0
@@ -202,7 +205,7 @@ class Atom():
         if self.type==16: #S
             self.color = (131/255,206/255,137/255,1.0)
             self.m = 32
-            self.r = 12
+            self.r = 18
             (n1,n2) = (Node(self),Node(self))				
             n1.f = 0
             n2.f = glm.radians(92.1)
@@ -237,11 +240,16 @@ class Atom():
     def info(self):
         print("type=", self.type)
         bs = ""
+        #for n in self.nodes:
+        #    if n.bonded: 
+        #        bs+="1"
+        #    else: 
+        #        bs+="0"
+        print(f'atom q = {self.q}')
+        print(f"position = ", self.pos)
+        print(f"velocity = {self.v} speed { glm.length(self.v)}" )
         for n in self.nodes:
-            if n.bonded: 
-                bs+="1"
-            else: 
-                bs+="0"
-        print("bonds="+bs)     
+            print(f'node spin={n.spin} q={n.q} type={n.type} bonded={n.bonded}') 
+
 
 

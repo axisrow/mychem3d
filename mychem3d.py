@@ -10,7 +10,7 @@ from PIL import ImageGrab
 from mychem_atom import Atom
 from mychem_space import Space
 from mychem_gl import AppOgl
-from mychem_functions import OnOff,UndoStack,bond_atoms
+from mychem_functions import OnOff,UndoStack,bond_atoms,double_info
 import glm
 import random
 import OpenGL.GL as gl
@@ -35,7 +35,7 @@ class mychemApp():
         sim_menu.add_checkbutton(label="Random shake", accelerator="s",variable=self.space.shake, command=self.handle_shake)
         #sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
         sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_gravity)
-        sim_menu.add_checkbutton(label="Animate unbond", accelerator="", variable=self.space.animate_unbond, command=self.handle_animate_unbond)
+        sim_menu.add_checkbutton(label="Highlight unbond", accelerator="", variable=self.space.highlight_unbond, command=self.handle_highlight_unbond)
         sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
         sim_menu.add_checkbutton(label="Record image",variable=self.space.recording, command=self.handle_recording)
         sim_menu.add_checkbutton(label="Record data",variable=self.space.record_data, command=self.handle_record_data)
@@ -143,6 +143,7 @@ class mychemApp():
         print(event)
 
     def handle_undo(self,event):
+        print("Undo")
         data = self.undostack.pop()
         if data is not None:
             self.space.load_data(data)
@@ -186,7 +187,10 @@ class mychemApp():
         self.space.pause = True
         #self.glframe.animate = 0
         self.status_bar.settime(self.space.t)
-        self.status_bar.setinfo("Number of atoms: "+str(len(self.space.atoms)))
+        N = len(self.space.atoms)
+        info = f"Number of atoms: {N}, Ek={self.space.Ek:.2f}"
+        if (N!=0): info += f" Ekavg={self.space.Ek/len(self.space.atoms):.2f} "
+        self.status_bar.setinfo(info )
         self.status_bar.set("Paused")
 
     def handle_recording(self,event=None):
@@ -278,17 +282,18 @@ class mychemApp():
         self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
         self.glframe.update_uniforms = True
 
-    def handle_animate_unbond(self,event=None):
+    def handle_highlight_unbond(self,event=None):
         if event:
-            self.space.animate_unbond.set(not self.space.animate_unbond.get())
-        self.status_bar.set("Unbond animate is "+ OnOff(self.space.animate_unbond.get()))
+            self.space.highlight_unbond.set(not self.space.highlight_unbond.get())
+        self.status_bar.set("Unbond highlight is "+ OnOff(self.space.highlight_unbond.get()))
         self.glframe.update_uniforms = True
 
 
     def handle_zero(self,event=None):
         self.space.compute2atoms()
+        self.undostack.push(self.space.make_export())
         self.space.appendmixer(1)
-        self.resetdata = self.space.make_export()
+        #self.resetdata = self.space.make_export()
         self.space.atoms2compute()
 
 
@@ -331,6 +336,7 @@ class mychemApp():
 
     def file_merge(self,event=None, path=None):
         self.sim_pause()
+        self.undostack.push(self.space.make_export())
         if path:
             print(path)
             fileName=path
@@ -342,7 +348,6 @@ class mychemApp():
         self.space.merge_atoms = []
         mergedata = json.loads(f.read())
         self.recentdata = mergedata
-        #self.resetdata = mergedata 
         self.space.select_mode=0
         self.space.selected_atoms = []
         self.merge_mode=True
@@ -454,6 +459,7 @@ class mychemApp():
         if not self.recentdata:
             return
         self.sim_pause()
+        self.undostack.push(self.space.make_export())
         self.merge_atoms = []
         self.merge_mode=True
         self.select_mode=0
@@ -487,6 +493,7 @@ class mychemApp():
             self.space.merge2atoms()
         self.space.merge_pos = self.space.box/2
         self.space.merge_rot = glm.quat()
+        self.resetdata = self.space.make_export()
         self.space.atoms2compute()
         self.merge_mode = False
 
@@ -543,10 +550,8 @@ class mychemApp():
     def handle_mouseb3(self,event=None):
         if self.space.select_mode and len(self.space.selected_atoms)==1:
             self.space.compute2atoms()
-            q = self.space.atoms[self.space.selected_atoms[0]].q
-            print(f'atom q = {q}')
-            for n in self.space.atoms[self.space.selected_atoms[0]].nodes:
-                print(f'node spin={n.spin} q={n.q} type={n.type} bonded={n.bonded}') 
+            a = self.space.atoms[self.space.selected_atoms[0]]
+            #a.info()
 
 
     def handle_bond(self,event=None):
@@ -600,6 +605,7 @@ class mychemApp():
 
     def handle_add_atom(self,keysym=""):
         self.sim_pause()
+        self.undostack.push(self.space.make_export())
         self.space.select_mode = 0
         self.space.selected_atoms = []
         self.space.merge_pos.x +=25
@@ -627,6 +633,7 @@ class mychemApp():
     def handle_delete(self,event):
         if self.merge_mode:
             self.undostack.push(self.space.make_export())
+            self.resetdata = self.space.make_export()
             self.merge_mode = False
             self.space.merge_atoms = []
         if self.space.select_mode:
@@ -640,7 +647,6 @@ class mychemApp():
 
 
     def handle_release1(self,event):
-        print("release1")
         if self.motion:
             self.motion = False
             return
@@ -671,6 +677,8 @@ class mychemApp():
                     self.space.selected_atoms.remove(near_atom_i)    
                 else:
                     self.space.selected_atoms.append(near_atom_i)
+                if len(self.space.selected_atoms)==2:
+                    double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]])
             else:
                 if near_atom_i in self.space.selected_atoms:
                     self.handle_enter(event)
@@ -690,16 +698,17 @@ class mychemApp():
             self.undostack.push(self.space.make_export())
             self.space.selected2merge()
             self.merge_mode = True
-            self.space.atoms2compute()
+            #self.space.atoms2compute()
             self.space.selected_atoms = []
             return
         if self.merge_mode:
             self.space.compute2atoms()
-            self.undostack.push(self.space.make_export())
+            #self.undostack.push(self.space.make_export())
             self.merge_mode = False 
             self.space.merge2atoms()
-            self.space.atoms2compute()
             self.resetdata = self.space.make_export()
+            self.space.atoms2compute()
+            #self.resetdata = self.space.make_export()
             self.status_bar.set("Merged")
 
 
@@ -768,9 +777,11 @@ class mychemApp():
 
     def handle_scroll(self,event:tk.Event):
          shift = event.state & 1
+         rkey = event.state & 1024
+         # # print("event.state=", event.state)
          ctrl = event.state & 4
          if self.merge_mode and not ctrl:
-            if not shift:
+            if not rkey:
                 offset = 15
                 angle = 5
             else:
@@ -809,7 +820,7 @@ class mychemApp():
                     self.space.select_mode=0
          
          else:
-            if shift:
+            if rkey:
                 cameraSpeed = 0.01
             else:
                 cameraSpeed = 0.1

@@ -22,7 +22,7 @@ class Space:
         self.REPULSION1 = -6
         self.REPULSION_KOEFF1 = 5
         self.REPULSION2 = 6
-        self.REPULSION_KOEFF2= 20.0
+        self.REPULSION_KOEFF2= 50.0
         self.MASS_KOEFF = 5.0
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
@@ -35,6 +35,7 @@ class Space:
         self.record_data = tk.BooleanVar()
         self.record_data.set(False)
         self.atoms = []	
+        self.Ek = 0
         self.g = 0.001
         self.createf = 0
         self.merge_atoms = []
@@ -54,8 +55,8 @@ class Space:
         self.segmented_redox = True
         self.bondlock =tk.BooleanVar()
         self.bondlock.set(False)
-        self.animate_unbond =tk.BooleanVar()
-        self.animate_unbond.set(False)
+        self.highlight_unbond =tk.BooleanVar()
+        self.highlight_unbond.set(False)
 
         self.update_delta= 5
         self.action = None
@@ -250,7 +251,7 @@ class Space:
                 vz = a["vz"]
                 rot = glm.quat(a["rot"])
             aa = Atom(a["x"],a["y"],z, type=type )
-            aa.r = a["r"]
+            #aa.r = a["r"]
             if zerospeed and type!=666:
                 aa.v= glm.vec3(0,0,0) 
             else:
@@ -258,7 +259,7 @@ class Space:
             aa.rot = rot
             aa.calc_node_positions()
 #            aa.q=a["q"]
-            aa.m=a["m"]
+            #aa.m=a["m"]
             if "color" in a:
                 aa.color = a["color"]
 #            if not "version" in j:
@@ -268,7 +269,7 @@ class Space:
                 aa.fixed = a["fixed"]
             if "nodes" in a:
                  for n in a["nodes"]:
-                    aa.nodes[ni].q= 0 # n["q"]
+                    #aa.nodes[ni].q= 0 # n["q"]
                     if "spin" in n:
                         aa.nodes[ni].spin= n["spin"]
                     ni+=1

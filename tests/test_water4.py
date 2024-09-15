@@ -36,9 +36,9 @@ if __name__ == '__main__':
     f = random.random()*pi
     rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
     space.merge_from_file("examples/simple/H2O.json",x+40,y-40,z,rot)
-    f = random.random()*pi
-    rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
-    space.merge_from_file("examples/simple/H2O.json",x+40,y-40,z+40,rot)
+    #f = random.random()*pi
+    #rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
+    #space.merge_from_file("examples/simple/H2O.json",x+40,y-40,z+40,rot)
 
 
     #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)

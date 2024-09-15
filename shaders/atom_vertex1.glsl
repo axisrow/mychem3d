@@ -19,7 +19,7 @@ struct Atom
     float ncount;
     vec4 rot;
     vec4 rotv;
-    float animate;
+    float highlight;
     float q;
     vec4 color;
     Node nodes[5];
@@ -93,7 +93,7 @@ void main()
         if (bug){
             ObjectColor = vec4(1,0,0,1);
         }
-        if (currentAtom.animate>0) ObjectColor = vec4(0,1,0,1);
+        if (currentAtom.highlight>0) ObjectColor = vec4(0,1,0,1);
         FragPos = vposition.xyz;
         Normal = normal;
     }
