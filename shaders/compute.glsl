@@ -59,6 +59,7 @@ struct Atom
     float highlight;
     float q;
     float fxd;
+    float _pad;
     vec4 color;
     Node nodes[5];
 };

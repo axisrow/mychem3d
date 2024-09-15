@@ -55,7 +55,7 @@ class AtomC(Structure):
         ("highlight", c_float),
         ("q",  c_float),
         ("fixed", c_float),
-        ("_pad1", c_float*1),
+        ("_pad1", c_float),
         ("color", c_float*4),
         ]
     def to_ctypes(self, a):
