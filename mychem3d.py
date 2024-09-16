@@ -54,6 +54,7 @@ class mychemApp():
         self.menu_bar.add_command(label="Options", command=self.options_window)
         examples_menu = tk.Menu(self.menu_bar, tearoff=False)
         self.create_json_menu(examples_menu,"examples/")
+
         self.menu_bar.add_cascade(label="Examples", menu=examples_menu)
         self.root.config(menu=self.menu_bar)
 
@@ -231,6 +232,16 @@ class mychemApp():
             self.sim_run()
         else:
             self.sim_pause()
+
+    def handle_g(self):
+        e=tk.Event()
+        e.keysym = "g"
+        self.handle_movemode(e)
+
+    def handle_r(self,event=None):
+        e=tk.Event()
+        e.keysym= "r"
+        self.handle_movemode(e)
 
 
     def handle_movemode(self,event=None):
@@ -529,30 +540,42 @@ class mychemApp():
             self.space.select_mode = 0
             self.space.selected_atoms = []
 
-    def handle_fix(self,event):
-        print("fixed selected atoms")
+    def handle_fix(self,event=None):
         if self.space.select_mode:
             self.space.compute2atoms()
             for s in self.space.selected_atoms:
                 self.space.atoms[s].fixed = True
             self.space.atoms2compute()
-            self.status_bar.set("fixed selected atoms")
+            self.status_bar.set("fix selected atoms")
 
-    def handle_unfix(self,event):
-        print("Unfixed selected atoms")
+    def handle_unfix(self,event=None):
         if self.space.select_mode:
             self.space.compute2atoms()
             for s in self.space.selected_atoms:
                 self.space.atoms[s].fixed = False
             self.space.atoms2compute()
-            self.status_bar.set("Unfixed selected atoms")
+            self.status_bar.set("unfix selected atoms")
     
     def handle_mouseb3(self,event=None):
-        if self.space.select_mode and len(self.space.selected_atoms)==1:
+        if self.space.select_mode:
             self.space.compute2atoms()
+            self.atom_context_menu = tk.Menu(self.root,tearoff=0)
+            if len(self.space.selected_atoms)==2:
+                self.atom_context_menu.add_command(label="Bond", command=self.handle_bond)
+            self.atom_context_menu.add_command(label="Move", command=self.handle_g)
+            self.atom_context_menu.add_command(label="Rotate", command=self.handle_r)
+            self.atom_context_menu.add_command(label="Fix", command=self.handle_fix)
+            self.atom_context_menu.add_command(label="Unfix", command=self.handle_unfix)
+            self.atom_context_menu.add_command(label="Delete", command=self.handle_delete)
+            if len(self.space.selected_atoms)==1:
+                self.atom_context_menu.add_command(label="Properties", command=self.show_atom_properties)
             a = self.space.atoms[self.space.selected_atoms[0]]
+            self.atom_context_menu.tk_popup(event.x_root, event.y_root)
+            
             #a.info()
 
+    def show_atom_properties(self,event=None):
+        pass
 
     def handle_bond(self,event=None):
         if self.space.select_mode==1 and len(self.space.selected_atoms)==2:
@@ -630,7 +653,7 @@ class mychemApp():
             self.merge_mode = False
             self.space.merge_atoms = []
 
-    def handle_delete(self,event):
+    def handle_delete(self,event=None):
         if self.merge_mode:
             self.undostack.push(self.space.make_export())
             self.resetdata = self.space.make_export()
