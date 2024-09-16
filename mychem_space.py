@@ -269,7 +269,7 @@ class Space:
                 aa.fixed = a["fixed"]
             if "nodes" in a:
                  for n in a["nodes"]:
-                    #aa.nodes[ni].q= 0 # n["q"]
+                    aa.nodes[ni].q= n["q"]
                     if "spin" in n:
                         aa.nodes[ni].spin= n["spin"]
                     ni+=1
