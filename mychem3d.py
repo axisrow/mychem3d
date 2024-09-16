@@ -698,7 +698,7 @@ class mychemApp():
             self.undostack.push(self.space.make_export())
             self.space.selected2merge()
             self.merge_mode = True
-            #self.space.atoms2compute()
+            self.space.atoms2compute()
             self.space.selected_atoms = []
             return
         if self.merge_mode:
