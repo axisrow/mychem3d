@@ -190,7 +190,7 @@ class Space:
         f =  open(filename,"r")		
         self.merge_atoms = []
         mergedata = json.loads(f.read())
-        self.load_data(mergedata, merge=True)
+        r = self.load_data(mergedata, merge=True)
         self.merge_pos = glm.vec3(x,y,z)
         self.merge_rot = merge_rot
         first = self.merge2atoms()
@@ -237,6 +237,7 @@ class Space:
         return frame
 
     def load_data(self, j, merge=False, zerospeed=True):
+        errors = False
         if not merge: 
             self.atoms = []
         vers = j["vers"]
@@ -272,12 +273,15 @@ class Space:
                     aa.nodes[ni].q= n["q"]
                     if "spin" in n:
                         aa.nodes[ni].spin= n["spin"]
+                    if (aa.nodes[ni].q!=0.0 and aa.nodes[ni].spin!=0.0) or (aa.nodes[ni].q==0.0 and aa.nodes[ni].spin==0.0): 
+                        print("Inconsistent spin and q!")
+                        errors = True
                     ni+=1
             if merge:
                 aa.space = self
                 self.merge_atoms.append(aa)
             else:
                 self.appendatom(aa)
-
+        return errors
 
 

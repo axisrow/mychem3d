@@ -79,10 +79,10 @@ def bond_atoms(a1, a2, ni1=-1, ni2=-1):
        bi2 = ni2
     print("bi1bi2" , bi1,bi2)       
     a1.nodes[bi1].q = -1
-    a1.nodes[bi1].spin = -1
+    a1.nodes[bi1].spin = 0
     a1.nodes[bi1].bonded = True
     a2.nodes[bi2].q = 1
-    a2.nodes[bi2].spin = 1
+    a2.nodes[bi2].spin = 0
     a2.nodes[bi2].bonded = True
     return True
 

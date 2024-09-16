@@ -181,8 +181,8 @@ void main()
         for (int ni = 0; ni<atom_i.ncount; ni++ ) {
             vec3 ni_realpos = rpos[i][ni].xyz;
             float ni_type = atom_i.nodes[ni].type;
-            //if (ni_type>1) continue;
-            if (atom_i.nodes[ni].spin ==0){
+            if (ni_type>1) continue;
+            if (atom_i.nodes[ni].spin ==0 && atom_i.nodes[ni].q==0){
                 for (int j=0;j<i;j++){  //half matrix
                     Atom atom_j = In.atoms[j];
                     vec3 pos_j = atom_j.pos.xyz;
@@ -192,7 +192,7 @@ void main()
                     for (int nj = 0; nj<atom_j.ncount; nj++){
                         vec3 nj_realpos = rpos[j][nj].xyz;
                         float nj_type = atom_j.nodes[nj].type;
-                        //if (nj_type>1) continue;
+                        if (nj_type>1) continue;
                         vec3 ndelta =  ni_realpos - nj_realpos + delta;
                         float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                         if (rn<BONDR){
@@ -216,7 +216,7 @@ void main()
                         }
                     }
                 }
-                if (In.atoms[i].nodes[ni].spin==0) In.atoms[i].nodes[ni].spin=1;
+                if (In.atoms[i].nodes[ni].spin==0) In.atoms[i].nodes[ni].spin= 2*mod(i+ni,2)-1;
             }
         }                
         return;
@@ -268,14 +268,14 @@ void main()
             if (pos_i.x<300){
                 if (rand(v_i.xy)>=0.9994) {
                     atom_i.nodes[0].q = 1;
-                    atom_i.nodes[0].spin = 1;
+                    atom_i.nodes[0].spin = 0;
                     atom_i.highlight = 500;                    
                 }
             }
             if (pos_i.x>WIDTH-300){
                 if (rand(v_i.xy)>=0.9994) {
                     atom_i.nodes[0].q = -1;
-                    atom_i.nodes[0].spin = -1;
+                    atom_i.nodes[0].spin = 0;
                     atom_i.highlight = 500;
                 }
             }    
@@ -339,6 +339,7 @@ void main()
                             if (ni_spin + nj_spin==0 && ni_q + nj_q == 0 && ni_type!=2 && nj_type!=2){
                                 qshift_buffer[i][ni]=0.3*edelta + 0.1*(atom_j.q-atom_i.q);
                                 atom_i.nodes[ni].q = 0;
+                                atom_i.nodes[ni].spin = 2*int(i<j)-1;   //+mod(time,2)?
                                 bondcheck[ni]=1.0;
                                 f3 = -rn* BOND_KOEFF;
                                 //v_i *=0.01;
@@ -354,11 +355,11 @@ void main()
                             f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                         }
                         
-                        if (rn>1.0 && ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0  ){
+                        if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0  ){
                             f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
                         }
                                         
-                        if (rn>1.0 && ni_bonded == 0.0 && nj_bonded==0.0 && ni_q + nj_q==0 && ni_spin + nj_spin==0 ){ 
+                        if (ni_bonded == 0.0 && nj_bonded==0.0 && ni_q + nj_q==0 ){ 
                             f3+= ni_q * nj_q * INTERACT_KOEFF2/rn/rn;
                         }
                         
@@ -368,7 +369,7 @@ void main()
                                 ndelta =  ni_realpos - nj_realpos + delta;
                                 rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                                 float conus_i  = dot(ni_realpos,-delta)/atom_i.r/length(delta);
-                                if(rn>1.0 && rn< 40 &&  conus_i>CONUS_KOEFF){   //rn>BONDR &&
+                                if(rn< 20 &&  conus_i>CONUS_KOEFF){   //rn>BONDR &&
                                     f3+= atom_j.q* ni_q  * INTERACT_KOEFF/rn;
                                     //atom_i.highlight = 2;                    
                                     
@@ -423,7 +424,7 @@ void main()
                     float rn = distance(pos_i, pos_j + nj_realpos);
                     float conus_j  = dot(nj_realpos, delta)/length(delta)/atom_j.r;
                     //if (rn==0) continue;
-                    if(rn>1  && rn< 40 && conus_j>CONUS_KOEFF){   //rn>BONDR &&
+                    if(rn< 20 && conus_j>CONUS_KOEFF){   //rn>BONDR &&
                                     float f3= atom_i.q* nj_q  * INTERACT_KOEFF/rn;
                                     F += ndelta/rn*f3;                                    
                                     //atom_i.highlight = 2;
@@ -449,9 +450,11 @@ void main()
             }                
             if(qshift_buffer[i][ni]>0){
                 atom_i.nodes[ni].q= 1;
+                atom_i.nodes[ni].spin= 0;
             }
             if(qshift_buffer[i][ni]<0){
                 atom_i.nodes[ni].q=-1;
+                atom_i.nodes[ni].spin= 0;
             }
             qshift_buffer[i][ni] = 0;
         }

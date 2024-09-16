@@ -363,11 +363,15 @@ class mychemApp():
         self.space.select_mode=0
         self.space.selected_atoms = []
         self.merge_mode=True
-        self.space.load_data(mergedata, merge=True)
+        r = self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
         #self.space.atoms2compute()
         #self.canvas.configure(cursor="hand2")
-        self.status_bar.set("Merging mode")
+        if r: 
+            tk.messagebox.showerror("error", f"Import errors, check console!")
+            self.status_bar.set("import errors!  Merging mode")
+        else:
+            self.status_bar.set("Merging mode")
         f.close()
 
     def acr2type(self, acr):
@@ -1075,12 +1079,20 @@ class AtomProperties(tk.Toplevel):
         self.button1 = ttk.Button(self.button_frame, text="Cancel",command=self.cancel).pack(side=tk.LEFT,padx=10)
 
     def save(self):
+        allgood = True
         for i in range(len(self.a.nodes)):
             node = self.a.nodes[i]
-            node.q = float(node.node_q.get())
-            node.spin = float(node.node_spin.get())
-        print("Save")
-        self.destroy()
+            q = float(node.node_q.get())
+            spin = float(node.node_spin.get())
+            if (q!=0.0 and spin!=0.0) or (q==0.0 and spin==0.0): 
+                tk.messagebox.showerror("error", f"Inconsistent spin and q for node {i}")
+                allgood = False
+                break
+            node.q = q
+            node.spin = spin
+        if allgood:
+            print("Save")
+            self.destroy()
         pass
 
     def cancel(self):

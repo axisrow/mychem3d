@@ -149,6 +149,7 @@ class Atom():
             n = Node(self)    
             n.type =2 
             n.q=-1
+            n.spin = 0
             n.f = 0
             n.f2 = glm.radians(-90)
             self.nodes.append(n)
@@ -168,10 +169,12 @@ class Atom():
             n3.f2 = glm.radians(120) 
             n3.type = 2
             n3.q = -1
+            n3.spin = 0
             n4.f = glm.radians(52.0)
             n4.f2 = glm.radians(-120) 
             n4.type = 2
             n4.q = -1
+            n4.spin = 0
             self.nodes.extend([n1,n2,n3,n4])
 
 
