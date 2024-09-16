@@ -1,5 +1,6 @@
 #!/usr/bin/python3.9
 import tkinter as tk
+from tkinter import ttk
 import tkinter.filedialog as filedialog
 import time
 from math import sin,cos,log,sqrt
@@ -568,13 +569,19 @@ class mychemApp():
             self.atom_context_menu.add_command(label="Unfix", command=self.handle_unfix)
             self.atom_context_menu.add_command(label="Delete", command=self.handle_delete)
             if len(self.space.selected_atoms)==1:
-                self.atom_context_menu.add_command(label="Properties", command=self.show_atom_properties)
+                self.atom_context_menu.add_command(label="Properties", command=lambda: self.show_atom_properties(self.space.atoms[self.space.selected_atoms[0]]))
             a = self.space.atoms[self.space.selected_atoms[0]]
             self.atom_context_menu.tk_popup(event.x_root, event.y_root)
             
             #a.info()
 
-    def show_atom_properties(self,event=None):
+    def show_atom_properties(self,a:Atom):
+        ap = AtomProperties(self.root,a)
+        print("dialog")
+        ap.grab_set()
+        ap.wait_window()
+        self.space.atoms2compute()
+        print("end dialog")
         pass
 
     def handle_bond(self,event=None):
@@ -1018,6 +1025,78 @@ class OptionsFrame():
         self.glframe.update_uniforms=True
 
     
+class AtomProperties(tk.Toplevel):
+    def __init__(self, root, a:Atom):
+        super().__init__(root)
+        self.a = a
+        self.title("Atom properties")
+        self.resizable(0, 0)
+        self.geometry('420x300')
+        self.main_frame = tk.Frame(self)
+        self.main_frame.pack()
+        self.type_frame = tk.Frame(self.main_frame)
+        self.type_frame.pack()
+        self.type_label = tk.Label(self.type_frame, text="Atom type:").pack(side=tk.LEFT)
+        self.type = tk.Label(self.type_frame, text=str(a.type)).pack(side=tk.RIGHT)
+        self.pos_frame = tk.Frame(self.main_frame)
+        self.pos_frame.pack()
+        self.pos_label = tk.Label(self.pos_frame, text="Position:").pack(side=tk.LEFT)
+        self.pos = tk.Label(self.pos_frame, text=str(a.pos)).pack(side=tk.RIGHT)
+        #from tkinter import colorchooser
+        #colorchooser.askcolor(initialcolor='#ff0000')
+        self.fnodes = {}
+        self.nodes_frame = tk.Frame(self)
+        self.nodes_frame.pack()
+        self.nodes_label = tk.Label(self.nodes_frame, text="Nodes:").pack(side=tk.LEFT)
+        for i in range(len(a.nodes)):
+            node = self.a.nodes[i]
+            self.fnodes[i] = tk.Frame(self.nodes_frame)
+            node_type_label = tk.Label(self.fnodes[i], text="Type:").pack(side=tk.LEFT)
+            node_type = tk.Label(self.fnodes[i], text=node.type).pack(side=tk.LEFT)
+            node_spin_label = tk.Label(self.fnodes[i], text="Spin:").pack(side=tk.LEFT)
+            node_spin = ttk.Combobox(self.fnodes[i], values=[-1, 0, 1], width=5,state="readonly")
+            node_spin.pack(side=tk.LEFT)
+            node_spin.set(str(int(node.spin)))
+            node_q_label = tk.Label(self.fnodes[i], text="q:").pack(side=tk.LEFT)
+            node_q = ttk.Combobox(self.fnodes[i], values=[-1, 0, 1], width=5,state="readonly")
+            node_q.pack(side=tk.LEFT)
+            node_q.set(str(int(node.q)))
+            node_bonded_label = tk.Label(self.fnodes[i], text="Bonded:"+str(node.bonded)).pack(side=tk.LEFT)
+            setattr(node, 'node_spin',node_spin)
+            setattr(node, 'node_q',node_q)
+
+            #fnodes
+#            self.node_spin.set(node[i].spin)  
+            self.fnodes[i].pack()
+            
+        self.button_frame = tk.Frame(self)
+        self.button_frame.pack(pady=20)
+        self.button0 = ttk.Button(self.button_frame, text="ОК", command=self.save).pack(side=tk.LEFT,padx=10)
+        self.button1 = ttk.Button(self.button_frame, text="Cancel",command=self.cancel).pack(side=tk.LEFT,padx=10)
+
+    def save(self):
+        for i in range(len(self.a.nodes)):
+            node = self.a.nodes[i]
+            node.q = float(node.node_q.get())
+            node.spin = float(node.node_spin.get())
+        print("Save")
+        self.destroy()
+        pass
+
+    def cancel(self):
+        self.destroy()
+#        self.type_entry.configure(state="readonly") 
+
+
+        #self.mass_entry.insert(0, str(self.main_object.mass))
+        #self.mass_entry.pack()
+        #self.mass_entry.insert(0, str(self.main_object.mass))
+        #self.mass_label = tk.Label(self, text="Масса:")
+        #self.mass_label.pack()
+        #self.apply_button = tk.Button(self, text="Применить", command=self.apply_changes)
+        #self.apply_button.pack(pady=10)
+
+
 
 if __name__ == '__main__':
     mychemApp().run()
