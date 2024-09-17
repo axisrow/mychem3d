@@ -149,6 +149,7 @@ class mychemApp():
         data = self.undostack.pop()
         if data is not None:
             self.space.load_data(data)
+            self.resetdata = data
             self.space.atoms2compute()
             self.status_bar.set('Undo')
 
@@ -483,6 +484,7 @@ class mychemApp():
         self.space.load_data(self.recentdata, merge=True)
         #self.space.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
+        self.space.merge_pos+=glm.vec3(20,0,0)    
         self.status_bar.set("Merging mode")
         
     def handle_random_recent(self,event=None):
@@ -561,12 +563,25 @@ class mychemApp():
             self.space.atoms2compute()
             self.status_bar.set("unfix selected atoms")
     
+    def handle_dublicate(self,event=None):
+        if self.space.select_mode:
+            self.undostack.push(self.space.make_export())
+            self.space.selected2merge(duble=True)
+            self.merge_mode = True
+            self.space.select_mode = False
+            
+            
+            
+
+        
+
     def handle_mouseb3(self,event=None):
         if self.space.select_mode:
             self.space.compute2atoms()
             self.atom_context_menu = tk.Menu(self.root,tearoff=0)
             if len(self.space.selected_atoms)==2:
                 self.atom_context_menu.add_command(label="Bond", command=self.handle_bond)
+            self.atom_context_menu.add_command(label="Dublicate", command=self.handle_dublicate)
             self.atom_context_menu.add_command(label="Move", command=self.handle_g)
             self.atom_context_menu.add_command(label="Rotate", command=self.handle_r)
             self.atom_context_menu.add_command(label="Fix", command=self.handle_fix)

@@ -254,5 +254,13 @@ class Atom():
         for n in self.nodes:
             print(f'node spin={n.spin} q={n.q} type={n.type} bonded={n.bonded}') 
 
-
+    def copy(self):
+        a = Atom(self.pos.x, self.pos.y,self.pos.z, self.type)
+        a.rot = self.rot
+        #a.rotv = self.rotv
+        for i in range(len(self.nodes)):
+            a.nodes[i].q = self.nodes[i].q
+            a.nodes[i].spin = self.nodes[i].spin
+            a.nodes[i].bonded = self.nodes[i].bonded
+        return a            
 
