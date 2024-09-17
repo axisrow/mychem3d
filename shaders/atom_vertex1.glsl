@@ -104,7 +104,11 @@ void main()
         Atom currentAtom = In.atoms[gl_InstanceID];
         float alpha = currentAtom.color.w;
         //vec3 nodepos = rotate_vector(currentAtom.nodes[nodeindex].pos.xyz, currentAtom.rot);
-        vec3 nodepos = rpos[gl_InstanceID][nodeindex].xyz;
+        vec3 nodepos;
+        if (nodeindex<currentAtom.ncount)
+            nodepos = rpos[gl_InstanceID][nodeindex].xyz;
+        else nodepos = vec3(0);
+
         nodepos += currentAtom.pos.xyz;
         vec4 vposition = vec4(position * 1 * factor +  nodepos*factor, 1.0f) ;
         gl_Position = projection * view * vposition;
