@@ -267,10 +267,13 @@ class Atom():
 
     def select_first_unbond(self):
         ncount = len(self.nodes)
-        while(self.nodeselect<ncount):
-            self.nodeselect+=1
-            if not self.nodes[self.nodeselect].bonded and self.nodes[self.nodeselect].type!=2:
+        select = 0
+        while(select <ncount):
+            if not self.nodes[select].bonded and self.nodes[select].type!=2:
+                self.nodeselect = select
                 break
+            select+=1
+
         
 
     def select_next_node(self):

@@ -373,7 +373,7 @@ class AppOgl(OpenGLFrame):
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
                 self.atomMesh.draw(self.shader)
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
-                if len(self.space.selected_atoms)<=2:
+                if len(self.space.selected_atoms)<=2 and a.nodeselect!=-1:
                     n = a.nodes[a.nodeselect]
                     pos = a.rot * n.pos *1.1
                     pos += a.pos
