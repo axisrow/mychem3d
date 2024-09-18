@@ -612,6 +612,8 @@ class mychemApp():
                        )
             if r: 
                 self.status_bar.set("Bond atoms ok")
+                self.space.atoms[self.space.selected_atoms[0]].nodeselect=-1
+                self.space.atoms[self.space.selected_atoms[1]].nodeselect=-1
                 self.space.atoms2compute()
             else: 
                 self.status_bar.set("Bond atoms fail")
@@ -736,6 +738,8 @@ class mychemApp():
                     return
                 self.space.selected_atoms = [near_atom_i]
             self.space.select_mode = 1
+            if self.space.atoms[self.space.selected_atoms[0]].nodeselect==-1:
+                self.space.atoms[self.space.selected_atoms[0]].select_first_unbond()
         else:
             self.space.selected_atoms = []
             self.space.select_mode = 0
