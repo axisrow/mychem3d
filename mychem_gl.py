@@ -373,7 +373,19 @@ class AppOgl(OpenGLFrame):
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
                 self.atomMesh.draw(self.shader)
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
-        
+                if len(self.space.selected_atoms)<=2:
+                    n = a.nodes[a.nodeselect]
+                    pos = a.rot * n.pos *1.1
+                    pos += a.pos
+                    model =  glm.mat4()
+                    model =  glm.translate(model, pos * self.factor  )
+                    model =  glm.scale(model,glm.vec3(self.factor*0.2*a.r))
+                    self.nodeMesh.color = (1.0,0.0,1.0,1.0) 
+                    self.nodeMesh.modelmatrix = model
+                    self.nodeMesh.draw(self.shader)                
+                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+
+
         gl.glDisable(gl.GL_CULL_FACE);
         gl.glUseProgram(0)
 

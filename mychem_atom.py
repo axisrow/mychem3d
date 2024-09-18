@@ -112,6 +112,7 @@ class Atom():
         self.MAXVELOCITY = 1
         self.UNBONDEDCOLOR = (1,1,1)
         self.BONDEDCOLOR = "orange"
+        self.nodeselect = 0
         
         if self.type==1:
             self.color = (0.0,0.0,1.0,1.0)
@@ -262,5 +263,14 @@ class Atom():
             a.nodes[i].q = self.nodes[i].q
             a.nodes[i].spin = self.nodes[i].spin
             a.nodes[i].bonded = self.nodes[i].bonded
-        return a            
+        return a       
+
+    def select_next_node(self):
+        ncount = len(self.nodes)
+        self.nodeselect +=1
+        for i in range(2):
+            if self.nodeselect<ncount and self.nodes[self.nodeselect].type==2:
+                self.nodeselect +=1
+        if self.nodeselect>=ncount:
+            self.nodeselect = 0
 

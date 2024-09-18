@@ -392,7 +392,7 @@ class mychemApp():
         links_counter =0
         #data = 
         counter = 0
-        result = True
+        result = Truef
         for l in f:
             counter+=1
             if counter<3: continue
@@ -606,7 +606,9 @@ class mychemApp():
     def handle_bond(self,event=None):
         if self.space.select_mode==1 and len(self.space.selected_atoms)==2:
             r= bond_atoms(self.space.atoms[self.space.selected_atoms[0]],
-                       self.space.atoms[self.space.selected_atoms[1]]
+                       self.space.atoms[self.space.selected_atoms[1]],
+                       self.space.atoms[self.space.selected_atoms[0]].nodeselect,
+                       self.space.atoms[self.space.selected_atoms[1]].nodeselect
                        )
             if r: 
                 self.status_bar.set("Bond atoms ok")
@@ -779,7 +781,9 @@ class mychemApp():
 
     def handle_mouseb2(self,event:tk.Event):
         if self.space.select_mode:
-            self.handle_enter(event)
+            if len(self.space.selected_atoms)==1:
+                self.space.atoms[self.space.selected_atoms[0]].select_next_node()
+            #self.handle_enter(event)
 
         
         
