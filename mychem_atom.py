@@ -191,7 +191,7 @@ class Atom():
         if self.type==15: #P
             self.color = (128/255,64/255,48/255,1.0)
             self.m= 31
-            self.r = 18
+            self.r = 14
             (n1,n2,n3,n4,n5) = (Node(self),Node(self),Node(self),Node(self),Node(self))
             n1.f = 0
             n1.f2 = 0
