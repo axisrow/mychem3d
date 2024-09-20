@@ -1084,11 +1084,14 @@ class AtomProperties(tk.Toplevel):
             node_spin = ttk.Combobox(self.fnodes[i], values=[-1, 0, 1], width=5,state="readonly")
             node_spin.pack(side=tk.LEFT)
             node_spin.set(str(int(node.spin)))
+            node_spin.bind("<<ComboboxSelected>>", lambda event, x=i: self.node_spin_changed(x))
             node_q_label = tk.Label(self.fnodes[i], text="q:").pack(side=tk.LEFT)
             node_q = ttk.Combobox(self.fnodes[i], values=[-1, 0, 1], width=5,state="readonly")
+            node_q.bind("<<ComboboxSelected>>", lambda event, x=i: self.node_q_changed(x))
             node_q.pack(side=tk.LEFT)
             node_q.set(str(int(node.q)))
-            node_bonded_label = tk.Label(self.fnodes[i], text="Bonded:"+str(node.bonded)).pack(side=tk.LEFT)
+            bonded = "bonded" if node.bonded else ""
+            node_bonded_label = tk.Label(self.fnodes[i], text=bonded).pack(side=tk.LEFT)
             setattr(node, 'node_spin',node_spin)
             setattr(node, 'node_q',node_q)
 
@@ -1100,6 +1103,21 @@ class AtomProperties(tk.Toplevel):
         self.button_frame.pack(pady=20)
         self.button0 = ttk.Button(self.button_frame, text="ОК", command=self.save).pack(side=tk.LEFT,padx=10)
         self.button1 = ttk.Button(self.button_frame, text="Cancel",command=self.cancel).pack(side=tk.LEFT,padx=10)
+
+    def node_q_changed(self,i):
+        node = self.a.nodes[i]        
+        q = node.node_q.get()
+        if q in ["-1", "1"]: newspin = "0"
+        if q=="0": newspin = "1"
+        node.node_spin.set(newspin)
+
+    def node_spin_changed(self,i):
+        node = self.a.nodes[i]        
+        spin = node.node_spin.get()
+        if spin in ["-1", "1"]: newq = "0"
+        if spin=="0": newq = "1"
+        node.node_q.set(newq)
+
 
     def save(self):
         allgood = True
