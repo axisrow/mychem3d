@@ -15,14 +15,14 @@ class Space:
         self.ucounter = 0
         self.setSize(width,height,depth)
         self.debug = False
-        self.BOND_KOEFF = 0.2
+        self.BOND_KOEFF = 0.1
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 1.0
         self.ROTA_KOEFF = 10
         self.REPULSION1 = -6
         self.REPULSION_KOEFF1 = 5
         self.REPULSION2 = 6
-        self.REPULSION_KOEFF2= 50.0
+        self.REPULSION_KOEFF2= 15.0
         self.MASS_KOEFF = 5.0
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering

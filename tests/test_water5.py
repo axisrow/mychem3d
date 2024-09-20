@@ -16,12 +16,17 @@ def action1(space):
     global f
     if space.t==1:    #OH
         random.seed(1)
-        for i in range(0,200):
+        (x,y,z)=(20,20,20)
+        for i in range(0,700):
             f = random.random()*pi
             rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
-            x = random.randint(0,space.WIDTH)
-            y = random.randint(0,space.HEIGHT)
-            z = random.randint(0,space.DEPTH)        
+            x+=40
+            if x>450: 
+                y+=40
+                x=20
+            if y>450:
+                z+=40
+                y=20
             i=space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
         #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
         space.atoms2compute()
@@ -32,7 +37,7 @@ if __name__ == '__main__':
 #
     App = mychemApp()
     space = App.space
-    space.setSize(500,500,100)
+    space.setSize(500,500,500)
 
     space.update_delta = 10
     space.REPULSION_KOEFF2 = 20.0

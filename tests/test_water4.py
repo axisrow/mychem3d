@@ -44,6 +44,7 @@ if __name__ == '__main__':
     #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
 
     space.update_delta = 5
+    
      #space.recording = True
     #space.appendmixer(1)
     #space.redox.set(True)

@@ -23,6 +23,7 @@ def action1(space):
             dz = random.randint(0,space.DEPTH)
             i1=space.merge_from_file("examples/simple/OH.json",x+dx,y+dz,z+dy,rot)
             space.atoms[i1].nodes[1].q=-1
+            space.atoms[i1].nodes[1].spin=0
 #        for i in range(0,20):
 #            f = random.random()*pi
 #            rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
@@ -73,8 +74,8 @@ if __name__ == '__main__':
     space = App.space
     space.setSize(1000,300,300)
     space.action = action1
-    space.INTERACT_KOEFF = 0.4
-    space.BOND_KOEFF = 0.2
+    #space.INTERACT_KOEFF = 0.4
+    #space.BOND_KOEFF = 0.2
     #space.ROTA_KOEFF = 1
     #space.REPULSION_KOEFF2=0.4
     space.update_delta = 10
