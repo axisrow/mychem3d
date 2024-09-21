@@ -110,6 +110,7 @@ class mychemApp():
         #self.root.bind("<FocusIn>"), self.handle_focusin
         self.glframe = AppOgl(self.root, width=1024, height=600)
         self.glframe.bind("<B1-Motion>", self.handle_mouse1move)
+        self.glframe.bind("<B3-Motion>", self.handle_mouse3move)
         self.glframe.bind("<Motion>", self.handle_motion)
         self.glframe.bind("<ButtonRelease-1>", self.handle_release1)
         self.glframe.bind("<MouseWheel>", self.handle_scroll)
@@ -804,19 +805,33 @@ class mychemApp():
         self.lastX = event.x
         self.lastY = event.y
         sense = 0.1
+        if shift:
+            sense = 0.01
         offsetx *= sense
         offsety *= sense
-        if shift:
-            self.glframe.cameraPos -= glm.normalize(glm.cross(self.glframe.cameraFront, self.glframe.cameraUp)) * offsetx*0.05
-            self.glframe.cameraPos += self.glframe.cameraUp * offsety*0.05
-        else:
-            self.glframe.pitch -=offsety
-            self.glframe.yaw += offsetx
-            if self.glframe.pitch > 89:
-                self.glframe.pitch = 89
-            if self.glframe.pitch < -89:
-                self.glframe.pitch = -89
+        self.glframe.pitch -=offsety
+        self.glframe.yaw += offsetx
+        if self.glframe.pitch > 89:
+           self.glframe.pitch = 89
+        if self.glframe.pitch < -89:
+           self.glframe.pitch = -89
         #print(f'yaw={self.glframe.yaw} pitch{self.glframe.pitch} pos={self.glframe.cameraPos}')
+
+
+    def handle_mouse3move(self,event:tk.Event):
+        shift = event.state & 1
+        offsetx = event.x - self.lastX 
+        offsety = event.y - self.lastY
+        self.lastX = event.x
+        self.lastY = event.y
+        sense = 0.1
+        if shift:        
+            sense = 0.01
+        offsetx *= sense
+        offsety *= sense
+        
+        self.glframe.cameraPos -= glm.normalize(glm.cross(self.glframe.cameraFront, self.glframe.cameraUp)) * offsetx*0.05
+        self.glframe.cameraPos += self.glframe.cameraUp * offsety*0.05
 
 
     def handle_motion(self,event:tk.Event):
@@ -839,7 +854,7 @@ class mychemApp():
          # # print("event.state=", event.state)
          ctrl = event.state & 4
          if self.merge_mode and not ctrl:
-            if not rkey:
+            if not shift:
                 offset = 15
                 angle = 5
             else:
@@ -878,7 +893,7 @@ class mychemApp():
                     self.space.select_mode=0
          
          else:
-            if rkey:
+            if shift:
                 cameraSpeed = 0.01
             else:
                 cameraSpeed = 0.1

@@ -12,8 +12,9 @@ Tested on:
 Be careful. This application may create misconceptions about chemical interactions
 
 Controls:
--    Mouse + click -  rotate camera
--    Mouse + shift + click  - move camera
+-    Mouse + left button  -  rotate camera
+-    Mouse + right button - move camera left and right
+-     +shift - gently
 -    Mouse wheel - move camera forward and back
 
  In merge mode (adding atoms or files):
