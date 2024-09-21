@@ -496,7 +496,10 @@ class mychemApp():
         self.space.select_mode = 0
         self.space.selected_atoms = []
         (center,distant) = self.space.get_atoms_distant(self.space.merge_atoms)
-        for i in range(0,10):
+        howmany = tk.simpledialog.askinteger("How many?", "How many random merges? ")
+        if howmany == None:
+            howmany = 10
+        for i in range(0,howmany):
             self.space.merge_atoms = []
             distant = glm.round(distant)
             x= random.randint(distant.x+10,self.space.WIDTH-distant.x-10)
