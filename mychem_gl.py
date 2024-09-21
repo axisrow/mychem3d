@@ -14,6 +14,7 @@ from mychem_data import cube_vertices
 from mychem_atom import Node,AtomC,NodeC
 from array import array
 from mesh import Mesh
+import tkinter as tk
 import threading
 import json
 
@@ -48,7 +49,8 @@ class AppOgl(OpenGLFrame):
         self.nearatomsmax = 5000
         self.LOCALSIZEX = 64
         self.nearflag = False
-        self.drawnodes = True
+        self.drawnodes =  tk.BooleanVar()
+        self.drawnodes.set(True)
         self.update_uniforms = True
     
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
@@ -240,6 +242,7 @@ class AppOgl(OpenGLFrame):
             self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
             self.loc.update( {"HEAT": gl.glGetUniformLocation(self.gpu_code, "HEAT") })
             self.loc.update( {"highlight_unbond": gl.glGetUniformLocation(self.gpu_code, "highlight_unbond") })
+            self.loc.update( {"sideheat": gl.glGetUniformLocation(self.gpu_code, "sideheat") })
             self.loc.update( {"view": gl.glGetUniformLocation(self.shader, "view") })
             self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
@@ -338,7 +341,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1i(self.loc["transparency"],1)
         gl.glUniform1i(self.loc["mode"],1)
         gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
-        if self.drawnodes:
+        if self.drawnodes.get():
             gl.glUniform1i(self.loc["mode"],2)
             self.nodeMesh.bind()
             for i in range(0,5):
@@ -406,6 +409,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
             gl.glUniform1f(self.loc["HEAT"],self.space.heat)
+            gl.glUniform1i(self.loc["sideheat"],self.space.sideheat.get())
             gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond.get())
             print("set compute vars")
 

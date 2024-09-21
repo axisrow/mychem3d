@@ -1014,6 +1014,11 @@ class OptionsFrame():
         self.sizez_slider.grid(row=9,column=1)
         self.sizez_slider.set(int(self.space.DEPTH/100))
 
+        self.label10 = tk.Checkbutton(a, text="Show nodes",variable=self.glframe.drawnodes).grid(row=10,column=0)
+        self.label11 = tk.Checkbutton(a, text="Side heat",variable=self.space.sideheat, command=self.set_sideheat).grid(row=11,column=0)
+        
+
+
     def set_delta(self,value):
         self.space.update_delta = int(value)
 
@@ -1041,6 +1046,10 @@ class OptionsFrame():
     
     def set_massk(self,value):
         self.space.MASS_KOEFF = float(value)
+        self.glframe.update_uniforms=True
+
+    def set_sideheat(self):
+        print("set sideheat")
         self.glframe.update_uniforms=True
 
     def set_size(self,value):

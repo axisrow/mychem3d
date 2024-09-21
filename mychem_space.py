@@ -57,6 +57,8 @@ class Space:
         self.bondlock.set(False)
         self.highlight_unbond =tk.BooleanVar()
         self.highlight_unbond.set(False)
+        self.sideheat =tk.BooleanVar()
+        self.sideheat.set(False)
 
         self.update_delta= 5
         self.action = None

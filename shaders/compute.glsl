@@ -11,6 +11,7 @@ uniform int gravity;
 uniform int redox;
 uniform int shake;
 uniform int highlight_unbond;
+uniform int sideheat;
 
 //uniform float frame_time;
 float BONDR = 4;
@@ -385,7 +386,7 @@ void main()
                                 ndelta =  ni_realpos - nj_realpos + delta;
                                 rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                                 float conus_i  = dot(ni_realpos,-delta)/atom_i.r/length(delta);
-                                if(rn> 6 &&  rn< 30 &&  conus_i>CONUS_KOEFF){   //rn>BONDR &&
+                                if(rn> 6 && rn<60 &&  conus_i>CONUS_KOEFF){  
                                     f3+= atom_j.q* ni_q  * INTERACT_KOEFF/rn;
                                     //atom_i.highlight = 2;                    
                                     
@@ -442,7 +443,7 @@ void main()
                     float rn = distance(pos_i, pos_j + nj_realpos);
                     float conus_j  = dot(nj_realpos, delta)/length(delta)/atom_j.r;
                     //if (rn==0) continue;
-                    if(rn> 6 && rn< 30 && conus_j>CONUS_KOEFF){   //rn>BONDR &&
+                    if(rn> 6 && rn<60 && conus_j>CONUS_KOEFF){   
                                     float f3= atom_i.q* nj_q  * INTERACT_KOEFF/rn;
                                     F += ndelta/rn*f3;                                    
                                     //atom_i.highlight = 5;
@@ -493,11 +494,14 @@ void main()
     }
 
 //heating
-   v_i +=  v_i * HEAT*0.0001;      
+   if (sideheat==1){
+        if (pos_i.y<100.0) v_i +=  v_i * HEAT*0.0005;      
+   }
+   else v_i +=  v_i * HEAT*0.0005;      
    
  
  //gravity
-   if (gravity==1) v_i.y -= 0.00001; //gravity
+   if (gravity==1) v_i.y -= 0.0001; //gravity
 
    //if (pos_i.y < 30) v_i.y += 0.1;
      
