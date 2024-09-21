@@ -602,7 +602,7 @@ class mychemApp():
         ap = AtomProperties(self.root,a)
         ap.grab_set()
         ap.wait_window()
-        if ap.save:
+        if ap.saved:
             self.space.atoms2compute()
 
     def handle_bond(self,event=None):
@@ -1081,7 +1081,7 @@ class AtomProperties(tk.Toplevel):
     def __init__(self, root, a:Atom):
         super().__init__(root)
         self.a = a
-        self.save = False
+        self.saved = False
         self.title("Atom properties")
         self.resizable(0, 0)
         self.geometry('420x300')
@@ -1126,9 +1126,6 @@ class AtomProperties(tk.Toplevel):
             
             setattr(node, 'node_spin',node_spin)
             setattr(node, 'node_q',node_q)
-
-            #fnodes
-#            self.node_spin.set(node[i].spin)  
             self.fnodes[i].pack()
             
         self.button_frame = tk.Frame(self)
@@ -1163,11 +1160,10 @@ class AtomProperties(tk.Toplevel):
                 break
             node.q = q
             node.spin = spin
+        print(allgood)
         if allgood:
-            print("Save")
             self.destroy()
-            self.save = True
-        pass
+            self.saved = True
 
     def cancel(self):
         self.destroy()
