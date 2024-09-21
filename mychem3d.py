@@ -599,12 +599,10 @@ class mychemApp():
 
     def show_atom_properties(self,a:Atom):
         ap = AtomProperties(self.root,a)
-        print("dialog")
         ap.grab_set()
         ap.wait_window()
-        self.space.atoms2compute()
-        print("end dialog")
-        pass
+        if ap.save:
+            self.space.atoms2compute()
 
     def handle_bond(self,event=None):
         if self.space.select_mode==1 and len(self.space.selected_atoms)==2:
@@ -1068,6 +1066,7 @@ class AtomProperties(tk.Toplevel):
     def __init__(self, root, a:Atom):
         super().__init__(root)
         self.a = a
+        self.save = False
         self.title("Atom properties")
         self.resizable(0, 0)
         self.geometry('420x300')
@@ -1081,6 +1080,10 @@ class AtomProperties(tk.Toplevel):
         self.pos_frame.pack()
         self.pos_label = tk.Label(self.pos_frame, text="Position:").pack(side=tk.LEFT)
         self.pos = tk.Label(self.pos_frame, text=str(a.pos)).pack(side=tk.RIGHT)
+        self.q_frame = tk.Frame(self.main_frame)
+        self.q_frame.pack()
+        self.q_label = tk.Label(self.q_frame, text="q = "+str(self.a.q)).pack(side=tk.RIGHT)
+
         #from tkinter import colorchooser
         #colorchooser.askcolor(initialcolor='#ff0000')
         self.fnodes = {}
@@ -1102,8 +1105,10 @@ class AtomProperties(tk.Toplevel):
             node_q.bind("<<ComboboxSelected>>", lambda event, x=i: self.node_q_changed(x))
             node_q.pack(side=tk.LEFT)
             node_q.set(str(int(node.q)))
-            bonded = "bonded" if node.bonded else ""
-            node_bonded_label = tk.Label(self.fnodes[i], text=bonded).pack(side=tk.LEFT)
+            node_bonded_label = tk.Label(self.fnodes[i], text='Bonded:'+str(node.bonded)).pack(side=tk.LEFT)
+            if a.nodeselect==i:
+                node_selected_label = tk.Label(self.fnodes[i], text='Sel').pack(side=tk.LEFT)
+            
             setattr(node, 'node_spin',node_spin)
             setattr(node, 'node_q',node_q)
 
@@ -1146,6 +1151,7 @@ class AtomProperties(tk.Toplevel):
         if allgood:
             print("Save")
             self.destroy()
+            self.save = True
         pass
 
     def cancel(self):
