@@ -121,12 +121,12 @@ class mychemApp():
         self.ttype = "mx"
         #self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
         self.glframe.grid(row=0,column=0,sticky="NSEW")
-        self.glframe.animate = 10
+        self.glframe.animate = 5
         self.glframe.set_space(self.space)
         self.space.glframe = self.glframe
         self.root.columnconfigure(index=0, weight=3)
         self.root.rowconfigure(index=0, weight=3)
-        self.heat = tk.Scale(self.root, from_ =10, to=-10,showvalue=0, length=400,command=self.setHeat)
+        self.heat = tk.Scale(self.root, from_ =20, to=-20,showvalue=0, length=400,command=self.setHeat)
         self.heat.grid(row=0, column=1)
         #   app.config(cursor="none")
         #app.after(100, app.printContext)
@@ -331,7 +331,7 @@ class mychemApp():
         self.space.select_mode = 0
         self.space.selected_atoms = []
         self.merge_mode = False
-        self.space.atoms2compute()
+        #self.space.atoms2compute(
         self.status_bar.set("New file")
 
     def file_open(self,event=None):
@@ -730,8 +730,10 @@ class mychemApp():
             if ctrl:
                 if near_atom_i in self.space.selected_atoms:
                     self.space.selected_atoms.remove(near_atom_i)    
+                    self.show_selected_q()
                 else:
                     self.space.selected_atoms.append(near_atom_i)
+                    self.show_selected_q()
                 if len(self.space.selected_atoms)==2:
                     double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]])
             else:
@@ -739,6 +741,7 @@ class mychemApp():
                     self.handle_enter(event)
                     return
                 self.space.selected_atoms = [near_atom_i]
+                self.show_selected_q()
             self.space.select_mode = 1
             if self.space.atoms[self.space.selected_atoms[0]].nodeselect==-1:
                 self.space.atoms[self.space.selected_atoms[0]].select_first_unbond()
@@ -746,7 +749,11 @@ class mychemApp():
             self.space.selected_atoms = []
             self.space.select_mode = 0
 
-
+    def show_selected_q(self):
+            q = 0
+            for i in self.space.selected_atoms:
+                q+= self.space.atoms[i].q
+            self.status_bar.set(f"q of selected = {q:.3f} ")
     
     def handle_enter(self,event:tk.Event):
         if self.space.select_mode==1:
@@ -891,7 +898,7 @@ class mychemApp():
                     self.space.selected_atoms.pop()
                 if len(self.space.selected_atoms)==0:
                     self.space.select_mode=0
-         
+            self.show_selected_q()
          else:
             if shift:
                 cameraSpeed = 0.01
