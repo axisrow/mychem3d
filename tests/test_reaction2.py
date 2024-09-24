@@ -17,9 +17,9 @@ if __name__ == '__main__':
 #    random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(1500,1000,200)
+    space.setSize(1500,500,200)
     time.sleep(1)
-    for i in range(0,800):
+    for i in range(0,400):
             #makealcohol(space,random.randint(100,900),random.randint(100,900),random.randint(100,900),3)
         #space.merge_from_file("examples/simple/NH3.json",random.randint(-500,500),random.randint(-500,500),random.randint(-500,500))
         #space.merge_from_file("examples/simple/H2O.json",random.randint(-400,500),random.randint(-500,500),random.randint(-400,400))

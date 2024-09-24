@@ -37,11 +37,12 @@ if __name__ == '__main__':
 #
     App = mychemApp()
     space = App.space
-    space.setSize(500,500,500)
+    space.setSize(600,600,500)
 
     space.update_delta = 10
-    space.REPULSION_KOEFF2 = 20.0
-    space.INTERACT_KOEFF = 0.5
+    space.REPULSION_KOEFF2 = 350.0
+    space.INTERACT_KOEFF = 5
+    space.BOND_KOEFF = 0.3
     space.action = action1
     #space.MASS_KOEFF = 5
     #space.NEARDIST=100
