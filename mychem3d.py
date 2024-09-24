@@ -126,7 +126,7 @@ class mychemApp():
         self.space.glframe = self.glframe
         self.root.columnconfigure(index=0, weight=3)
         self.root.rowconfigure(index=0, weight=3)
-        self.heat = tk.Scale(self.root, from_ =20, to=-20,showvalue=0, length=400,command=self.setHeat)
+        self.heat = tk.Scale(self.root, from_ =50, to=-50,showvalue=0, length=400,command=self.setHeat)
         self.heat.grid(row=0, column=1)
         #   app.config(cursor="none")
         #app.after(100, app.printContext)
@@ -393,7 +393,7 @@ class mychemApp():
         links_counter =0
         #data = 
         counter = 0
-        result = Truef
+        result = True
         for l in f:
             counter+=1
             if counter<3: continue
@@ -991,7 +991,7 @@ class OptionsFrame():
         self.update_slider.set(self.space.update_delta)
 
         self.label1 = tk.Label(a, text= "Interact koeff").grid(row=1,column=0)
-        self.interact_slider = tk.Scale(a, from_=0, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
+        self.interact_slider = tk.Scale(a, from_=0, to=1000, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
         self.interact_slider.grid(row=1,column=1)
         self.interact_slider.set(int(self.space.INTERACT_KOEFF*100))
 
