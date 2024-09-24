@@ -141,9 +141,10 @@ void main()
        for (int ni = 0; ni<In.atoms[i].ncount; ni++ ) {
                 rpos[i][ni].xyz = rotate_vector(In.atoms[i].nodes[ni].pos.xyz, In.atoms[i].rot);
                 q += qshift_buffer[i][ni]; 
-                if (In.atoms[i].nodes[ni].type != 2.0 ) { 
-                    q += In.atoms[i].nodes[ni].q;
+                if (In.atoms[i].nodes[ni].type == 2.0 ) { 
+                    q +=  1;
                 }
+                q +=  In.atoms[i].nodes[ni].q;
                 
        } 
        In.atoms[i].q = q;
@@ -182,7 +183,7 @@ void main()
         for (int ni = 0; ni<atom_i.ncount; ni++ ) {
             vec3 ni_realpos = rpos[i][ni].xyz;
             float ni_type = atom_i.nodes[ni].type;
-            if (ni_type>1) continue;
+            //if (ni_type>1) continue;
             if (atom_i.nodes[ni].spin ==0 && atom_i.nodes[ni].q==0){
                 for (int j=0;j<i;j++){  //half matrix
                     Atom atom_j = In.atoms[j];
@@ -193,7 +194,7 @@ void main()
                     for (int nj = 0; nj<atom_j.ncount; nj++){
                         vec3 nj_realpos = rpos[j][nj].xyz;
                         float nj_type = atom_j.nodes[nj].type;
-                        if (nj_type>1) continue;
+                        //if (nj_type>1) continue;
                         vec3 ndelta =  ni_realpos - nj_realpos + delta;
                         float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                         if (rn<BONDR){
@@ -228,7 +229,7 @@ void main()
             vec3 ni_realpos = rpos[i][ni].xyz;
             float ni_type = atom_i.nodes[ni].type;
             float bonded = 0.0;
-            if (ni_type>1) continue;
+            //if (ni_type>1) continue;
             for (int jj=1;jj<=Near.indexes[i][0];jj++){
                 int j = Near.indexes[i][jj];
                 Atom atom_j = In.atoms[j];
@@ -239,7 +240,7 @@ void main()
                 for (int nj = 0; nj<atom_j.ncount; nj++){
                     float nj_type = atom_j.nodes[nj].type;
                     vec3 nj_realpos = rpos[j][nj].xyz;
-                    if (nj_type>1) continue;
+                    //if (nj_type>1) continue;
                     vec3 ndelta =  ni_realpos - nj_realpos + delta;
                     float rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                     
@@ -352,8 +353,9 @@ void main()
                         float edelta = tbl_elneg[int(atom_j.type)] - tbl_elneg[int(atom_i.type)];
                         
                         if (rn<=BONDR  ){                        
-                            if (ni_spin + nj_spin==0 && ni_q + nj_q == 0 && ni_type!=2 && nj_type!=2){
-                                qshift_buffer[i][ni]=0.35*edelta + 0.05*(atom_j.q-atom_i.q);
+                            if (ni_spin + nj_spin==0 && ni_q + nj_q == 0){
+                                qshift_buffer[i][ni]=0.35*edelta + 0.1*(atom_j.q-atom_i.q);
+                                //if (ni_type!=2 && nj_type!=2) 
                                 atom_i.nodes[ni].q = 0;
                                 atom_i.nodes[ni].spin = 2*int(i<j)-1;   //+mod(time,2)?
                                 bondcheck[ni]=1.0;
@@ -372,7 +374,7 @@ void main()
                         }
                         
                         if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0 ){
-                            f3+= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF/rn/rn;
+                            f3+= ni_spin * nj_spin * INTERACT_KOEFF/rn/rn;
                         }
                                         
                         if (ni_bonded == 0.0 && nj_bonded==0.0 && ni_q + nj_q==0  ){ 
@@ -386,7 +388,7 @@ void main()
                                 ndelta =  ni_realpos - nj_realpos + delta;
                                 rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                                 float conus_i  = dot(ni_realpos,-delta)/atom_i.r/length(delta);
-                                if(rn> 6 && rn<60 &&  conus_i>CONUS_KOEFF){  
+                                if(rn>8  &&  conus_i>CONUS_KOEFF){  
                                     f3+= atom_j.q* ni_q  * INTERACT_KOEFF/rn;
                                     //atom_i.highlight = 2;                    
                                     
@@ -398,8 +400,8 @@ void main()
                     vec3 target_direction2 = pos_j - pos_i;
                     // nice self-align without +nj_realpos, but broke bonds, sigma&pi?
                     vec3 v1 = normalize(ni_realpos);
-                    //vec3 v2 = normalize(target_direction);
-                    vec3 v2 = normalize(mix(target_direction,target_direction2,0.1));
+                    vec3 v2 = normalize(target_direction);
+                    //vec3 v2 = normalize(mix(target_direction,target_direction2,0.1));
                     if (v1!=v2){
                             float dt = dot(v1,v2);
                             dt = clamp(dt,-1,1);
@@ -443,7 +445,7 @@ void main()
                     float rn = distance(pos_i, pos_j + nj_realpos);
                     float conus_j  = dot(nj_realpos, delta)/length(delta)/atom_j.r;
                     //if (rn==0) continue;
-                    if(rn> 6 && rn<60 && conus_j>CONUS_KOEFF){   
+                    if(rn> 8 && conus_j>CONUS_KOEFF){   
                                     float f3= atom_i.q* nj_q  * INTERACT_KOEFF/rn;
                                     F += ndelta/rn*f3;                                    
                                     //atom_i.highlight = 5;
@@ -495,18 +497,18 @@ void main()
 
 //heating
    if (sideheat==1){
-        if (pos_i.y<100.0) v_i +=  v_i * HEAT*0.0005;      
+        if (pos_i.y<50.0) v_i +=  v_i * HEAT*0.0001;      
    }
-   else v_i +=  v_i * HEAT*0.0005;      
+   else v_i +=  v_i * HEAT*0.0001;      
    
  
  //gravity
-   if (gravity==1) v_i.y -= 0.0001; //gravity
+   if (gravity==1) v_i.y -= 0.00001; //gravity
 
    //if (pos_i.y < 30) v_i.y += 0.1;
      
 //shake
-   if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.03;
+   if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.01;
 
 // far field
    //F += Far.F.xyz*0.01;
