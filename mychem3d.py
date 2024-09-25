@@ -128,6 +128,8 @@ class mychemApp():
         self.root.rowconfigure(index=0, weight=3)
         self.heat = tk.Scale(self.root, from_ =50, to=-50,showvalue=0, length=400,command=self.setHeat)
         self.heat.grid(row=0, column=1)
+        
+        
         #   app.config(cursor="none")
         #app.after(100, app.printContext)
         self.status_bar = StatusBar(self.root)
@@ -156,7 +158,7 @@ class mychemApp():
 
 
     def setHeat(self, value):
-        self.space.heat = float(value)
+        self.space.heat = value
         self.status_bar.set('heat = ' + str(value))
         self.glframe.update_uniforms = True
 

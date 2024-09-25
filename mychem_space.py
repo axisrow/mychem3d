@@ -27,7 +27,7 @@ class Space:
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
         self.NODEDIST = 60
-        self.heat = 0.0
+        self.heat = 0
         self.t = -1
         self.stoptime = -1
         self.recordtime = 0
@@ -38,7 +38,6 @@ class Space:
         self.atoms = []	
         self.Ek = 0
         self.g = 0.001
-        self.createf = 0
         self.merge_atoms = []
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
@@ -49,18 +48,15 @@ class Space:
         self.shake= tk.BooleanVar()
         self.shake.set(False)
         self.SHAKE_KOEFF = 0.5
-        self.competitive = True
         self.redox = tk.BooleanVar()
         self.redox.set(False)
         self.redox_rate = 1
-        self.segmented_redox = True
         self.bondlock =tk.BooleanVar()
         self.bondlock.set(False)
         self.highlight_unbond =tk.BooleanVar()
         self.highlight_unbond.set(False)
         self.sideheat =tk.BooleanVar()
         self.sideheat.set(False)
-
         self.update_delta= 5
         self.action = None
         self.fdata = open('data.txt',"w")

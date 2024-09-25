@@ -410,7 +410,7 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
             gl.glUniform1f(self.loc["NODEDIST"],self.space.NODEDIST)
-            gl.glUniform1f(self.loc["HEAT"],self.space.heat)
+            gl.glUniform1f(self.loc["HEAT"],float(self.space.heat))
             gl.glUniform1i(self.loc["sideheat"],self.space.sideheat.get())
             gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond.get())
             print("set compute vars")
