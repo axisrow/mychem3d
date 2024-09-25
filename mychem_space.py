@@ -26,6 +26,7 @@ class Space:
         self.MASS_KOEFF = 5.0
         self.MAXVELOCITY = 1
         self.NEARDIST = 200.0   # near atoms buffering
+        self.NODEDIST = 60
         self.heat = 0.0
         self.t = -1
         self.stoptime = -1

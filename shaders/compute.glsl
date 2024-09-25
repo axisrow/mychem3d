@@ -26,6 +26,7 @@ uniform float REPULSION_KOEFF1;
 uniform float REPULSION_KOEFF2;
 uniform float MASS_KOEFF;
 uniform float NEARDIST;
+uniform float NODEDIST;
 uniform float HEAT;
 float WIDTH = box.x;
 float HEIGHT = box.y;
@@ -302,7 +303,7 @@ void main()
             f2 = REPULSION_KOEFF2/r/r/r;
             F += delta/r*f2;
 
-            if (r<60) {
+            if (r<NODEDIST) {
                 float sumradius = atom_i.r + atom_j.r;
                 if (r<(sumradius+REPULSION1) ){
                    f2 =  REPULSION_KOEFF1/r ;
