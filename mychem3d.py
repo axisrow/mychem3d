@@ -106,6 +106,8 @@ class mychemApp():
         self.root.bind("<Alt-g>", self.handle_gravity)
         self.root.bind("<Control-z>", self.handle_undo)
         self.root.bind("0", self.handle_zero)
+        self.root.bind("<Map>", self.handle_mapunmap)
+        self.root.bind("<Unmap>", self.handle_mapunmap)
         #self.root.bind("<b>", self.handle_bondlock)
         #self.root.bind("<FocusIn>"), self.handle_focusin
         self.glframe = AppOgl(self.root, width=1024, height=600)
@@ -114,6 +116,7 @@ class mychemApp():
         self.glframe.bind("<Motion>", self.handle_motion)
         self.glframe.bind("<ButtonRelease-1>", self.handle_release1)
         self.glframe.bind("<MouseWheel>", self.handle_scroll)
+        
 
         print("glframe created")
         self.space.pause = False
@@ -129,6 +132,7 @@ class mychemApp():
         self.heat = tk.Scale(self.root, from_ =50, to=-50,showvalue=0, length=400,command=self.setHeat)
         self.heat.grid(row=0, column=1)
         
+
         
         #   app.config(cursor="none")
         #app.after(100, app.printContext)
@@ -146,6 +150,16 @@ class mychemApp():
 
     def handle_resize(self, event):
         print(event)
+
+    def handle_mapunmap(self,event):
+        if self.root.state()=="iconic":
+            self.glframe.iconic = True
+            self.glframe.animate = 0
+        else:
+            self.glframe.iconic = False
+            self.glframe.animate = 5 
+    
+
 
     def handle_undo(self,event):
         print("Undo")
