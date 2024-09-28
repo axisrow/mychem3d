@@ -114,7 +114,7 @@ def double_info(a1, a2):
     print("A1")
     a1.info()
     print("A2")
-    a1.info()
+    a2.info()
     delta = a1.pos - a2.pos
     print(f"Delta = {delta}, Distance={glm.length(delta):.3f}")
     print(f"R1 = {a1.r}, R2= {a2.r}, sumrad = {a1.r+a2.r} ")
