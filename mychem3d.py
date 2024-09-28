@@ -15,6 +15,7 @@ from mychem_functions import OnOff,UndoStack,bond_atoms,double_info
 import glm
 import random
 import OpenGL.GL as gl
+from molex import load_sdf
 
 class mychemApp():
     def init_menu(self):
@@ -392,68 +393,6 @@ class mychemApp():
             self.status_bar.set("Merging mode")
         f.close()
 
-    def acr2type(self, acr):
-        if acr=="H": return 1
-        if acr=="O": return 8
-        if acr=="N": return 7
-        if acr=="C": return 6
-        if acr=="P": return 15
-        if acr=="S": return 16
-        print("unknown atom's type")
-        return None
-
-    def load_sdf(self, f, atoms):
-        natoms = 0
-        nlinks = 0
-        atoms_counter =0
-        links_counter =0
-        #data = 
-        counter = 0
-        result = True
-        for l in f:
-            counter+=1
-            if counter<3: continue
-            if counter==4:
-                natoms = int(l[:3])
-                nlinks = int(l[3:6])
-                print(f"Loading: atoms:{natoms} links:{nlinks} ")
-                if natoms>100000 or nlinks>100000: 
-                    print(" too many natoms or links!")
-                    result = False
-                    break
-                atoms_counter = natoms
-                links_counter = nlinks
-                continue
-            if counter>4 and atoms_counter>0:
-                atoms_counter -= 1
-                sp = l.split()
-                print(f"x={float(sp[0])} y={sp[1]} z={sp[2]} type={sp[3]}")
-                x = float(sp[0])*11
-                y = float(sp[1])*11
-                z = float(sp[2])*11
-                type = self.acr2type(sp[3])
-                if type==None: 
-                    print("Error in string ", counter)
-                    result = False
-                    a = Atom(x,y,z,1)
-                    a.color = glm.vec3(0,0,0)
-                else:
-                    a = Atom(x,y,z,type)
-                a.fixed = 1.0
-                atoms.append(a)
-            if (counter>4+natoms) and links_counter>0:
-                links_counter -= 1
-                #sp = l.split()
-                n1 = int(l[:3])-1
-                n2 = int(l[3:6])-1
-                bt = int(l[6:9])
-                if bt<=3:
-                    for k in range(0,bt):
-                        #print(n1,n2)
-                        bond_atoms(atoms[n1],atoms[n2])
-        
-        return result
-
 # https://www.molinstincts.com/
     def file_import(self,event=None, path=None):
         self.sim_pause()
@@ -467,7 +406,7 @@ class mychemApp():
         f =  open(fileName,"r")		
         self.space.merge_atoms = []
 #        try:
-        result = self.load_sdf(f,self.space.merge_atoms)
+        result = load_sdf(f,self.space.merge_atoms)
         f.close()
         mergedata = self.space.make_export(self.space.merge_atoms)
 #        except Exception as e:
