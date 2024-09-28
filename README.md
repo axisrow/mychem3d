@@ -35,6 +35,7 @@ Selection atoms
   -  ctrl + alt + s - save selected atoms
   -  "b" - try to bond two selected atoms with selected nodes, resutl in statusbar
   -   middle button for change selected node in selected atom
+  - Right mouse button on selected - context menu for actions
 
 
 
