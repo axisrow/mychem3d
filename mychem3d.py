@@ -690,7 +690,7 @@ class mychemApp():
                     self.space.selected_atoms.append(near_atom_i)
                     self.show_selected_q()
                 if len(self.space.selected_atoms)==2:
-                    double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]])
+                    double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]],self.space)
             else:
                 if near_atom_i in self.space.selected_atoms:
                     self.handle_enter(event)
@@ -848,6 +848,8 @@ class mychemApp():
                             if not j in new_selected:
                                 new_selected.append(j)
                 self.space.selected_atoms = new_selected.copy()
+                if len(self.space.selected_atoms)==2:
+                    double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]],self.space)
             else:
                 if len(self.space.selected_atoms)>0:
                     self.space.selected_atoms.pop()

@@ -110,7 +110,7 @@ class UndoStack:
         return len(self.stack) == 0
     
 
-def double_info(a1, a2):
+def double_info(a1, a2,space):
     print("A1")
     a1.info()
     print("A2")
@@ -118,6 +118,11 @@ def double_info(a1, a2):
     delta = a1.pos - a2.pos
     print(f"Delta = {delta}, Distance={glm.length(delta):.3f}")
     print(f"R1 = {a1.r}, R2= {a2.r}, sumrad = {a1.r+a2.r} ")
+    r = glm.length(delta)
+    FK = space.INTERACT_KOEFF*a1.q * a2.q/glm.length2(delta)
+    FR = space.REPULSION_KOEFF2/r/r/r
+    F = FK+FR
+    print(f"FK={FK:.3f}  FR={FR:.3f} F={F:.3f}")
     print("node distance:")
     bondedinfo = ""
     for ni in range(len(a1.nodes)):
