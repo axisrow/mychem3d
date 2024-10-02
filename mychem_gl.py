@@ -167,7 +167,9 @@ class AppOgl(OpenGLFrame):
         self.qshift_buffer = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.qshift_buffer)
         gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, self.qshift_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*6, None , gl.GL_DYNAMIC_DRAW); 
+        zero = np.zeros(self.N*4*6,dtype=np.byte)
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*6, zero , gl.GL_DYNAMIC_DRAW); 
+        
 
 
 
