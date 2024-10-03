@@ -26,7 +26,7 @@ class mychemApp():
         file_menu.add_command(label="Import SDF (limited)", accelerator="", command=self.file_import)
         file_menu.add_command(label="Merge", accelerator="m", command=self.file_merge)
         file_menu.add_command(label="Merge recent", accelerator="l", command=self.file_merge_recent)
-        file_menu.add_command(label="Merge recent random x10", accelerator="Alt+l", command=self.handle_random_recent)
+        file_menu.add_command(label="Merge recent random X", accelerator="Alt+l", command=self.handle_random_recent)
         file_menu.add_command(label="Save", accelerator="Alt+s", command=self.file_save)
         file_menu.add_command(label="Save selected", accelerator="Ctrl+Alt+s", command=self.file_save_selected)
         file_menu.add_command(label="Exit", command=self.file_exit)
@@ -950,7 +950,7 @@ class OptionsFrame():
         self.label1 = tk.Label(a, text= "Interact koeff").grid(row=1,column=0)
         self.interact_slider = tk.Scale(a, from_=0, to=1000, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
         self.interact_slider.grid(row=1,column=1)
-        self.interact_slider.set(int(self.space.INTERACT_KOEFF*100))
+        self.interact_slider.set(int(self.space.INTERACT_KOEFF))
 
         self.label2 = tk.Label(a, text= "Repulsion koeff1").grid(row=2,column=0)
         self.repulsek1_slider = tk.Scale(a, from_=1, to=500, length=200,orient=tk.HORIZONTAL,command=self.set_repulsek1)
@@ -965,13 +965,13 @@ class OptionsFrame():
         self.label4 = tk.Label(a, text= "Bond koeff").grid(row=4,column=0)
         self.bondk_slider = tk.Scale(a, from_=1, to=300, length=300,orient=tk.HORIZONTAL,command=self.set_bondk)
         self.bondk_slider.grid(row=4,column=1)
-        self.bondk_slider.set(self.space.BOND_KOEFF*100)
+        self.bondk_slider.set(self.space.BOND_KOEFF)
         
         self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
         self.rotk_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,command=self.set_rotk)
         self.rotk_slider.grid(row=5,column=1)
         #self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
-        self.rotk_slider.set(self.space.ROTA_KOEFF)
+        self.rotk_slider.set(int(self.space.ROTA_KOEFF))
 
 
         self.label6 = tk.Label(a, text= "Mass koeff").grid(row=6,column=0)
@@ -1003,7 +1003,7 @@ class OptionsFrame():
         self.space.update_delta = int(value)
 
     def set_interk(self,value):
-        self.space.INTERACT_KOEFF=float(value)/100.0
+        self.space.INTERACT_KOEFF=float(value)
         self.glframe.update_uniforms=True
 
     def set_repulsek1(self,value):
@@ -1015,11 +1015,10 @@ class OptionsFrame():
         self.glframe.update_uniforms=True
 
     def set_bondk(self,value):
-        self.space.BOND_KOEFF =float(value)/100
+        self.space.BOND_KOEFF =float(value)
         self.glframe.update_uniforms=True
 
     def set_rotk(self,value):
-
         self.space.ROTA_KOEFF = float(value)
 #        print("rota =",self.space.ROTA_KOEFF)
         self.glframe.update_uniforms=True
