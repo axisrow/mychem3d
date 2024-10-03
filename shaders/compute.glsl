@@ -384,7 +384,7 @@ void main()
                                 ndelta =  ni_realpos - nj_realpos + delta;
                                 rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                                 float conus_i  = dot(ni_realpos,-delta)/atom_i.r/length(delta);
-                                if(rn>8  ){   //&&  conus_i>CONUS_KOEFF
+                                if(rn>8 &&  conus_i>CONUS_KOEFF ){   
                                     float f = atom_j.q* ni_q * INTERACT_KOEFF/rn/rn;
                                     //f4+= f;
                                     f5+= f;
