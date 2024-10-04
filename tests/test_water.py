@@ -20,8 +20,8 @@ if __name__ == '__main__':
     random.seed(1)
     App = mychemApp()
     space = App.space
-    space.setSize(700,400,200)
-    for i in range(0,500):
+    space.setSize(500,500,500)
+    for i in range(0,1500):
         f = random.random()*pi
         rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
         x = random.randint(0,space.WIDTH)
@@ -30,12 +30,19 @@ if __name__ == '__main__':
         i=space.merge_from_file("examples/simple/H2O.json",x,y,z,rot)
         for n in range(0,3):
             color = space.atoms[i+n].color
-            #space.atoms[i+n].color=color[0:3] + (0.2,)
+            space.atoms[i+n].color=color[0:3] + (0.1,)
         #space.merge_from_file("examples/alcohol/methanol.json",x,y,z)
-    space.update_delta = 10
-    space.INTERACT_KOEFF = 5.0
-    space.REPULSION_KOEFF2 = 350.0
-    space.BOND_KOEFF = 0.3
+    space.update_delta = 1
+    #space.INTERACT_KOEFF = 5.0
+    #space.REPULSION_KOEFF2 = 500.0
+    #space.BOND_KOEFF = 0.3
+    space.NEARDIST = 200
+    space.NODEDIST = 60
+    
+    #space.sideheat.set(True)
+    space.heat= -50
+    #App.heat.set(-200)
+
     #space.MASS_KOEFF = 5    space.NEARDIST=100
     space.tranparentmode= True
      #space.recording = True

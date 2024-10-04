@@ -79,7 +79,7 @@ if __name__ == '__main__':
     #space.ROTA_KOEFF = 1
     #space.REPULSION_KOEFF2=0.4
     space.update_delta = 10
-    #space.gpu_compute.set(False)
+    space.highlight_unbond.set(True)
     #space.bondlock.set(True)
     App.run()
 #
