@@ -84,7 +84,7 @@ layout(std430, binding=2) buffer near_atoms
 
 layout(std430, binding=3) buffer far_field
 {
-    vec4 F;
+    vec4 F[];
 } Far;
 
 layout(std430, binding=4) buffer rpos_buffer
@@ -159,7 +159,7 @@ void main()
 
     if (stage==2){ //calc near atoms  and far field
         int index = 0;
-        F = vec3(0,0,0);
+        vec3 E = vec3(0,0,0);
         for (int j=0;j<In.atoms.length();j++){
             if (i == j) continue;
             float r = distance(pos_i, In.atoms[j].pos.xyz);
@@ -170,13 +170,13 @@ void main()
             }
             else {  //far field
                 vec3 delta = In.atoms[i].pos.xyz - In.atoms[j].pos.xyz;
-                float f1= In.atoms[i].q*In.atoms[j].q*INTERACT_KOEFF/r;
-                F += f1 * delta/r;  
+                float e1= In.atoms[j].q*INTERACT_KOEFF/r/r;
+                E += e1 * delta/r;  
             }
 
         }
         Near.indexes[i][0]=index;  // near atoms count
-        Far.F.xyz = F;
+        Far.F[i].xyz = E * In.atoms[i].q;
         return;
     }
 
@@ -481,7 +481,7 @@ void main()
    if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.1;
 
 // far field
-   //F += Far.F.xyz*0.01;
+   F += Far.F[i].xyz; //*0.01;
 
 //e-field
    //F.x += atom_i.q*INTERACT_KOEFF/20.0;
