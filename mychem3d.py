@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
         self.heat.setMinimumHeight(300)
         self.heat.setMaximumWidth(20)
         self.heat.valueChanged.connect(self.setHeat)
+        self.heat.setPageStep(1)
         self.heat.setOrientation(0)
         self.layout.addWidget(self.heat)
         self.status_bar = StatusBar()
@@ -403,7 +404,7 @@ class MainWindow(QMainWindow):
             fileName=path
         else:
             #fileName = filedialog.askopenfilename(title="Select file", filetypes=(("SDF", "*.sdf"), ("All Files", "*.*")))
-            fileName, _filter = QFileDialog.getOpenFileName(self,"Select file", "", "SDF (*.sdf);;All files(*.*)")
+            fileName, _filter = QFileDialog.getOpenFileName(self,"Select file", "", "SDF (*.sdf *.mol);;All files(*.*)")
             if not fileName:	
                 return
         f =  open(fileName,"r")		
