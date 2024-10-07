@@ -183,8 +183,7 @@ class MainWindow(QMainWindow):
         self.space.pause = False
         self.glframe.start = time.time()
         self.glframe.nframes = 0
-        self.space.select_mode = 0
-        self.space.selected_atoms = []
+        self.unselect()
         self.status_bar.set("Running")
 
     def sim_pause(self):
@@ -254,15 +253,29 @@ class MainWindow(QMainWindow):
     def handle_r(self):
         self.handle_movemode("r")
 
+    def unselect(self):
+        self.space.select_mode = 0
+        self.space.selected_atoms = []
+
+    def selectmode(self,m):
+        self.merge_mode = False
+        self.space.select_mode = m
+    
+    def mergemode(self):
+        self.unselect()
+        self.merge_mode = True
+
+    def mergefinish(self):
+        pass
+
+    
 
     def handle_movemode(self,keysym):
         if self.space.select_mode:
            self.undostack.push(self.space.make_export())
            self.space.selected2merge()
            self.space.atoms2compute()
-           self.space.select_mode = 0
-           self.space.selected_atoms = []
-           self.merge_mode = True
+           self.mergemode()
         if not self.merge_mode: return
         if keysym == "r":
            self.ttype = "r" + self.ttype[1]
@@ -347,8 +360,7 @@ class MainWindow(QMainWindow):
         self.space.merge_pos = self.space.box/2
         self.space.merge_rot = glm.quat()
         self.space.merge_atoms = []
-        self.space.select_mode = 0
-        self.space.selected_atoms = []
+        self.unselect()
         self.merge_mode = False
         self.status_bar.set("New file")
 
@@ -381,9 +393,7 @@ class MainWindow(QMainWindow):
         self.space.merge_atoms = []
         mergedata = json.loads(f.read())
         self.recentdata = mergedata
-        self.space.select_mode=0
-        self.space.selected_atoms = []
-        self.merge_mode=True
+        self.mergemode()
         r = self.space.load_data(mergedata, merge=True)
         self.space.merge_center = self.space.get_mergeobject_center()
         #self.space.atoms2compute()
@@ -419,9 +429,7 @@ class MainWindow(QMainWindow):
 
 
         self.recentdata = mergedata
-        self.merge_mode=True
-        self.space.select_mode = 0
-        self.space.selected_atoms = []
+        self.mergemode()
         self.space.merge_center = self.space.get_mergeobject_center()
         self.space.atoms2compute()
         if result:
@@ -438,9 +446,7 @@ class MainWindow(QMainWindow):
         self.sim_pause()
         self.undostack.push(self.space.make_export())
         self.merge_atoms = []
-        self.merge_mode=True
-        self.select_mode=0
-        self.space.selected_atoms = []
+        self.mergemode()
         self.space.load_data(self.recentdata, merge=True)
         #self.space.atoms2compute()
         self.space.merge_center = self.space.get_mergeobject_center()
@@ -454,8 +460,7 @@ class MainWindow(QMainWindow):
         self.sim_pause()
         self.undostack.push(self.space.make_export())
         self.space.load_data(self.recentdata, merge=True)
-        self.space.select_mode = 0
-        self.space.selected_atoms = []
+        self.unselect()
         (center,distant) = self.space.get_atoms_distant(self.space.merge_atoms)
         number, ok = QInputDialog.getInt(None, "Input number", "How many?")        
         if not ok :
@@ -509,8 +514,7 @@ class MainWindow(QMainWindow):
             f.write(json.dumps(export))
             f.close()
             self.status_bar.set("File saved")
-            self.space.select_mode = 0
-            self.space.selected_atoms = []
+            self.unselect()
 
     def handle_fix(self,event=None):
         if self.space.select_mode:
@@ -532,8 +536,7 @@ class MainWindow(QMainWindow):
         if self.space.select_mode:
             self.undostack.push(self.space.make_export())
             self.space.selected2merge(duble=True)
-            self.merge_mode = True
-            self.space.select_mode = False
+            self.mergemode()
             
 
     def handle_mouseb3(self,event=None):
@@ -591,7 +594,7 @@ class MainWindow(QMainWindow):
     def handle_cursor(self,event=None):
         if self.merge_mode: return
         if not self.space.pause: self.sim_pause()
-        self.space.select_mode = 1
+        self.selectmode(1)
         N = len(self.space.atoms)
         if event.keysym == "Left":
             self.space.select_i -=1
@@ -623,10 +626,8 @@ class MainWindow(QMainWindow):
     def handle_add_atom(self,keysym=""):
         self.sim_pause()
         self.undostack.push(self.space.make_export())
-        self.space.select_mode = 0
-        self.space.selected_atoms = []
         self.space.merge_pos.x +=25
-        self.merge_mode = True
+        self.mergemode()
         self.ttype = "mx"
         if keysym in ["1","2","3","4","5","6"]:
             table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
@@ -726,7 +727,7 @@ class MainWindow(QMainWindow):
                     return
                 self.space.selected_atoms = [near_atom_i]
                 self.show_selected_q()
-            self.space.select_mode = 1
+            self.selectmode(1)
             if self.space.atoms[self.space.selected_atoms[0]].nodeselect==-1:
                 self.space.atoms[self.space.selected_atoms[0]].select_first_unbond()
             if len(self.space.selected_atoms)==2:
@@ -734,8 +735,7 @@ class MainWindow(QMainWindow):
                     self.space.atoms[self.space.selected_atoms[1]].select_first_unbond()
 
         else:
-            self.space.selected_atoms = []
-            self.space.select_mode = 0
+            self.unselect()
         self.update_status()
 
     def show_selected_q(self):
@@ -746,11 +746,10 @@ class MainWindow(QMainWindow):
     
     def handle_enter(self,event):
         if self.space.select_mode==1:
-            self.space.select_mode = 0
             self.sim_pause()
             self.undostack.push(self.space.make_export())
             self.space.selected2merge()
-            self.merge_mode = True
+            self.mergemode()
             self.space.atoms2compute()
             self.space.selected_atoms = []
             return
@@ -867,7 +866,7 @@ class MainWindow(QMainWindow):
                 if len(self.space.selected_atoms)>0:
                     self.space.selected_atoms.pop()
                 if len(self.space.selected_atoms)==0:
-                    self.space.select_mode=0
+                    self.unselect()
             self.show_selected_q()
          else:
             if shift:
