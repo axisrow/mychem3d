@@ -48,7 +48,7 @@ if __name__ == '__main__':
      #space.recording = True
     #space.appendmixer(1)
     #space.redox.set(True)
-    space.highlight_unbond.set(True)
+    space.highlight_unbond=True
     App.run()
 #
 #

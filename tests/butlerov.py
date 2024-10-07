@@ -79,7 +79,7 @@ if __name__ == '__main__':
     #space.ROTA_KOEFF = 1
     #space.REPULSION_KOEFF2=0.4
     space.update_delta = 10
-    space.highlight_unbond.set(True)
+    space.highlight_unbond = True
     #space.bondlock.set(True)
     App.run()
 #

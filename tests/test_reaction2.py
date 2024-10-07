@@ -36,7 +36,7 @@ if __name__ == '__main__':
     #space.merge_from_file("examples/alkane/30ane.json",glm.vec3(100,100,100))
     space.update_delta = 10
     #space.gpu_compute.set(False)
-    space.highlight_unbond.set(True)
+    space.highlight_unbond = True
     #space.recording.set(True)
     #space.appendmixer(2)
     #space.redox.set(True)
