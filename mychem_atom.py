@@ -22,10 +22,10 @@ class NodeC(Structure):
     
     def from_ctypes(self,n,space):
         #n.pos = glm.vec3(self.pos[0:3])
-        n.q = self.q
+        n.q = int(self.q)
         n.bonded = bool(self.bonded)
         #n.pair = space.get_node_by_index(self.pair) 
-        n.spin = self.spin
+        n.spin = int(self.spin)
         n.type = int(self.type)
 
 class Node():
@@ -266,6 +266,7 @@ class Atom():
         return a       
 
     def select_first_unbond(self):
+        print('select')
         ncount = len(self.nodes)
         select = 0
         while(select <ncount):

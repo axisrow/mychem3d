@@ -1,168 +1,170 @@
 #!/usr/bin/python3.9
-import tkinter as tk
-from tkinter import ttk
-import tkinter.filedialog as filedialog
 import time
 from math import sin,cos,log,sqrt
-import os
+import os, sys
 import json
 from json import encoder
 from PIL import ImageGrab
 from mychem_atom import Atom
 from mychem_space import Space
-from mychem_gl import AppOgl
+from mychem_gl import GLWidget
 from mychem_functions import OnOff,UndoStack,bond_atoms,double_info
 import glm
 import random
 import OpenGL.GL as gl
 from molex import load_sdf
+from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, \
+                            QVBoxLayout, QWidget, QShortcut,QHBoxLayout,QStatusBar, \
+                            QSlider,QFileDialog, QMessageBox,QLabel,QDialog,QCheckBox, \
+                            QMenu,QComboBox,QPushButton,QInputDialog
+from PyQt5.QtCore import Qt
 
-class mychemApp():
-    def init_menu(self):
-        self.menu_bar = tk.Menu(self.root)
-        file_menu = tk.Menu(self.menu_bar, tearoff=False)
-        file_menu.add_command(label="New", accelerator="Alt+n",command=self.file_new)
-        file_menu.add_command(label="Open", accelerator="o", command=self.file_open)
-        file_menu.add_command(label="Import SDF (limited)", accelerator="", command=self.file_import)
-        file_menu.add_command(label="Merge", accelerator="m", command=self.file_merge)
-        file_menu.add_command(label="Merge recent", accelerator="l", command=self.file_merge_recent)
-        file_menu.add_command(label="Merge recent random X", accelerator="Alt+l", command=self.handle_random_recent)
-        file_menu.add_command(label="Save", accelerator="Alt+s", command=self.file_save)
-        file_menu.add_command(label="Save selected", accelerator="Ctrl+Alt+s", command=self.file_save_selected)
-        file_menu.add_command(label="Exit", command=self.file_exit)
-        sim_menu = tk.Menu(self.menu_bar, tearoff=False)
-        sim_menu.add_command(label="Go/Pause", accelerator="Space",command=self.handle_space)
-        sim_menu.add_command(label="Reset", accelerator="Alt+r",command=self.handle_reset)
-        sim_menu.add_command(label="Invert velocities", accelerator="Alt+i",command=self.handle_invert)
-        sim_menu.add_checkbutton(label="Random shake", accelerator="s",variable=self.space.shake, command=self.handle_shake)
-        #sim_menu.add_checkbutton(label="Bond lock", accelerator="b", variable=self.space.bondlock, command=self.handle_bondlock)
-        sim_menu.add_checkbutton(label="Gravity", accelerator="g", variable=self.space.gravity, command=self.handle_gravity)
-        sim_menu.add_checkbutton(label="Highlight unbond", accelerator="", variable=self.space.highlight_unbond, command=self.handle_highlight_unbond)
-        sim_menu.add_checkbutton(label="Two zone redox", accelerator="r", variable=self.space.redox,command=self.handle_redox)
-        sim_menu.add_checkbutton(label="Record image",variable=self.space.recording, command=self.handle_recording)
-        sim_menu.add_checkbutton(label="Record data",variable=self.space.record_data, command=self.handle_record_data)
-        sim_menu.add_command(label="Clear records", command=self.handle_clear_records)
-        add_menu = tk.Menu(self.menu_bar, tearoff=False)
-        add_menu.add_command(label="H", accelerator="1",command=lambda:self.handle_add_atom(keysym="1"))
-        add_menu.add_command(label="O", accelerator="2",command=lambda:self.handle_add_atom(keysym="2"))
-        add_menu.add_command(label="N", accelerator="3",command=lambda:self.handle_add_atom(keysym="3"))
-        add_menu.add_command(label="C", accelerator="4",command=lambda:self.handle_add_atom(keysym="4"))
-        add_menu.add_command(label="P", accelerator="5",command=lambda:self.handle_add_atom(keysym="5"))
-        add_menu.add_command(label="S", accelerator="6",command=lambda:self.handle_add_atom(keysym="6"))        
-        add_menu.add_command(label="Mixer", accelerator="0",command=lambda:self.handle_zero())
-        self.menu_bar.add_cascade(label="File", menu=file_menu)
-        self.menu_bar.add_cascade(label="Simulation", menu=sim_menu)
-        self.menu_bar.add_cascade(label="Add", menu=add_menu)
-        self.menu_bar.add_command(label="Options", command=self.options_window)
-        examples_menu = tk.Menu(self.menu_bar, tearoff=False)
-        self.create_json_menu(examples_menu,"examples/")
-
-        self.menu_bar.add_cascade(label="Examples", menu=examples_menu)
-        self.root.config(menu=self.menu_bar)
-
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("MyChem 3D")
+class mychemApp(QApplication):
+    def __init__(self,a=[]):
+        super().__init__(a)
         self.space = Space()
+
+    def run(self):
+        self.root = MainWindow(self, self.space)
+        self.space.pause = True
+        self.exec()
+
+
+class MainWindow(QMainWindow):
+    def __init__(self,app,space):
+        super(MainWindow, self).__init__()
+        self.app = app
+        self.space = space
+        self.resetdata = self.space.make_export()
+        self.setWindowTitle("MyChem 3D")
         self.undostack = UndoStack(limit=30)
         self.init_menu()
-        self.lastX = 300
+        self.lastX = 512
         self.lastY = 300
         self.motion = False
-    #    self.root.bind('<Configure>', self.handle_resize)
-        self.root.bind("1", self.handle_add_atom2)
-        self.root.bind("2", self.handle_add_atom2)
-        self.root.bind("3", self.handle_add_atom2)
-        self.root.bind("4", self.handle_add_atom2)
-        self.root.bind("5", self.handle_add_atom2)
-        self.root.bind("6", self.handle_add_atom2)
-        #self.root.bind("<Left>", self.handle_cursor)
-        #self.root.bind("<Right>", self.handle_cursor)
-        #self.root.bind("<KeyRelease>", self.handle_keyrelease)
-        self.root.bind("<space>", self.handle_space)
-        self.root.bind("<Alt-r>", self.handle_reset)
-        self.root.bind("<Alt-i>", self.handle_invert)
-        self.root.bind("<Alt-n>", self.file_new)
-        self.root.bind("<Alt-o>", self.file_open)
-        self.root.bind("<Alt-s>", self.file_save)
-        self.root.bind("<Control-Alt-s>", self.file_save_selected)
-        self.root.bind("<Button-1>", self.handle_mouseb1)
-        self.root.bind("<Button-2>", self.handle_mouseb2)
-        self.root.bind("<Button-3>", self.handle_mouseb3)
-        self.root.bind("<Return>", self.handle_enter)
-        self.root.bind("<Escape>", self.handle_escape)
-        self.root.bind("<Delete>", self.handle_delete)
-        self.root.bind("<s>", self.handle_shake)
-        self.root.bind("x", self.handle_movemode)
-        self.root.bind("y", self.handle_movemode)
-        self.root.bind("z", self.handle_movemode)
-        self.root.bind("r", self.handle_movemode)
-        self.root.bind("g", self.handle_movemode)
-        self.root.bind("m", self.file_merge)
-        self.root.bind("l", self.file_merge_recent)
-        self.root.bind("b", self.handle_bond)
-        self.root.bind("f", self.handle_fix)
-        self.root.bind("u", self.handle_unfix)
-        self.root.bind("<Alt-l>", self.handle_random_recent)
-        self.root.bind("<Alt-g>", self.handle_gravity)
-        self.root.bind("<Control-z>", self.handle_undo)
-        self.root.bind("0", self.handle_zero)
-        self.root.bind("<Map>", self.handle_mapunmap)
-        self.root.bind("<Unmap>", self.handle_mapunmap)
-        #self.root.bind("<b>", self.handle_bondlock)
-        #self.root.bind("<FocusIn>"), self.handle_focusin
-        self.glframe = AppOgl(self.root, width=1024, height=600)
-        self.glframe.bind("<B1-Motion>", self.handle_mouse1move)
-        self.glframe.bind("<B3-Motion>", self.handle_mouse3move)
-        self.glframe.bind("<Motion>", self.handle_motion)
-        self.glframe.bind("<ButtonRelease-1>", self.handle_release1)
-        self.glframe.bind("<MouseWheel>", self.handle_scroll)
-        
-
+        #QShortcut( '1', self ).activated.connect(self.handle_add_atom2)
+        #QShortcut( '2', self ).activated.connect(self.handle_add_atom2)
+        #QShortcut( '3', self ).activated.connect(self.handle_add_atom2)
+        #QShortcut( '4', self ).activated.connect(self.handle_add_atom2)        
+        #QShortcut( '5', self ).activated.connect(self.handle_add_atom2)
+        #QShortcut( '6', self ).activated.connect(self.handle_add_atom2)
+        #QShortcut( 'Space', self ).activated.connect(self.handle_space)
+        #QShortcut( 'Alt+r', self ).activated.connect(self.handle_reset)
+        #QShortcut( 'Alt+i', self ).activated.connect(self.handle_invert)
+        #QShortcut( 'Alt+n', self ).activated.connect(self.file_new)        
+        #QShortcut( 'Alt+o', self ).activated.connect(self.file_open)        
+        #QShortcut( 'Alt+s', self ).activated.connect(self.file_save)                
+        #QShortcut( 'Alt+o', self ).activated.connect(self.file_open)                
+        #QShortcut( 'm', self ).activated.connect(self.file_merge)                
+        #QShortcut( 'l', self ).activated.connect(self.file_merge_recent)                
+        #QShortcut( 'Ctrl+Alt+s', self ).activated.connect(self.file_save_selected)                        
+        #self..bind("<Button-1>", self.handle_mouseb1)
+        #self.bind("<Button-2>", self.handle_mouseb2)
+        #self.bind("<Button-3>", self.handle_mouseb3)
+        QShortcut( 'Enter', self ).activated.connect(self.handle_enter)                
+        QShortcut( 'Esc', self ).activated.connect(self.handle_escape)                
+        QShortcut( 'Delete', self ).activated.connect(self.handle_delete)                
+        #QShortcut( 's', self ).activated.connect(self.handle_shake)                        
+        QShortcut( 'x', self ).activated.connect(lambda : self.handle_movemode("x"))                        
+        QShortcut( 'y', self ).activated.connect(lambda : self.handle_movemode("y"))                        
+        QShortcut( 'z', self ).activated.connect(lambda : self.handle_movemode("z"))                        
+        QShortcut( 'r', self ).activated.connect(lambda : self.handle_movemode("r"))                        
+        QShortcut( 'g', self ).activated.connect(lambda : self.handle_movemode("g"))                        
+        QShortcut( 'b', self ).activated.connect(self.handle_bond)                                
+        QShortcut( 'f', self ).activated.connect(self.handle_fix) 
+        QShortcut( 'u', self ).activated.connect(self.handle_unfix) 
+        #QShortcut( 'Alt+l', self ).activated.connect(self.handle_random_recent) 
+        #QShortcut( 'Alt+g', self ).activated.connect(self.handle_gravity) 
+        QShortcut( 'Ctrl+z', self ).activated.connect(self.handle_undo)         
+        QShortcut( '0', self ).activated.connect(self.handle_zero)         
+        #self.bind("<Map>", self.handle_mapunmap)
+        #self.bind("<Unmap>", self.handle_mapunmap)
+        self.qw = QWidget(self)
+        self.layout = QHBoxLayout()
+        self.glframe = GLWidget(space)        
+        self.layout.addWidget(self.glframe)
+        self.qw.setLayout(self.layout)
+        self.resize(1024, 600)
+        self.setCentralWidget(self.qw)
+        #self.glframe.bind("<B1-Motion>", self.handle_mouse1move)
+        #self.glframe.bind("<B3-Motion>", self.handle_mouse3move)
+        #self.glframe.bind("<Motion>", self.handle_motion)
+        #self.glframe.bind("<ButtonRelease-1>", self.handle_release1)
+        #self.glframe.bind("<MouseWheel>", self.handle_scroll)
+        self.space.glframe = self.glframe
         print("glframe created")
-        self.space.pause = False
         self.merge_mode = False
         self.ttype = "mx"
-        #self.glframe.pack(fill=tk.BOTH, expand=tk.YES)
-        self.glframe.grid(row=0,column=0,sticky="NSEW")
-        self.glframe.animate = 5
-        self.glframe.set_space(self.space)
-        self.space.glframe = self.glframe
-        self.root.columnconfigure(index=0, weight=3)
-        self.root.rowconfigure(index=0, weight=3)
-        self.heat = tk.Scale(self.root, from_ =50, to=-50,showvalue=0, length=400,command=self.setHeat)
-        self.heat.grid(row=0, column=1)
-        
-
-        
-        #   app.config(cursor="none")
-        #app.after(100, app.printContext)
-        self.status_bar = StatusBar(self.root)
-        #self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-        self.status_bar.grid(row=1,column=0,sticky="EW")
+        self.heat = QSlider()
+        self.heat.setMinimum(-50)
+        self.heat.setMaximum(50)
+        self.heat.setMinimumHeight(300)
+        self.heat.setMaximumWidth(20)
+        self.heat.valueChanged.connect(self.setHeat)
+        self.heat.setOrientation(0)
+        self.layout.addWidget(self.heat)
+        self.status_bar = StatusBar()
+        self.setStatusBar(self.status_bar)
         self.glframe.status_bar = self.status_bar
         if not os.path.exists('output'):
             os.makedirs('output')
         if not os.path.exists('output/data'):
             os.makedirs('output/data')
+        #self.run()
+        self.show()
+        self.status_bar.set("Ready")
 
 
-        self.status_bar.set('Ready')
+    def init_menu(self):
+        self.menu_bar = self.menuBar()
+        file_menu = self.menu_bar.addMenu("File")
+        file_menu.addAction(QAction('New', self, triggered=self.file_new, shortcut='Alt+N'))
+        file_menu.addAction(QAction('Open', self, triggered=self.file_open, shortcut='o'))
+        file_menu.addAction(QAction('Import SDF (limited)', self, triggered=self.file_import))
+        file_menu.addAction(QAction('Merge', self, triggered=self.file_merge, shortcut='m'))
+        file_menu.addAction(QAction('Merge recent', self, triggered=self.file_merge_recent, shortcut='l'))        
+        file_menu.addAction(QAction('Merge recent random X', self, triggered=self.handle_random_recent, shortcut='Alt+l'))        
+        file_menu.addAction(QAction('Save', self, triggered=self.file_save, shortcut='Alt+s'))
+        file_menu.addAction(QAction('Save selected', self, triggered=self.file_save_selected, shortcut='Ctrl+Alt+s'))
+        file_menu.addAction(QAction('Exit', self, triggered=self.file_exit, shortcut='Alt+Q'))        
+        sim_menu = self.menu_bar.addMenu("Simulation")
+        sim_menu.addAction(QAction("Go/Pause",self,triggered=self.handle_space, shortcut="Space"))
+        sim_menu.addAction(QAction("Reset",self,triggered=self.handle_reset, shortcut="Alt+r"))
+        sim_menu.addAction(QAction("Invert velocities",self,triggered=self.handle_invert, shortcut="Alt+i"))
+        sim_menu.addAction(QAction("Random shake",self,triggered=self.handle_shake, shortcut="s",checkable=True))
+        sim_menu.addAction(QAction("Gravity",self,triggered=self.handle_gravity, shortcut="Alt+g",checkable=True))
+        sim_menu.addAction(QAction("Highlight unbond",self,triggered=self.handle_highlight_unbond, checkable=True))
+        sim_menu.addAction(QAction("Two zone redox",self,triggered=self.handle_redox,checkable=True))
+        sim_menu.addAction(QAction("Record image",self,triggered=self.handle_recording,checkable=True))
+        sim_menu.addAction(QAction("Record data",self,triggered=self.handle_record_data,checkable=True))
+        sim_menu.addAction(QAction("Clear records",self,triggered=self.handle_clear_records))
+        add_menu = self.menu_bar.addMenu("Add")
+        add_menu.addAction(QAction("H",self,triggered=lambda:self.handle_add_atom(keysym="1"), shortcut="1"))
+        add_menu.addAction(QAction("O",self,triggered=lambda:self.handle_add_atom(keysym="2"), shortcut="2"))
+        add_menu.addAction(QAction("N",self,triggered=lambda:self.handle_add_atom(keysym="3"), shortcut="3"))
+        add_menu.addAction(QAction("C",self,triggered=lambda:self.handle_add_atom(keysym="4"), shortcut="4"))
+        add_menu.addAction(QAction("P",self,triggered=lambda:self.handle_add_atom(keysym="5"), shortcut="5"))
+        add_menu.addAction(QAction("S",self,triggered=lambda:self.handle_add_atom(keysym="6"), shortcut="6"))
+        add_menu.addAction(QAction("Mixer",self,triggered=self.handle_zero, shortcut="0"))
+        self.menu_bar.addAction(QAction("Options",self,triggered=self.options_window ))
+        examples_menu = self.menu_bar.addMenu("Examples")
+        self.create_json_menu(examples_menu,"examples/")
 
-    def handle_resize(self, event):
-        print(event)
 
-    def handle_mapunmap(self,event):
-        if self.root.state()=="iconic":
-            self.glframe.iconic = True
-            self.glframe.animate = 0
-        else:
-            self.glframe.iconic = False
-            self.glframe.animate = 5 
+    def create_json_menu(self,menu, lpath):
+        files_last = []
+        for filename in os.listdir(lpath):
+            filepath = os.path.join(lpath, filename)
+            if os.path.isdir(filepath):
+                submenu = menu.addMenu(filename)
+                self.create_json_menu(submenu, filepath)
+            elif os.path.splitext(filename)[-1] == ".json":
+                files_last.append((filename,filepath))
+        for (f,p) in files_last:				
+            menu.addAction(QAction(f,self,triggered=lambda _state,p2=p: self.file_merge(p2) ))
+
     
-
-
-    def handle_undo(self,event):
+    def handle_undo(self):
         print("Undo")
         data = self.undostack.pop()
         if data is not None:
@@ -171,29 +173,10 @@ class mychemApp():
             self.space.atoms2compute()
             self.status_bar.set('Undo')
 
-
     def setHeat(self, value):
         self.space.heat = value
         self.status_bar.set('heat = ' + str(value))
         self.glframe.update_uniforms = True
-
-    def firstrun(self):
-        print("firstruns")
-        if self.glframe.initok:
-            self.space.atoms2compute()
-            self.space.pause = False
-        else:
-            print("wait")
-            self.root.after(100,self.firstrun)    
-        
-    def run(self):
-        self.resetdata = self.space.make_export()
-        #self.space.atoms2compute()
-        self.space.pause = True
-        self.root.after(300,self.firstrun)
-        self.root.mainloop()
-        
-
 
     def sim_run(self):
         self.space.pause = False
@@ -208,22 +191,33 @@ class mychemApp():
         self.space.pause = True
         #self.glframe.animate = 0
         self.status_bar.settime(self.space.t)
+        self.update_status()
+        self.status_bar.set("Paused")
+
+
+    def update_status(self):
         N = len(self.space.atoms)
         info = f"Number of atoms: {N}, Ek={self.space.Ek:.2f}"
         if (N!=0): info += f" Ekavg={self.space.Ek/len(self.space.atoms):.2f} "
         self.status_bar.setinfo(info )
-        self.status_bar.set("Paused")
 
-    def handle_recording(self,event=None):
-        if event:
-            self.space.recording.set(not self.space.recording.get())
-        self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
 
-    def handle_record_data(self,event=None):
-        if event:
-            self.space.record_data.set(not self.space.record_data.get())
+    def handle_recording(self,checked):
+        if checked:
+            self.space.recording = True
             if not os.path.exists('output/data'):
                 os.makedirs('output/data')
+        else:
+            self.space.recording = False
+        self.status_bar.set("Recording frames to disk is "+ OnOff(self.space.recording))
+
+    def handle_record_data(self,checked):
+        if checked:
+            self.space.record_data = True
+            if not os.path.exists('output/data'):
+                os.makedirs('output/data')
+        else:
+            self.space.record_data = False
         self.status_bar.set("Recording dataframes to disk is "+ OnOff(self.space.record_data))
 
     def handle_clear_records(self,event=None):
@@ -236,7 +230,7 @@ class mychemApp():
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                 except Exception as e:
-                    print("Не удалось удалить {}".format(file_path), e)
+                    print("Cannot delete {}".format(file_path), e)
 
             directory_to_clean = 'output/data/'
             for filename in os.listdir(directory_to_clean):
@@ -245,7 +239,7 @@ class mychemApp():
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                 except Exception as e:
-                    print("Не удалось удалить {}".format(file_path), e)
+                    print("Cannot delete {}".format(file_path), e)
         
     def handle_space(self,event=None):
         if self.space.pause:
@@ -254,17 +248,13 @@ class mychemApp():
             self.sim_pause()
 
     def handle_g(self):
-        e=tk.Event()
-        e.keysym = "g"
-        self.handle_movemode(e)
+        self.handle_movemode("g")
 
-    def handle_r(self,event=None):
-        e=tk.Event()
-        e.keysym= "r"
-        self.handle_movemode(e)
+    def handle_r(self):
+        self.handle_movemode("r")
 
 
-    def handle_movemode(self,event=None):
+    def handle_movemode(self,keysym):
         if self.space.select_mode:
            self.undostack.push(self.space.make_export())
            self.space.selected2merge()
@@ -273,20 +263,20 @@ class mychemApp():
            self.space.selected_atoms = []
            self.merge_mode = True
         if not self.merge_mode: return
-        if event.keysym == "r":
+        if keysym == "r":
            self.ttype = "r" + self.ttype[1]
            self.status_bar.set("Rotate "+ self.ttype[1] )
            return
-        if event.keysym == "g":
+        if keysym == "g":
            self.ttype ="m" + self.ttype[1]
            self.status_bar.set("Move "+ self.ttype[1] )
            return
         self.ttype=self.ttype[0]
-        if event.keysym == "x":
+        if keysym == "x":
             self.ttype+="x"
-        if event.keysym == "y":
+        if keysym == "y":
             self.ttype+="y"
-        if event.keysym == "z":
+        if keysym == "z":
             self.ttype+="z"
         if self.ttype[0]=="r":
             self.status_bar.set("Rotate "+ self.ttype[1] )
@@ -294,29 +284,38 @@ class mychemApp():
             self.status_bar.set("Move "+ self.ttype[1] )
 
 
-    def handle_shake(self,event=None):
-        if event:
-            self.space.shake.set(not self.space.shake.get())
-        self.status_bar.set("Random shake is "+ OnOff(self.space.shake.get()))
+    def handle_shake(self,checked):
+        if checked:
+            self.space.shake = True
+        else:
+            self.space.shake = False
+        self.status_bar.set("Random shake is "+ OnOff(self.space.shake))
         self.glframe.update_uniforms = True
 
-    def handle_redox(self,event=None):
-        if event:
-            self.space.redox.set(not self.space.redox.get())
-        print(self.space.redox.get())
-        self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox.get()))
+    def handle_redox(self,checked):
+        if checked:
+            self.space.redox = True
+        else:
+            self.space.redox = False
+        self.status_bar.set("Two zone redox is "+ OnOff(self.space.redox))
         self.glframe.update_uniforms = True
 
-    def handle_gravity(self,event=None):
-        if event:
-            self.space.gravity.set(not self.space.gravity.get())
-        self.status_bar.set("Gravity is "+ OnOff(self.space.gravity.get()))
+    def handle_gravity(self,checked):
+        print(self.N/0)
+        print(checked)
+        if checked:
+            self.space.gravity = True
+        else:
+            self.space.gravity = False
+        self.status_bar.set("Gravity is "+ OnOff(self.space.gravity))
         self.glframe.update_uniforms = True
 
-    def handle_highlight_unbond(self,event=None):
-        if event:
-            self.space.highlight_unbond.set(not self.space.highlight_unbond.get())
-        self.status_bar.set("Unbond highlight is "+ OnOff(self.space.highlight_unbond.get()))
+    def handle_highlight_unbond(self,checked):
+        if checked:
+            self.space.highlight_unbond = True
+        else:
+            self.space.highlight_unbond = False
+        self.status_bar.set("Unbond highlight is "+ OnOff(self.space.highlight_unbond))
         self.glframe.update_uniforms = True
 
 
@@ -328,10 +327,12 @@ class mychemApp():
         self.space.atoms2compute()
 
 
-    def handle_bondlock(self,event=None):
-        if event:
-            self.space.bondlock.set(not self.space.bondlock.get())
-        self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock.get()))
+    def handle_bondlock(self,checked):
+        if checked:
+            self.space.bondlock = True
+        else:
+            self.space.bondlock = False
+        self.status_bar.set("Bondlock is "+ OnOff(self.space.bondlock))
         self.glframe.update_uniforms = True
 
 
@@ -348,11 +349,11 @@ class mychemApp():
         self.space.select_mode = 0
         self.space.selected_atoms = []
         self.merge_mode = False
-        #self.space.atoms2compute(
         self.status_bar.set("New file")
 
     def file_open(self,event=None):
-        fileName = filedialog.askopenfilename(title="Select file", filetypes=(("JSON files", "*.json"), ("All Files", "*.*")))
+        fileName, _filter = QFileDialog.getOpenFileName(self,"Select file", "", "Json files (*.json)")
+        print(fileName)
         if not fileName:	
             return
         self.file_new()
@@ -365,14 +366,14 @@ class mychemApp():
 
 
 
-    def file_merge(self,event=None, path=None):
+    def file_merge(self,path=None):
         self.sim_pause()
         self.undostack.push(self.space.make_export())
+        print("Merge path=",path)
         if path:
-            print(path)
             fileName=path
         else:
-            fileName = filedialog.askopenfilename(title="Select file", filetypes=(("JSON files", "*.json"), ("All Files", "*.*")))
+            fileName, _filter = QFileDialog.getOpenFileName(self,"Select file", "", "Json files (*.json)")
             if not fileName:	
                 return
         f =  open(fileName,"r")		
@@ -387,8 +388,9 @@ class mychemApp():
         #self.space.atoms2compute()
         #self.canvas.configure(cursor="hand2")
         if r: 
-            tk.messagebox.showerror("error", f"Import errors, check console!")
-            self.status_bar.set("import errors!  Merging mode")
+            self.status_bar.set("import errors!  Merging mode")            
+            QMessageBox.warning(self,"error",f"Import errors, check console!")
+
         else:
             self.status_bar.set("Merging mode")
         f.close()
@@ -400,7 +402,8 @@ class mychemApp():
             print(path)
             fileName=path
         else:
-            fileName = filedialog.askopenfilename(title="Select file", filetypes=(("SDF", "*.sdf"), ("All Files", "*.*")))
+            #fileName = filedialog.askopenfilename(title="Select file", filetypes=(("SDF", "*.sdf"), ("All Files", "*.*")))
+            fileName, _filter = QFileDialog.getOpenFileName(self,"Select file", "", "SDF (*.sdf);;All files(*.*)")
             if not fileName:	
                 return
         f =  open(fileName,"r")		
@@ -442,6 +445,7 @@ class mychemApp():
         self.space.merge_center = self.space.get_mergeobject_center()
         self.space.merge_pos+=glm.vec3(20,0,0)    
         self.status_bar.set("Merging mode")
+        self.update_status()
         
     def handle_random_recent(self,event=None):
         if not self.recentdata:
@@ -452,10 +456,10 @@ class mychemApp():
         self.space.select_mode = 0
         self.space.selected_atoms = []
         (center,distant) = self.space.get_atoms_distant(self.space.merge_atoms)
-        howmany = tk.simpledialog.askinteger("How many?", "How many random merges? ")
-        if howmany == None:
-            howmany = 10
-        for i in range(0,howmany):
+        number, ok = QInputDialog.getInt(None, "Input number", "How many?")        
+        if not ok :
+            return
+        for i in range(0,number):
             self.space.merge_atoms = []
             distant = glm.round(distant)
             x= random.randint(distant.x+10,self.space.WIDTH-distant.x-10)
@@ -473,12 +477,13 @@ class mychemApp():
         self.resetdata = self.space.make_export()
         self.space.atoms2compute()
         self.merge_mode = False
+        self.update_status()
 
 
 
     def file_save(self,event=None):
         self.sim_pause()
-        fileName = tk.filedialog.asksaveasfilename(title="Save As", filetypes=(("JSON files", "*.json"), ("All Files", "*.*")))
+        fileName, _filter = QFileDialog.getSaveFileName(self,"Select file", "", "Json files (*.json)")
         if not (fileName.endswith(".json") or fileName.endswith(".JSON")):
             fileName+=".json"
         f = open(fileName, "w")
@@ -495,7 +500,7 @@ class mychemApp():
             center = self.space.get_atoms_center(atoms)                
             for a in atoms:
                 a.pos -= center
-            fileName = tk.filedialog.asksaveasfilename(title="Save As", filetypes=(("JSON files", "*.json"), ("All Files", "*.*")))
+            fileName, _filter = QFileDialog.getSaveFileName(self,"Select file", "", "Json files (*.json)")
             if not (fileName.endswith(".json") or fileName.endswith(".JSON")):
                 fileName+=".json"
             f = open(fileName, "w")
@@ -522,43 +527,45 @@ class mychemApp():
             self.space.atoms2compute()
             self.status_bar.set("unfix selected atoms")
     
-    def handle_dublicate(self,event=None):
+    def handle_duplicate(self,event=None):
         if self.space.select_mode:
             self.undostack.push(self.space.make_export())
             self.space.selected2merge(duble=True)
             self.merge_mode = True
             self.space.select_mode = False
             
-            
-            
-
-        
 
     def handle_mouseb3(self,event=None):
         if self.space.select_mode:
             self.space.compute2atoms()
-            self.atom_context_menu = tk.Menu(self.root,tearoff=0)
+            self.atom_context_menu = QMenu(self)
             if len(self.space.selected_atoms)==2:
-                self.atom_context_menu.add_command(label="Bond", command=self.handle_bond)
-            self.atom_context_menu.add_command(label="Dublicate", command=self.handle_dublicate)
-            self.atom_context_menu.add_command(label="Move", command=self.handle_g)
-            self.atom_context_menu.add_command(label="Rotate", command=self.handle_r)
-            self.atom_context_menu.add_command(label="Fix", command=self.handle_fix)
-            self.atom_context_menu.add_command(label="Unfix", command=self.handle_unfix)
-            self.atom_context_menu.add_command(label="Delete", command=self.handle_delete)
+                self.atom_context_menu.addAction(QAction("Bond", self, triggered=self.handle_bond))
+            self.atom_context_menu.addAction(QAction("Duplicate", self, triggered=self.handle_duplicate))
+            self.atom_context_menu.addAction(QAction("Move", self, triggered=self.handle_g))
+            self.atom_context_menu.addAction(QAction("Rotate", self, triggered=self.handle_r))
+            self.atom_context_menu.addAction(QAction("Set Merge position", self, triggered=self.handle_mergepos2selected))
+            self.atom_context_menu.addAction(QAction("Fix", self, triggered=self.handle_fix))
+            self.atom_context_menu.addAction(QAction("Unfix", self, triggered=self.handle_unfix))
+            self.atom_context_menu.addAction(QAction("Delete", self, triggered=self.handle_delete))
             if len(self.space.selected_atoms)==1:
-                self.atom_context_menu.add_command(label="Properties", command=lambda: self.show_atom_properties(self.space.atoms[self.space.selected_atoms[0]]))
-            a = self.space.atoms[self.space.selected_atoms[0]]
-            self.atom_context_menu.tk_popup(event.x_root, event.y_root)
-            
-            #a.info()
+                #a = self.space.atoms[self.space.selected_atoms[0]]
+                self.atom_context_menu.addAction(QAction("Properties", self, triggered=lambda: self.show_atom_properties(self.space.atoms[self.space.selected_atoms[0]])))
+            #self.glframe.mapFromGlobal(self.mapToGlobal(event.pos()))
+            self.atom_context_menu.exec_(event.pos())
 
     def show_atom_properties(self,a:Atom):
-        ap = AtomProperties(self.root,a)
-        ap.grab_set()
-        ap.wait_window()
-        if ap.saved:
+        ap = AtomProperties(self,a)
+        if ap.exec_() == QDialog.Accepted:
+            print("saved")
             self.space.atoms2compute()
+        else:
+            print("not saved")
+    
+    def handle_mergepos2selected(self):
+        a = self.space.atoms[self.space.selected_atoms[0]]
+        self.space.merge_pos = a.pos
+        self.status_bar.set("Merge position moved to selected")
 
     def handle_bond(self,event=None):
         if self.space.select_mode==1 and len(self.space.selected_atoms)==2:
@@ -578,8 +585,7 @@ class mychemApp():
 
 
     def file_exit(self,event=None):
-        self.root.destroy()
-        pass
+        self.app.exit()
 
     def handle_cursor(self,event=None):
         if self.merge_mode: return
@@ -654,6 +660,24 @@ class mychemApp():
             self.space.atoms2compute()
 
     
+    def mousePressEvent(self, event):
+        pos = event.pos()
+        self.lastX = pos.x()
+        self.lastY = pos.y()
+        #if event.button() == Qt.LeftButton:
+        #    self.handle_mouseb1(event)
+        #if event.button() == Qt.RightButton:
+        #    self.handle_mouseb3(event)
+
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.handle_release1(event)
+        elif event.button() == Qt.RightButton:
+            self.handle_mouseb3(event)
+        elif event.button() == Qt.MiddleButton:
+            self.handle_mouseb2(event)
+
 
 
     def handle_release1(self,event):
@@ -662,16 +686,19 @@ class mychemApp():
             return
         if self.merge_mode:
             self.handle_enter(event)
+            self.update_status()
             return
-        #print("coord ", event.x, event.y)
-        #print("size ", self.glframe.winfo_width(), self.glframe.winfo_height() ) 
-        ctrl = event.state & 4
-        
+        modifiers = event.modifiers() 
+        shift = modifiers & Qt.ShiftModifier
+        ctrl = modifiers & Qt.ControlModifier
+        mpos = self.glframe.mapFromGlobal(self.mapToGlobal(event.pos()))
+        #print(f"eventpos={event.pos()} glgrame.width={self.glframe.width()} glframe.height={self.glframe.height()} mpos={mpos}")
         self.space.compute2atoms()
         N = len(self.space.atoms)
-        y = self.glframe.height - event.y
-        z = gl.glReadPixels(event.x, y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
-        (x,y,z) = glm.unProject(glm.vec3(event.x, y,z),self.glframe.view,self.glframe.projection, (0,0,self.glframe.width,self.glframe.height))
+        y = self.glframe.height() - mpos.y()
+        self.glframe.makeCurrent()
+        z = gl.glReadPixels(mpos.x(), y, 1, 1, gl.GL_DEPTH_COMPONENT, gl.GL_FLOAT)
+        (x,y,z) = glm.unProject(glm.vec3(mpos.x(), y,z),self.glframe.view,self.glframe.projection, (0,0,self.glframe.width(),self.glframe.height()))
         pos = glm.vec3(x,y,z) / self.glframe.factor
         near_atom_i= -1
         for i in range(0,N):
@@ -691,6 +718,7 @@ class mychemApp():
                     self.show_selected_q()
                 if len(self.space.selected_atoms)==2:
                     double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]],self.space)
+                    #self.space.atoms[self.space.selected_atoms[1]].select_first_unbond()
             else:
                 if near_atom_i in self.space.selected_atoms:
                     self.handle_enter(event)
@@ -700,9 +728,14 @@ class mychemApp():
             self.space.select_mode = 1
             if self.space.atoms[self.space.selected_atoms[0]].nodeselect==-1:
                 self.space.atoms[self.space.selected_atoms[0]].select_first_unbond()
+            if len(self.space.selected_atoms)==2:
+                if self.space.atoms[self.space.selected_atoms[1]].nodeselect==-1:
+                    self.space.atoms[self.space.selected_atoms[1]].select_first_unbond()
+
         else:
             self.space.selected_atoms = []
             self.space.select_mode = 0
+        self.update_status()
 
     def show_selected_q(self):
             q = 0
@@ -710,7 +743,7 @@ class mychemApp():
                 q+= self.space.atoms[i].q
             self.status_bar.set(f"q of selected = {q:.3f} ")
     
-    def handle_enter(self,event:tk.Event):
+    def handle_enter(self,event):
         if self.space.select_mode==1:
             self.space.select_mode = 0
             self.sim_pause()
@@ -731,41 +764,30 @@ class mychemApp():
             self.status_bar.set("Merged")
 
 
-
-    def sphere_intersect(self, ro, rd, pos, rad):
-           oc = glm.vec3(ro - pos)
-           b = glm.dot( oc, rd )
-           c = glm.dot( oc, oc ) - rad*rad;
-           h = b*b - c
-           if h<0.0:  return -1
-           h = sqrt( h )
-           return -b-h
-
-
-
-    def handle_mouseb1(self,event:tk.Event):
-        self.lastX = event.x
-        self.lastY = event.y
-
-    def handle_mouseb2(self,event:tk.Event):
+    def handle_mouseb2(self,event):
         if self.space.select_mode:
             if len(self.space.selected_atoms)==1:
                 self.space.atoms[self.space.selected_atoms[0]].select_next_node()
             #self.handle_enter(event)
 
-        
+    def mouseMoveEvent(self, event):
+        if event.buttons() & Qt.LeftButton:
+            self.handle_mouse1move(event)
+        if event.buttons() & Qt.RightButton:
+            self.handle_mouse3move(event)
         
 
-
+    def handle_mouse1move(self,event):
+        modifiers = event.modifiers() 
+        shift = modifiers & Qt.ShiftModifier
+        ctrl = modifiers & Qt.ControlModifier
+        pos = event.pos()
         
-
-    def handle_mouse1move(self,event:tk.Event):
         self.motion = True
-        shift = event.state & 1
-        offsetx = event.x - self.lastX 
-        offsety = event.y - self.lastY
-        self.lastX = event.x
-        self.lastY = event.y
+        offsetx = pos.x() - self.lastX 
+        offsety = pos.y() - self.lastY
+        self.lastX = pos.x()
+        self.lastY = pos.y()
         sense = 0.1
         if shift:
             sense = 0.01
@@ -780,12 +802,15 @@ class mychemApp():
         #print(f'yaw={self.glframe.yaw} pitch{self.glframe.pitch} pos={self.glframe.cameraPos}')
 
 
-    def handle_mouse3move(self,event:tk.Event):
-        shift = event.state & 1
-        offsetx = event.x - self.lastX 
-        offsety = event.y - self.lastY
-        self.lastX = event.x
-        self.lastY = event.y
+    def handle_mouse3move(self,event):
+        modifiers = event.modifiers() 
+        shift = modifiers & Qt.ShiftModifier
+        ctrl = modifiers & Qt.ControlModifier
+        pos = event.pos()
+        offsetx = pos.x() - self.lastX 
+        offsety = pos.y() - self.lastY
+        self.lastX = pos.x()
+        self.lastY = pos.y()
         sense = 0.1
         if shift:        
             sense = 0.01
@@ -796,25 +821,12 @@ class mychemApp():
         self.glframe.cameraPos += self.glframe.cameraUp * offsety*0.05
 
 
-    def handle_motion(self,event:tk.Event):
-        shift = event.state & 1
-        offsetx = event.x - self.lastX 
-        offsety = event.y - self.lastY
-        self.lastX = event.x
-        self.lastY = event.y
-        if shift:
-            sense = 0.1
-        else:
-            sense = 0.5
-        offsetx *= sense
-        offsety *= sense
 
-
-    def handle_scroll(self,event:tk.Event):
-         shift = event.state & 1
-         rkey = event.state & 1024
-         # # print("event.state=", event.state)
-         ctrl = event.state & 4
+    def wheelEvent(self, event):
+         delta = event.angleDelta().y()  # Получаем направление прокрутки
+         modifiers = event.modifiers() 
+         shift = modifiers & Qt.ShiftModifier
+         ctrl = modifiers & Qt.ControlModifier
          if self.merge_mode and not ctrl:
             if not shift:
                 offset = 15
@@ -822,7 +834,7 @@ class mychemApp():
             else:
                 offset = 1
                 angle = 1
-            if event.delta>0:
+            if delta>0:
                 angle*=-1
                 offset*=-1
             if self.ttype=="mx":
@@ -838,7 +850,7 @@ class mychemApp():
             if self.ttype=="rz":
                 self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1)) * self.space.merge_rot
          elif self.space.select_mode==1: #select molecule
-            if event.delta>0:
+            if delta>0:
                 new_selected = self.space.selected_atoms.copy()
                 for i in self.space.selected_atoms:
                     for j in range(0, len(self. space.atoms)):
@@ -861,287 +873,281 @@ class mychemApp():
                 cameraSpeed = 0.01
             else:
                 cameraSpeed = 0.1
-            if event.delta>0:
+            if delta>0:
                 self.glframe.cameraPos += cameraSpeed * self.glframe.cameraFront
             else:
                 self.glframe.cameraPos -= cameraSpeed * self.glframe.cameraFront   
 
            
 
-
-
-
-
-    def create_json_menu(self,menu, lpath):
-        files_last = []
-        for filename in os.listdir(lpath):
-            filepath = os.path.join(lpath, filename)
-            if os.path.isdir(filepath):
-                submenu = tk.Menu(menu,tearoff=False)
-                menu.add_cascade(label=filename, menu=submenu)
-                self.create_json_menu(submenu, filepath)
-            elif os.path.splitext(filename)[-1] == ".json":
-                files_last.append((filename,filepath))
-        for (f,p) in files_last:				
-            menu.add_command(label=f, command=lambda p2=p: self.file_merge(path=p2))
-
     def options_window(self):
+        print("options")
         o = OptionsFrame(self)
         
-    def about_window(self):
-        
-        a = tk.Toplevel()
-        a.geometry('200x150')
-        a['bg'] = 'grey'
-        a.overrideredirect(True)
-        tk.Label(a, text="About this")\
-            .pack(expand=1)
-        a.after(5000, lambda: a.destroy())
 
 
+class StatusBar(QStatusBar):
+     def __init__(self, ):
+         super().__init__()
+         pass
+         #self.layout = QHBoxLayout()
+         #self.setLayout(self.layout)
+         status_widget = QWidget()
+         layout = QHBoxLayout(status_widget)
 
-class StatusBar(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        #status_frame = tk.Frame(parent, bd=1, relief=tk.SUNKEN)
-        #status_frame.pack(side=tk.BOTTOM, fill=tk.X)
-        self.label = tk.Label(self, text= "Status")
-        self.label.pack(side=tk.LEFT)
-        self.fpslabel = tk.Label(self, text="FPS")
-        self.fpslabel.pack(side=tk.RIGHT)
-        self.timelabel = tk.Label(self, text="Time")
-        self.timelabel.pack(side=tk.RIGHT)
-        self.info = tk.Label(self, text="Info")
-        self.info.pack(side=tk.RIGHT)
-
+         self.label = QLabel("Status")
+         layout.addWidget(self.label)
+         layout.addStretch()
+         self.info = QLabel("Info")
+         layout.addWidget(self.info)
+         self.timelabel = QLabel("Time")
+         layout.addWidget(self.timelabel)
+         self.fpslabel = QLabel("FPS")
+         layout.addWidget(self.fpslabel)
+         #self.addWidget(status_widget)
+         self.addPermanentWidget(status_widget,2)
     
-    def set(self, text):
-        self.label.config(text=text)
+     def set(self, text):
+         self.label.setText(text)
 
-    def settime(self,t):
-        self.timelabel.config(text="Time:"+str(t))
+     def settime(self,t):
+         self.timelabel.setText("Time:"+str(t))
 
-    def setFPS(self,f):
-        self.fpslabel.config(text=f"FPS:{f:3.2f}")
+     def setFPS(self,f):
+         self.fpslabel.setText(f"FPS:{f:3.2f}")
 
 
-    def setinfo(self,info):
-        self.info.config(text=info)
+     def setinfo(self,info):
+         self.info.setText(info)
     
-    def clear(self):
-        self.label.config(text='')
 
-
-class OptionsFrame():
+class OptionsFrame(QDialog):
     def __init__(self, app):
+        super().__init__()
         self.space = app.space
         self.glframe = app.glframe
-        a = tk.Toplevel()
-        a.title("Fine tuning (options)")
-        a.resizable(0, 0)
-        a.geometry('420x500')
-        #self.frame = tk.Frame(a, bd=5, relief=tk.SUNKEN)
-        #self.frame.pack()
-        self.label0 = tk.Label(a, text= "Update delta").grid(row=0,column=0)
-        self.update_slider = tk.Scale(a, from_=1, to=500, length=300, orient=tk.HORIZONTAL,command=self.set_delta)
-        self.update_slider.grid(row=0,column=1)
-        self.update_slider.set(self.space.update_delta)
+        self.setWindowTitle("Fine tuning (options)")
+        self.setFixedSize(420, 500)
 
-        self.label1 = tk.Label(a, text= "Interact koeff").grid(row=1,column=0)
-        self.interact_slider = tk.Scale(a, from_=0, to=1000, length=300,orient=tk.HORIZONTAL,command=self.set_interk)
-        self.interact_slider.grid(row=1,column=1)
-        self.interact_slider.set(int(self.space.INTERACT_KOEFF))
+        layout = QVBoxLayout()
 
-        self.label2 = tk.Label(a, text= "Repulsion koeff1").grid(row=2,column=0)
-        self.repulsek1_slider = tk.Scale(a, from_=1, to=500, length=200,orient=tk.HORIZONTAL,command=self.set_repulsek1)
-        self.repulsek1_slider.grid(row=2,column=1)
-        self.repulsek1_slider.set(int(self.space.REPULSION_KOEFF1))
+        # Создание слайдеров и меток
+        self.create_slider(layout, "Update delta", 1, 150, self.space.update_delta, self.set_delta)
+        self.create_slider(layout, "Interact koeff", 0, 1000, int(self.space.INTERACT_KOEFF), self.set_interk)
+        self.create_slider(layout, "Repulsion koeff1", 1, 100, int(self.space.REPULSION_KOEFF1), self.set_repulsek1)
+        self.create_slider(layout, "Repulsion koeff2", 0, 500, int(self.space.REPULSION_KOEFF2), self.set_repulsek2)
+        self.create_slider(layout, "Bond koeff", 1, 100, self.space.BOND_KOEFF, self.set_bondk)
+        self.create_slider(layout, "Rotation koeff", 1, 50, int(self.space.ROTA_KOEFF), self.set_rotk)
+        self.create_slider(layout, "Mass koeff", 1, 50, self.space.MASS_KOEFF, self.set_massk)
+        self.sizex = self.create_slider(layout, "Container size X", 1, 50, int(self.space.WIDTH / 100), self.set_size)
+        self.sizey = self.create_slider(layout, "Container size Y", 1, 50, int(self.space.HEIGHT / 100), self.set_size)
+        self.sizez = self.create_slider(layout, "Container size Z", 1, 50, int(self.space.DEPTH / 100), self.set_size)
 
-        self.label3 = tk.Label(a, text= "Repulsion koeff2").grid(row=3,column=0)
-        self.repulsek2_slider = tk.Scale(a, from_=0, to=500, length=300,orient=tk.HORIZONTAL,command=self.set_repulsek2)
-        self.repulsek2_slider.grid(row=3,column=1)
-        self.repulsek2_slider.set(int(self.space.REPULSION_KOEFF2))
-        
-        self.label4 = tk.Label(a, text= "Bond koeff").grid(row=4,column=0)
-        self.bondk_slider = tk.Scale(a, from_=1, to=300, length=300,orient=tk.HORIZONTAL,command=self.set_bondk)
-        self.bondk_slider.grid(row=4,column=1)
-        self.bondk_slider.set(self.space.BOND_KOEFF)
-        
-        self.label5 = tk.Label(a, text= "Rotation koeff").grid(row=5,column=0)
-        self.rotk_slider = tk.Scale(a, from_=1, to=100, length=200,orient=tk.HORIZONTAL,command=self.set_rotk)
-        self.rotk_slider.grid(row=5,column=1)
-        #self.rotk_slider.set( -log(self.space.ROTA_KOEFF,10))
-        self.rotk_slider.set(int(self.space.ROTA_KOEFF))
+        self.show_nodes_checkbox = QCheckBox("Show nodes")
+        self.show_nodes_checkbox.setChecked(self.glframe.drawnodes)
+        self.show_nodes_checkbox.stateChanged.connect(self.set_shownodes)
+        layout.addWidget(self.show_nodes_checkbox)
+
+        self.side_heat_checkbox = QCheckBox("Side heat")
+        self.side_heat_checkbox.setChecked(self.space.sideheat)
+        self.side_heat_checkbox.stateChanged.connect(self.set_sideheat)
+        layout.addWidget(self.side_heat_checkbox)
+
+        self.setLayout(layout)
+        self.show()
+        self.exec()
 
 
-        self.label6 = tk.Label(a, text= "Mass koeff").grid(row=6,column=0)
-        self.massk_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_massk)
-        self.massk_slider.grid(row=6,column=1)
-        self.massk_slider.set(self.space.MASS_KOEFF)
+    def create_slider(self, layout, label_text, min_value, max_value, initial_value, callback):
+        slider_frame = QWidget()
+        h_layout = QHBoxLayout(slider_frame)
+        layout.addWidget(slider_frame)
+        label = QLabel(label_text)
+        h_layout.addWidget(label)
 
-        self.label7 = tk.Label(a, text= "Container size X").grid(row=7,column=0)
-        self.sizex_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_size)
-        self.sizex_slider.grid(row=7,column=1)
-        self.sizex_slider.set(int(self.space.WIDTH/100))
+        slider = QSlider()
+        slider.setOrientation(1)  # 1 - горизонтальный
+        slider.setRange(min_value, max_value)
+        slider.setValue(int(initial_value))
+        slider.valueChanged.connect(callback)
+        slider.setPageStep(1)
+        h_layout.addWidget(slider)
+        label = QLabel(str(slider.value()))
+        h_layout.addWidget(label)
+        slider.valueChanged.connect(lambda  value: label.setText(str(value)))
+        return slider
 
-        self.label8 = tk.Label(a, text= "Container size Y").grid(row=8,column=0)
-        self.sizey_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_size)
-        self.sizey_slider.grid(row=8,column=1)
-        self.sizey_slider.set(int(self.space.HEIGHT/100))
+    
 
-        self.label9 = tk.Label(a, text= "Container size Z").grid(row=9,column=0)
-        self.sizez_slider = tk.Scale(a, from_=1, to=50, length=200,orient=tk.HORIZONTAL,command=self.set_size)
-        self.sizez_slider.grid(row=9,column=1)
-        self.sizez_slider.set(int(self.space.DEPTH/100))
-
-        self.label10 = tk.Checkbutton(a, text="Show nodes",variable=self.glframe.drawnodes).grid(row=10,column=0)
-        self.label11 = tk.Checkbutton(a, text="Side heat",variable=self.space.sideheat, command=self.set_sideheat).grid(row=11,column=0)
-        
-
-
-    def set_delta(self,value):
+    def set_delta(self, value):
         self.space.update_delta = int(value)
 
-    def set_interk(self,value):
-        self.space.INTERACT_KOEFF=float(value)
-        self.glframe.update_uniforms=True
+    def set_interk(self, value):
+        self.space.INTERACT_KOEFF = float(value)
+        self.glframe.update_uniforms = True
 
-    def set_repulsek1(self,value):
-        self.space.REPULSION_KOEFF1 =float(value)
-        self.glframe.update_uniforms=True
+    def set_repulsek1(self, value):
+        self.space.REPULSION_KOEFF1 = float(value)
+        self.glframe.update_uniforms = True
 
-    def set_repulsek2(self,value):
-        self.space.REPULSION_KOEFF2=float(value)
-        self.glframe.update_uniforms=True
+    def set_repulsek2(self, value):
+        self.space.REPULSION_KOEFF2 = float(value)
+        self.glframe.update_uniforms = True
 
-    def set_bondk(self,value):
-        self.space.BOND_KOEFF =float(value)
-        self.glframe.update_uniforms=True
+    def set_bondk(self, value):
+        self.space.BOND_KOEFF = float(value)
+        self.glframe.update_uniforms = True
 
-    def set_rotk(self,value):
+    def set_rotk(self, value):
         self.space.ROTA_KOEFF = float(value)
-#        print("rota =",self.space.ROTA_KOEFF)
-        self.glframe.update_uniforms=True
-    
-    def set_massk(self,value):
+        self.glframe.update_uniforms = True
+
+    def set_massk(self, value):
         self.space.MASS_KOEFF = float(value)
-        self.glframe.update_uniforms=True
+        self.glframe.update_uniforms = True
 
-    def set_sideheat(self):
-        print("set sideheat")
-        self.glframe.update_uniforms=True
-
-    def set_size(self,value):
-        sx = self.sizex_slider.get()
-        sy = self.sizey_slider.get()
-        sz = self.sizez_slider.get()
-        self.space.setSize(sx*100, sy*100, sz*100)
-        self.space.glframe.updateContainerSize()
-        self.glframe.update_uniforms=True
-
+    def set_sideheat(self,checked):
+        if checked:
+            self.space.sideheat = True
+        else:
+            self.space.sideheat = False
+        self.glframe.update_uniforms = True
     
-class AtomProperties(tk.Toplevel):
-    def __init__(self, root, a:Atom):
-        super().__init__(root)
-        self.a = a
+    def set_shownodes(self,checked):
+        if checked:
+            self.glframe.drawnodes = True
+        else:
+            self.glframe.drawnodes = False
+
+    def set_size(self, value):
+        sx = self.sizex.value()
+        sy = self.sizey.value()
+        sz = self.sizez.value()
+        self.space.setSize(sx * 100, sy * 100, sz * 100)
+        self.space.glframe.updateContainerSize()
+        self.glframe.update_uniforms = True
+
+class AtomProperties(QDialog):
+    def __init__(self, parent, atom: Atom):
+        super().__init__(parent)
+        self.a = atom
         self.saved = False
-        self.title("Atom properties")
-        self.resizable(0, 0)
-        self.geometry('420x300')
-        self.main_frame = tk.Frame(self)
-        self.main_frame.pack()
-        self.type_frame = tk.Frame(self.main_frame)
-        self.type_frame.pack()
-        self.type_label = tk.Label(self.type_frame, text="Atom type:").pack(side=tk.LEFT)
-        self.type = tk.Label(self.type_frame, text=str(a.type)).pack(side=tk.RIGHT)
-        self.pos_frame = tk.Frame(self.main_frame)
-        self.pos_frame.pack()
-        self.pos_label = tk.Label(self.pos_frame, text="Position:").pack(side=tk.LEFT)
-        self.pos = tk.Label(self.pos_frame, text=str(a.pos)).pack(side=tk.RIGHT)
-        self.q_frame = tk.Frame(self.main_frame)
-        self.q_frame.pack()
-        self.q_label = tk.Label(self.q_frame, text="q = "+str(self.a.q)).pack(side=tk.RIGHT)
+        self.setWindowTitle("Atom properties")
+        self.setFixedSize(420, 300)
 
-        #from tkinter import colorchooser
-        #colorchooser.askcolor(initialcolor='#ff0000')
-        self.fnodes = {}
-        self.nodes_frame = tk.Frame(self)
-        self.nodes_frame.pack()
-        self.nodes_label = tk.Label(self.nodes_frame, text="Nodes:").pack(side=tk.LEFT)
-        for i in range(len(a.nodes)):
-            node = self.a.nodes[i]
-            self.fnodes[i] = tk.Frame(self.nodes_frame)
-            node_type_label = tk.Label(self.fnodes[i], text="Type:").pack(side=tk.LEFT)
-            node_type = tk.Label(self.fnodes[i], text=node.type).pack(side=tk.LEFT)
-            node_spin_label = tk.Label(self.fnodes[i], text="Spin:").pack(side=tk.LEFT)
-            node_spin = ttk.Combobox(self.fnodes[i], values=[-1, 0, 1], width=5,state="readonly")
-            node_spin.pack(side=tk.LEFT)
-            node_spin.set(str(int(node.spin)))
-            node_spin.bind("<<ComboboxSelected>>", lambda event, x=i: self.node_spin_changed(x))
-            node_q_label = tk.Label(self.fnodes[i], text="q:").pack(side=tk.LEFT)
-            node_q = ttk.Combobox(self.fnodes[i], values=[-1, 0, 1], width=5,state="readonly")
-            node_q.bind("<<ComboboxSelected>>", lambda event, x=i: self.node_q_changed(x))
-            node_q.pack(side=tk.LEFT)
-            node_q.set(str(int(node.q)))
-            node_bonded_label = tk.Label(self.fnodes[i], text='Bonded:'+str(node.bonded)).pack(side=tk.LEFT)
-            if a.nodeselect==i:
-                node_selected_label = tk.Label(self.fnodes[i], text='Sel').pack(side=tk.LEFT)
-            
-            setattr(node, 'node_spin',node_spin)
-            setattr(node, 'node_q',node_q)
-            self.fnodes[i].pack()
-            
-        self.button_frame = tk.Frame(self)
-        self.button_frame.pack(pady=20)
-        self.button0 = ttk.Button(self.button_frame, text="ОК", command=self.save).pack(side=tk.LEFT,padx=10)
-        self.button1 = ttk.Button(self.button_frame, text="Cancel",command=self.cancel).pack(side=tk.LEFT,padx=10)
+        layout = QVBoxLayout(self)
 
-    def node_q_changed(self,i):
-        node = self.a.nodes[i]        
-        q = node.node_q.get()
-        if q in ["-1", "1"]: newspin = "0"
-        if q=="0": newspin = "1"
-        node.node_spin.set(newspin)
+        # Atom type
+        self.type_frame = QHBoxLayout()
+        self.type_frame.addWidget(QLabel("Atom type:"))
+        self.type_frame.addWidget(QLabel(str(atom.type)))
+        layout.addLayout(self.type_frame)
 
-    def node_spin_changed(self,i):
-        node = self.a.nodes[i]        
-        spin = node.node_spin.get()
-        if spin in ["-1", "1"]: newq = "0"
-        if spin=="0": newq = "1"
-        node.node_q.set(newq)
+        # Position
+        self.pos_frame = QHBoxLayout()
+        self.pos_frame.addWidget(QLabel("Position:"))
+        self.pos_frame.addWidget(QLabel(str(atom.pos)))
+        layout.addLayout(self.pos_frame)
 
+        # Charge
+        self.q_frame = QHBoxLayout()
+        self.q_frame.addWidget(QLabel("q = " + str(self.a.q)))
+        layout.addLayout(self.q_frame)
 
-    def save(self):
-        allgood = True
-        for i in range(len(self.a.nodes)):
-            node = self.a.nodes[i]
-            q = float(node.node_q.get())
-            spin = float(node.node_spin.get())
-            if (q!=0.0 and spin!=0.0) or (q==0.0 and spin==0.0): 
-                tk.messagebox.showerror("error", f"Inconsistent spin and q for node {i}")
-                allgood = False
-                break
-            node.q = q
-            node.spin = spin
-        print(allgood)
-        if allgood:
-            self.destroy()
-            self.saved = True
+        # Nodes
+        self.fnodes = []
+        self.nodes_frame = QVBoxLayout()
+        self.nodes_label = QLabel("Nodes:")
+        layout.addWidget(self.nodes_label)
+        
+        for i, node in enumerate(atom.nodes):
+            node_frame = QHBoxLayout()
+            node_frame.addWidget(QLabel("Type:"))
+            node_frame.addWidget(QLabel(str(node.type)))
+            node_frame.addStretch()
+            node_frame.addWidget(QLabel("Spin:"))
+            node_spin = QComboBox()
+            node_spin.addItems(["-1", "0", "1"])
+            node_spin.setCurrentText(str(int(node.spin)))
+            node_spin.currentIndexChanged.connect(lambda _, x=i: self.node_spin_changed(x))
+            node_frame.addWidget(node_spin)
+            node_frame.addStretch()
+            node_frame.addWidget(QLabel("q:"))
+            node_q = QComboBox()
+            node_q.addItems(["-1", "0", "1"])
+            node_q.setCurrentText(str(int(node.q)))
+            node_q.currentIndexChanged.connect(lambda _, x=i: self.node_q_changed(x))
+            node_frame.addWidget(node_q)
+            node_frame.addStretch()
+            if atom.nodeselect == i:
+                node_frame.addWidget(QLabel('Sel'))
+            node_frame.addWidget(QLabel('Bonded: ' + str(node.bonded)))
+
+            self.fnodes.append((node_spin, node_q))
+            self.nodes_frame.addLayout(node_frame)
+
+        layout.addLayout(self.nodes_frame)
+
+        # Buttons
+        self.button_frame = QHBoxLayout()
+        self.button0 = QPushButton("OK")
+        self.button0.clicked.connect(self.save)
+        self.button_frame.addWidget(self.button0)
+
+        self.button1 = QPushButton("Cancel")
+        self.button1.clicked.connect(self.cancel)
+        self.button_frame.addWidget(self.button1)
+
+        layout.addLayout(self.button_frame)
+
+    def node_q_changed(self, i):
+        node_spin, node_q = self.fnodes[i]
+        q = node_q.currentText()
+        if q in ["-1", "1"]:
+            new_spin = "0"
+        elif q == "0":
+            new_spin = "1"
+        node_spin.blockSignals(True)
+        node_spin.setCurrentText(new_spin)
+        node_spin.blockSignals(False)
+
+    def node_spin_changed(self, i):
+        node_spin, node_q = self.fnodes[i]
+        spin = node_spin.currentText()
+        if spin in ["-1", "1"]:
+            new_q = "0"
+        elif spin == "0":
+            new_q = "1"
+        node_q.setCurrentText(new_q)
 
     def cancel(self):
-        self.destroy()
-#        self.type_entry.configure(state="readonly") 
+        self.reject()
 
+    def save(self):
+        all_good = True
+        for i, (node_spin, node_q) in enumerate(self.fnodes):
+            q = float(node_q.currentText())
+            spin = float(node_spin.currentText())
+            if (q != 0.0 and spin != 0.0) or (q == 0.0 and spin == 0.0):
+                QMessageBox.critical(self, "Error", f"Inconsistent spin and q for node {i}")
+                all_good = False
+                break
+            self.a.nodes[i].q = q
+            self.a.nodes[i].spin = spin
+        if all_good:
+            self.accept()
 
-        #self.mass_entry.insert(0, str(self.main_object.mass))
-        #self.mass_entry.pack()
-        #self.mass_entry.insert(0, str(self.main_object.mass))
-        #self.mass_label = tk.Label(self, text="Масса:")
-        #self.mass_label.pack()
-        #self.apply_button = tk.Button(self, text="Применить", command=self.apply_changes)
-        #self.apply_button.pack(pady=10)
-
+import traceback
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.exit(0)
+    #print(f"Exception: {exc_value}")
+    traceback.print_last()
+sys.excepthook = handle_exception
 
 
 if __name__ == '__main__':
-    mychemApp().run()
+    a = mychemApp()
+    time.sleep(1)
+    a.run()
+    

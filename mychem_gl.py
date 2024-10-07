@@ -2,7 +2,7 @@ import OpenGL.GL as gl
 import OpenGL.GL.shaders
 #import glfw
 import ctypes
-from pyopengltk import OpenGLFrame
+#from pyopengltk import OpenGLFrame
 import numpy as np
 import glm
 import random
@@ -14,27 +14,33 @@ from mychem_data import cube_vertices
 from mychem_atom import Node,AtomC,NodeC
 from array import array
 from mesh import Mesh
-import tkinter as tk
 import threading
 import json
+from PyQt5.QtWidgets import QOpenGLWidget
+from PyQt5.QtCore import QTimer
+#from PyQt5.QtGui import QOpenGLWindow,
+#from OpenGL.GL import *
 
-class AppOgl(OpenGLFrame):
-    def set_space(self,space):
+
+class GLWidget(QOpenGLWidget):
+    def __init__(self,space):
+        super().__init__()
         self.space = space
-    def initgl(self):
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update)
+        self.timer.start(20)
+
+    def initializeGL(self):
         """Initalize gl states when the frame is created"""
         print("init gl")
-        gl.glViewport(0, 0, self.width, self.height)
+        #self.w
+        #self.setMinimumSize(self.width, self.height)
+        
+        gl.glViewport(0, 0, self.width(), self.height())
         gl.glClearColor(0.3, 0.3, 0.3, 0.0)
         gl.glEnable(gl.GL_DEPTH_TEST)
-        #glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-        #glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
         gl.glBlendEquation(gl.GL_FUNC_ADD)
         gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE,gl.GL_ZERO)
-        #gl.glBlendEquation(gl.GL_)
-        
-        
-
         #gl.glEnable(gl.GL_CULL_FACE);
         #gl.glCullFace(gl.GL_FRONT); 
         #gl.glFrontFace(gl.GL_CW) 
@@ -49,10 +55,10 @@ class AppOgl(OpenGLFrame):
         self.nearatomsmax = 5000
         self.LOCALSIZEX = 64
         self.nearflag = False
-        self.drawnodes =  tk.BooleanVar()
-        self.drawnodes.set(True)
+        self.drawnodes =  True
         self.update_uniforms = True
     
+        #self.makeCurrent()
         vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
         fragment_shader = open("shaders/atom_frag1.glsl","r").read()
         compute_shader = open("shaders/compute.glsl","r").read()
@@ -76,6 +82,7 @@ class AppOgl(OpenGLFrame):
         gl.glAttachShader(self.gpu_code, self.compute_shader)
         gl.glLinkProgram(self.gpu_code)
    
+        #self.doneCurrent()
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
         self.cameraPos = glm.vec3(0.5,0.5,2)
@@ -101,8 +108,7 @@ class AppOgl(OpenGLFrame):
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
-        print("objects created")
-        #self.space.atoms2compute()
+        self.space.atoms2compute()
         self.start = time.time()
         self.nframes = 0          
         self.rframes = 0
@@ -111,6 +117,7 @@ class AppOgl(OpenGLFrame):
     
 
     def atoms2ssbo(self):
+        self.makeCurrent()
         self.N = len(self.space.atoms)
         print(f"  Atoms2ssbo N={self.N}")
         ac = AtomC()
@@ -129,7 +136,7 @@ class AppOgl(OpenGLFrame):
                     nbytearray = bytearray(ctypes.sizeof(NodeC))
                     a_data += nbytearray
         else:
-            a_data = bytearray()
+            a_data = bytearray(1)
         datasize = len(a_data)
         a_data = np.array(a_data,dtype=np.byte)
 #        print_bytes_with_highlights(a_data,[(ctypes.sizeof(AtomC)+9*4,4)])
@@ -193,9 +200,11 @@ class AppOgl(OpenGLFrame):
 
 
         self.set_compute_uniforms()
+        self.doneCurrent()
 
 
     def ssbo2atoms(self):
+        self.makeCurrent()
         self.N = len(self.space.atoms)
         print(f"  ssbo2atoms N={self.N}")
         asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
@@ -206,6 +215,7 @@ class AppOgl(OpenGLFrame):
         #print("sizeof AtomC", ctypes.sizeof(AtomC))
         #print("sizeof NodeC", ctypes.sizeof(NodeC))
         gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
+        self.doneCurrent()
         offset = 0
         self.space.Ek = 0
         for i in range(0,self.N):
@@ -256,7 +266,7 @@ class AppOgl(OpenGLFrame):
 
 
     def create_objects(self):
-        print("create objects start")
+        print("create objects")
         self.atomMesh = Mesh(self.sphere_vertices)
         self.atomMesh.setup()
         self.nodeMesh = Mesh(self.sphere_vertices2)
@@ -267,10 +277,8 @@ class AppOgl(OpenGLFrame):
         model =  glm.scale(model,self.space.box/glm.vec3(1/self.factor))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
         model =  glm.translate(model, glm.vec3(1, 1, 1))
-
         self.containerMesh.color = (1,1,1,1)
         self.containerMesh.modelmatrix = model
-
         self.init_loc()
 
     def updateContainerSize(self):
@@ -291,7 +299,9 @@ class AppOgl(OpenGLFrame):
                 )
         self.cameraFront = glm.normalize(front)
         self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
-        self.projection = glm.perspective(glm.radians(self.fov), self.width/self.height, 0.01,20.0)
+        a = self.width()
+        b=  self.height()
+        self.projection = glm.perspective(glm.radians(self.fov), a/b, 0.01,20.0)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
         gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0]+self.view[0,1],
@@ -339,27 +349,28 @@ class AppOgl(OpenGLFrame):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         # render computed atoms
-        self.atomMesh.bind()
-        if self.space.tranparentmode:
-            gl.glUniform1i(self.loc["transparency"],1)
-        gl.glUniform1i(self.loc["mode"],1)
-        gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
-        if self.drawnodes.get():
-            gl.glUniform1i(self.loc["mode"],2)
-            self.nodeMesh.bind()
-            for i in range(0,5):
-                    gl.glUniform1i(self.loc["nodeindex"],i)
-                    gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
-
-        #draw transparent atoms after opaque
-        if self.space.tranparentmode:
-            gl.glEnable(gl.GL_BLEND)
+        if self.N>0:
             self.atomMesh.bind()
-            gl.glUniform1i(self.loc["transparency"],2)
+            if self.space.tranparentmode:
+                gl.glUniform1i(self.loc["transparency"],1)
             gl.glUniform1i(self.loc["mode"],1)
             gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
-            gl.glUniform1i(self.loc["transparency"],0)
-            gl.glDisable(gl.GL_BLEND)
+            if self.drawnodes:
+                gl.glUniform1i(self.loc["mode"],2)
+                self.nodeMesh.bind()
+                for i in range(0,5):
+                        gl.glUniform1i(self.loc["nodeindex"],i)
+                        gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
+
+            #draw transparent atoms after opaque
+            if self.space.tranparentmode:
+                gl.glEnable(gl.GL_BLEND)
+                self.atomMesh.bind()
+                gl.glUniform1i(self.loc["transparency"],2)
+                gl.glUniform1i(self.loc["mode"],1)
+                gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+                gl.glUniform1i(self.loc["transparency"],0)
+                gl.glDisable(gl.GL_BLEND)
         
 
         gl.glUniform1i(self.loc["mode"],0)
@@ -398,12 +409,12 @@ class AppOgl(OpenGLFrame):
 
     def set_compute_uniforms(self):
             gl.glUseProgram(self.gpu_code)
-            gl.glUniform1i(self.loc["bondlock"],self.space.bondlock.get())
+            gl.glUniform1i(self.loc["bondlock"],self.space.bondlock)
             gl.glUniform3fv(self.loc["box"], 1, glm.value_ptr(self.space.box))
             gl.glUniform1i(self.loc["iTime"],self.space.t)
-            gl.glUniform1i(self.loc["gravity"],self.space.gravity.get())
-            gl.glUniform1i(self.loc["redox"],self.space.redox.get())
-            gl.glUniform1i(self.loc["shake"],self.space.shake.get())
+            gl.glUniform1i(self.loc["gravity"],self.space.gravity)
+            gl.glUniform1i(self.loc["redox"],self.space.redox)
+            gl.glUniform1i(self.loc["shake"],self.space.shake)
             gl.glUniform1f(self.loc["BOND_KOEFF"],self.space.BOND_KOEFF)
             gl.glUniform1f(self.loc["INTERACT_KOEFF"],self.space.INTERACT_KOEFF)
             gl.glUniform1f(self.loc["REPULSION_KOEFF1"],self.space.REPULSION_KOEFF1)
@@ -413,8 +424,8 @@ class AppOgl(OpenGLFrame):
             gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
             gl.glUniform1f(self.loc["NODEDIST"],self.space.NODEDIST)
             gl.glUniform1f(self.loc["HEAT"],float(self.space.heat))
-            gl.glUniform1i(self.loc["sideheat"],self.space.sideheat.get())
-            gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond.get())
+            gl.glUniform1i(self.loc["sideheat"],self.space.sideheat)
+            gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond)
             print("set compute vars")
 
     def compute(self):
@@ -428,15 +439,14 @@ class AppOgl(OpenGLFrame):
             gl.glUseProgram(self.gpu_code)
 
             for i in range(0,self.space.update_delta):
-                self.space.t+=1
-                if not self.space.pause:
+                    self.space.t+=1
                     gl.glUniform1i(self.loc["stage"],1) #calc q and rpos of nodes
-                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                    gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
                         self.nearflag = False
                         gl.glUniform1i(self.loc["stage"],2)   #calc near atoms  and far field
-                        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                        gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
                         gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                         #gl.glUniform1i(self.loc["stage"],4)   # bonded state
                         #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
@@ -447,7 +457,7 @@ class AppOgl(OpenGLFrame):
                     #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
 
                     gl.glUniform1i(self.loc["stage"],5)  #main
-                    gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                    gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
                     gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
@@ -457,19 +467,8 @@ class AppOgl(OpenGLFrame):
             gl.glUseProgram(0)
 
 
-    def do_movement(self):
-        cameraSpeed = 5 * self.framedelta
-        if 'w' in self.keypressed:
-              self.cameraPos += cameraSpeed * self.cameraFront
-        if 's' in self.keypressed:
-              self.cameraPos -= cameraSpeed * self.cameraFront
-        if 'a' in self.keypressed:
-              self.cameraPos -= glm.normalize(glm.cross(self.cameraFront, self.cameraUp)) * cameraSpeed
-        if 'd' in self.keypressed:
-              self.cameraPos += glm.normalize(glm.cross(self.cameraFront, self.cameraUp)) * cameraSpeed
-
     def recordframe(self,pix,rframes):
-        img = Image.frombytes("RGB", (self.width,self.height), pix)
+        img = Image.frombytes("RGB", (self.width(),self.height()), pix)
         img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
         img3 = ImageDraw.Draw(img2)
         img3.text((10,10),str(rframes))
@@ -481,39 +480,28 @@ class AppOgl(OpenGLFrame):
         f.write(json.dumps(data))
         f.close()
 
-    def redraw(self):
+    def paintGL(self):
         """Render a single frame"""
-        
         #gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        self.N = len(self.space.atoms)
         self.render()
         self.compute()
 
-        if (self.space.recording.get() or self.space.record_data.get()) and not self.space.pause:
-            if self.space.recording.get():
-                pix = gl.glReadPixels(0,0,self.width, self.height,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+        if (self.space.recording or self.space.record_data) and not self.space.pause:
+            if self.space.recording:
+                pix = gl.glReadPixels(0,0,self.width(), self.height(),gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
                 thread = threading.Thread(target=self.recordframe,args=(pix,self.rframes))
                 thread.daemon = True
                 thread.start()
-            if self.space.record_data.get():
+            if self.space.record_data:
                 self.space.compute2atoms()
                 thread = threading.Thread(target=self.recorddata,args=(self.rframes,))
                 thread.daemon = True
                 thread.start()
             self.rframes+=1
 
-            
-            
-
-
-
-#        if self.nframes%50==0:
-           
-           
-                            
         self.curframe_time = time.time()
         self.framedelta = self.curframe_time - self.lastframe_time 
-   #     self.do_movement()
-        #time.sleep(0.1)
         self.lastframe_time = self.curframe_time
         throttle = 1/40 - self.framedelta
         if throttle>0:

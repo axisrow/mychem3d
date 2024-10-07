@@ -1,10 +1,10 @@
 Pseudochemical 3d simulator
-- python tkinter used
+- PyQt5 
 - opengl 4.3 with compute shader used for parallel computation
 - not release by now
 
 for use install libraries:
-- python -m pip install pillow numpy pyglm pyopengl pyopengltk
+- python -m pip install pillow numpy pyglm pyopengl pyqt5
 
 Tested on:
 - integrated Intel Iris Xe Graphics

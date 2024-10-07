@@ -4,9 +4,7 @@ from math import sqrt,sin,cos,pi,acos
 import numpy as np
 import random
 from mychem_atom import Atom
-from mychem_gl import AppOgl
 import glm
-import tkinter as tk
 import time
 
 class Space:
@@ -31,10 +29,8 @@ class Space:
         self.t = -1
         self.stoptime = -1
         self.recordtime = 0
-        self.recording = tk.BooleanVar()
-        self.recording.set(False)
-        self.record_data = tk.BooleanVar()
-        self.record_data.set(False)
+        self.recording = False
+        self.record_data = False
         self.atoms = []	
         self.Ek = 0
         self.g = 0.001
@@ -43,32 +39,28 @@ class Space:
         self.merge_center = glm.vec3(0,0,0)
         self.select_mode = 0
         self.selected_atoms = [] 
-        self.gravity = tk.BooleanVar()
-        self.gravity.set(False)
-        self.shake= tk.BooleanVar()
-        self.shake.set(False)
+        self.gravity = False
+        self.shake= False
         self.SHAKE_KOEFF = 0.5
-        self.redox = tk.BooleanVar()
-        self.redox.set(False)
+        self.redox = False
         self.redox_rate = 1
-        self.bondlock =tk.BooleanVar()
-        self.bondlock.set(False)
-        self.highlight_unbond =tk.BooleanVar()
-        self.highlight_unbond.set(False)
-        self.sideheat =tk.BooleanVar()
-        self.sideheat.set(False)
+        self.bondlock =False
+        self.highlight_unbond = False
+        self.sideheat = False
         self.update_delta= 5
         self.action = None
         self.fdata = open('data.txt',"w")
         self.tranparentmode = False
+        print("space created")
 
     def setSize(self, width,height,depth):
         self.WIDTH=width
         self.HEIGHT=height
         self.DEPTH=depth
         self.box = glm.vec3(self.WIDTH, self.HEIGHT, self.DEPTH)
-        print("box size =  ",self.box)
+        #print("box size =  ",self.box)
         self.merge_pos = self.box/2
+        
 
 
     def appendatom(self,a):
@@ -158,7 +150,6 @@ class Space:
          
 
     def atoms2compute(self):
-        self.glframe: AppOgl
         t = time.time()
         print("atoms2compute gpu")
         self.glframe.atoms2ssbo()
