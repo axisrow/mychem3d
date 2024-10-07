@@ -38,9 +38,10 @@ Selection atoms
   - Right mouse button on selected - context menu for actions
 
 
+*qt5 issue*
+issue error: could not find or load the Qt platform plugin "windows" in ""
+resolution: set QT_QPA_PLATFORM_PLUGIN_PATH environment variable to %PythonPath%\Lib\site-packages\PyQt5\Qt5\plugins\platforms
 
-
-Do not watch video parallel to runing this simulator or iconize it, the simulation may hang
 
 
 Some examples:
