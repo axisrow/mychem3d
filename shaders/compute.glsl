@@ -16,7 +16,7 @@ uniform int sideheat;
 //uniform float frame_time;
 float BONDR = 4;
 uniform float BOND_KOEFF;
-uniform float ATTRACT_KOEFF;
+uniform float ATTRACTION_KOEFF;
 uniform float INTERACT_KOEFF;
 uniform float INTERACT_KOEFF2=1.0;
 uniform float ROTA_KOEFF;
@@ -287,6 +287,7 @@ void main()
 
     float bondcheck[5]= {0.0,0.0,0.0,0.0,0.0};
 
+    //forj
     for (int jj=1;jj<=Near.indexes[i][0];jj++){
             int j = Near.indexes[i][jj];
             Atom atom_j = In.atoms[j];
@@ -298,22 +299,25 @@ void main()
 
             float f2,f3,f4,f5;
 
-            if (r>sumradius){
-                float e= atom_j.q*INTERACT_KOEFF/r/r;
-                E += delta/r * e;
-                //float sgm = 40.0;
-                //f2 = r*REPULSION_KOEFF2*(pow(sgm/r,14)- pow(sgm/r,8));
-                f2 = 100.0 * REPULSION_KOEFF2/pow(r,4);
-                F += delta/r*f2;
-            }
+            //if (r>sumradius){
+            float e= atom_j.q*INTERACT_KOEFF/r/r;
+            E += delta/r * e;
+            //}
+
+            f2 = -ATTRACTION_KOEFF*0.01/r/r;
+            F += delta/r*f2; 
 
             if (r<NODEDIST) {
-                if (r<(sumradius+REPULSION1) && r>1.0 ){
+                float sgm = sumradius+REPULSION_KOEFF1;
+                f3 = pow(sgm/r,REPULSION_KOEFF2);
+                F += delta/r*f3; 
+                /*if (r<(sumradius+REPULSION1) && r>1.0 ){
                    f3 =  REPULSION_KOEFF1/r ;
                    F += delta/r*f3;                   
                    //atom_i.highlight = 50;
 
-                }
+                }*/
+
             //nodes
             for (int ni = 0; ni<atom_i.ncount; ni++ ) {
                 vec3 ni_realpos = rpos[i][ni].xyz;
@@ -354,7 +358,9 @@ void main()
                             //v_i *=0.01;
                         }
                         else {
-                            f4 = 10.0/rn; // pauli!
+                            f4 = 1000*exp(-1.2*rn); // pauli!
+                            //atom_i.highlight = 50;
+                            
                         }
                     }
 
@@ -394,7 +400,7 @@ void main()
                         } 
                     }
 
-                    F += ndelta/rn*f4;
+                    F += ndelta/rn*f4*0.1;
 
                     vec3 target_direction = nj_realpos + pos_j - pos_i;
                     vec3 target_direction2 = pos_j - pos_i;
@@ -438,15 +444,17 @@ void main()
             if (highlight_unbond==1) {
                 atom_i.highlight = 50;                    
             }                
-            if(qshift_buffer[i][ni]>0){
-                atom_i.nodes[ni].q= 1;
-                atom_i.nodes[ni].spin= 0;
+            if (abs(qshift_buffer[i][ni])>0.4){
+                if(qshift_buffer[i][ni]>0){
+                    atom_i.nodes[ni].q= 1;
+                    atom_i.nodes[ni].spin= 0;
+                }
+                if(qshift_buffer[i][ni]<0){
+                    atom_i.nodes[ni].q=-1;
+                    atom_i.nodes[ni].spin= 0;
+                }
+                qshift_buffer[i][ni] = 0;
             }
-            if(qshift_buffer[i][ni]<0){
-                atom_i.nodes[ni].q=-1;
-                atom_i.nodes[ni].spin= 0;
-            }
-            qshift_buffer[i][ni] = 0;
         }
 
 
@@ -481,7 +489,7 @@ void main()
    if (shake==1) v_i+= vec3(rand(pos_i.xy)-0.5,rand(pos_i.xz)-0.5,rand(pos_i.yz)-0.5)*0.1;
 
 // far field
-   F += Far.F[i].xyz; //*0.01;
+   F += Far.F[i].xyz;
 
 //e-field
    //F.x += atom_i.q*INTERACT_KOEFF/20.0;

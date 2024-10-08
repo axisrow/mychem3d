@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         #QShortcut( 'Alt+l', self ).activated.connect(self.handle_random_recent) 
         #QShortcut( 'Alt+g', self ).activated.connect(self.handle_gravity) 
         QShortcut( 'Ctrl+z', self ).activated.connect(self.handle_undo)         
-        QShortcut( '0', self ).activated.connect(self.handle_zero)         
+        #QShortcut( '0', self ).activated.connect(self.handle_zero)         
         #self.bind("<Map>", self.handle_mapunmap)
         #self.bind("<Unmap>", self.handle_mapunmap)
         self.qw = QWidget(self)
@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
 
 
     def init_menu(self):
+        space:Space
         self.menu_bar = self.menuBar()
         file_menu = self.menu_bar.addMenu("File")
         file_menu.addAction(QAction('New', self, triggered=self.file_new, shortcut='Alt+N'))
@@ -132,12 +133,24 @@ class MainWindow(QMainWindow):
         sim_menu.addAction(QAction("Go/Pause",self,triggered=self.handle_space, shortcut="Space"))
         sim_menu.addAction(QAction("Reset",self,triggered=self.handle_reset, shortcut="Alt+r"))
         sim_menu.addAction(QAction("Invert velocities",self,triggered=self.handle_invert, shortcut="Alt+i"))
-        sim_menu.addAction(QAction("Random shake",self,triggered=self.handle_shake, shortcut="s",checkable=True))
-        sim_menu.addAction(QAction("Gravity",self,triggered=self.handle_gravity, shortcut="Alt+g",checkable=True))
-        sim_menu.addAction(QAction("Highlight unbond",self,triggered=self.handle_highlight_unbond, checkable=True))
-        sim_menu.addAction(QAction("Two zone redox",self,triggered=self.handle_redox,checkable=True))
-        sim_menu.addAction(QAction("Record image",self,triggered=self.handle_recording,checkable=True))
-        sim_menu.addAction(QAction("Record data",self,triggered=self.handle_record_data,checkable=True))
+        self.shake_action = QAction("Random shake",self,triggered=self.handle_shake, shortcut="s",checkable=True)
+        sim_menu.addAction(self.shake_action)
+        self.shake_action.setChecked(self.space.shake)
+        self.gravity_action = QAction("Gravity",self,triggered=self.handle_gravity, shortcut="Alt+g",checkable=True)
+        self.gravity_action.setChecked(self.space.gravity)
+        sim_menu.addAction(self.gravity_action)
+        self.highlight_unbond_action = QAction("Highlight unbond",self,triggered=self.handle_highlight_unbond, checkable=True)        
+        self.highlight_unbond_action.setChecked(self.space.highlight_unbond)
+        sim_menu.addAction(self.highlight_unbond_action)
+        self.redox_action = QAction("Two zone redox",self,triggered=self.handle_redox,checkable=True)
+        self.redox_action.setChecked(self.space.redox)
+        sim_menu.addAction(self.redox_action)
+        self.recording_action = QAction("Record image",self,triggered=self.handle_recording,checkable=True)
+        self.recording_action.setChecked(self.space.recording)
+        sim_menu.addAction(self.recording_action)
+        self.record_data_action = QAction("Record data",self,triggered=self.handle_record_data,checkable=True)
+        self.record_data_action.setChecked(self.space.record_data)
+        sim_menu.addAction(self.record_data_action)
         sim_menu.addAction(QAction("Clear records",self,triggered=self.handle_clear_records))
         add_menu = self.menu_bar.addMenu("Add")
         add_menu.addAction(QAction("H",self,triggered=lambda:self.handle_add_atom(keysym="1"), shortcut="1"))
@@ -259,6 +272,7 @@ class MainWindow(QMainWindow):
 
     def selectmode(self,m):
         self.merge_mode = False
+        self.merge_atoms = []
         self.space.select_mode = m
     
     def mergemode(self):
@@ -315,8 +329,6 @@ class MainWindow(QMainWindow):
         self.glframe.update_uniforms = True
 
     def handle_gravity(self,checked):
-        print(self.N/0)
-        print(checked)
         if checked:
             self.space.gravity = True
         else:
@@ -934,9 +946,10 @@ class OptionsFrame(QDialog):
         # Создание слайдеров и меток
         self.create_slider(layout, "Update delta", 1, 150, self.space.update_delta, self.set_delta)
         self.create_slider(layout, "Interact koeff", 0, 1000, int(self.space.INTERACT_KOEFF), self.set_interk)
-        self.create_slider(layout, "Repulsion koeff1", 1, 100, int(self.space.REPULSION_KOEFF1), self.set_repulsek1)
-        self.create_slider(layout, "Repulsion koeff2", 0, 500, int(self.space.REPULSION_KOEFF2), self.set_repulsek2)
-        self.create_slider(layout, "Bond koeff", 1, 100, self.space.BOND_KOEFF, self.set_bondk)
+        self.create_slider(layout, "Repulsion koeff1", -15, 50, int(self.space.REPULSION_KOEFF1), self.set_repulsek1)
+        self.create_slider(layout, "Repulsion koeff2", 1, 15, int(self.space.REPULSION_KOEFF2), self.set_repulsek2)
+        self.create_slider(layout, "Attracion koeff", 0, 100, int(self.space.ATTRACTION_KOEFF), self.set_attraction)
+        self.create_slider(layout, "Bond koeff", 1, 1000, self.space.BOND_KOEFF, self.set_bondk)
         self.create_slider(layout, "Rotation koeff", 1, 50, int(self.space.ROTA_KOEFF), self.set_rotk)
         self.create_slider(layout, "Mass koeff", 1, 50, self.space.MASS_KOEFF, self.set_massk)
         self.sizex = self.create_slider(layout, "Container size X", 1, 50, int(self.space.WIDTH / 100), self.set_size)
@@ -992,6 +1005,10 @@ class OptionsFrame(QDialog):
 
     def set_repulsek2(self, value):
         self.space.REPULSION_KOEFF2 = float(value)
+        self.glframe.update_uniforms = True
+
+    def set_attraction(self, value):
+        self.space.ATTRACTION_KOEFF = float(value)
         self.glframe.update_uniforms = True
 
     def set_bondk(self, value):
