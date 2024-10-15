@@ -28,7 +28,7 @@ class GLWidget(QOpenGLWidget):
         self.space = space
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update)
-        self.timer.start(20)
+        self.timer.start(10)
 
     def initializeGL(self):
         """Initalize gl states when the frame is created"""
