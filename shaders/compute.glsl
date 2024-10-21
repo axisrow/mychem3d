@@ -442,8 +442,9 @@ void main()
                     atom_i.nodes[ni].q=-1;
                     atom_i.nodes[ni].spin= 0;
                 }
-                qshift_buffer[i][ni] = 0;
+                
             }
+            qshift_buffer[i][ni] = 0;
         }
 
 
