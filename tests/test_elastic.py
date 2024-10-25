@@ -43,11 +43,11 @@ if __name__ == '__main__':
     space = App.space
     space.setSize(1000,1000,1000)
     space.action = action1
-    space.INTERACT_KOEFF = 0.1
-    space.BOND_KOEFF = 0.2
-    #space.ROTA_KOEFF = 0.000001
+    #space.INTERACT_KOEFF = 0.1
+    space.BOND_KOEFF = 100
+    space.ROTA_KOEFF = 10
     #space.REPULSION_KOEFF1=30
-    space.REPULSION_KOEFF2=0.2
+    #space.REPULSION_KOEFF2=0.2
     space.update_delta = 10
     #space.gpu_compute.set(False)
     #space.bondlock.set(True)

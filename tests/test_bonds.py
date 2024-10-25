@@ -54,6 +54,7 @@ def action1(space:Space):
         space.atoms2compute()
 
     if space.t==100:
+        return
         space.compute2atoms()
         bond_atoms(c1,c2,1,2)
         bond_atoms(n1,n2)
@@ -63,6 +64,7 @@ def action1(space:Space):
         space.atoms2compute()
 
     if space.t==1200:
+        return
         space.compute2atoms()
         bond_atoms(c1,c2,2,1)
         bond_atoms(n1,n2,1,2)
@@ -73,6 +75,7 @@ def action1(space:Space):
 
 
     if space.t==2600:
+        return
         space.compute2atoms()
         bond_atoms(n1,n2,2,1)
         bond_atoms(c3,n3,3)

@@ -37,6 +37,7 @@ if __name__ == '__main__':
     space.update_delta = 10
     #space.gpu_compute.set(False)
     space.highlight_unbond = True
+    #space.ROTA_KOEFF = 5
     #space.recording.set(True)
     #space.appendmixer(2)
     #space.redox.set(True)
