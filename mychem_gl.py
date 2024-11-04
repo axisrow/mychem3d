@@ -366,12 +366,14 @@ class GLWidget(QOpenGLWidget):
             #draw transparent atoms after opaque
             if self.space.tranparentmode:
                 gl.glEnable(gl.GL_BLEND)
+                gl.glDepthMask(gl.GL_FALSE)
                 self.atomMesh.bind()
                 gl.glUniform1i(self.loc["transparency"],2)
                 gl.glUniform1i(self.loc["mode"],1)
                 gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
                 gl.glUniform1i(self.loc["transparency"],0)
                 gl.glDisable(gl.GL_BLEND)
+                gl.glDepthMask(gl.GL_TRUE)
         
 
         gl.glUniform1i(self.loc["mode"],0)
