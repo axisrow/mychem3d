@@ -18,7 +18,7 @@ float BONDR = 4;
 uniform float BOND_KOEFF;
 uniform float ATTRACTION_KOEFF;
 uniform float INTERACT_KOEFF;
-uniform float INTERACT_KOEFF2=50;
+uniform float INTERACT_KOEFF2=30;
 uniform float ROTA_KOEFF;
 uniform float CONUS_KOEFF = 0.866;
 float REPULSION1 = -6;
@@ -336,19 +336,18 @@ void main()
                     f4 = 0, f5=0;
                     //node interact
                     float rn,rn2;
-                    vec3 ndelta,cdelta,force_dir;
+                    vec3 ndelta,force_dir;
                     
 
                     ndelta =  ni_realpos - nj_realpos + delta;
-                    cdelta = ni_realpos + delta;
-
+    
                     rn = distance(pos_i + ni_realpos, pos_j + nj_realpos);
                     if (rn == 0) continue;                    
 
-                    vec3 m = mix(ndelta,cdelta,0.1);
+                    //vec3 m = mix(ndelta,cdelta,0.0);
                     //vec3 m = cdelta;
-                    if (m!=vec3(0.0)){
-                        force_dir = normalize(m);
+                    if (ndelta!=vec3(0.0)){
+                        force_dir = normalize(ndelta);
                     }
 
                     float edelta = tbl_elneg[int(atom_j.type)] - tbl_elneg[int(atom_i.type)];
@@ -360,7 +359,7 @@ void main()
                             atom_i.nodes[ni].spin = 2*int(i<j)-1;   //+mod(time,2)?
                             bondcheck[ni]=1.0;
                             float f = -rn* BOND_KOEFF*0.01;
-                            f4 = f*0.25;
+                            f4 = f;
                             f5 = f;
                         }
                         else {
@@ -372,14 +371,14 @@ void main()
                     else {
                     
                         /*if (rn < BONDR*1.5  ){
-                            float f= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF/rn/rn;
-                            f4+=0;
+                            float f= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
+                            f4+=f;
                             f5+=f;
                         }*/
 
                         if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0 ){
                             float f= ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
-                            f4+= f*0.1;
+                            f4+= f;
                             f5+= f;
                         }
                                     
@@ -394,18 +393,19 @@ void main()
                     
                     //hydrogen bond, node to atom
                     if (ni_bonded==0.0 && atom_j.type==1.0 && nj_bonded==1.0){
+                                vec3 cdelta = ni_realpos + delta;
                                 float rc = distance(pos_i + ni_realpos, pos_j);
                                 float ld = length(delta);
                                 if (ld==0.0) continue;
                                 float conus_i  = dot(ni_realpos,-delta)/atom_i.r/ld;
-                                if(rc>8.0 &&  conus_i>CONUS_KOEFF ){   
-                                    float f = atom_j.q* ni_q *  0.1*  INTERACT_KOEFF/rc/rc;
+                                if(  conus_i>CONUS_KOEFF ){   
+                                    float f = atom_j.q* ni_q * INTERACT_KOEFF2/rc/rc;
                                     FN+= cdelta/rc*f;
                                 }
-                    } 
+                    }
 
                     FN +=force_dir*f5;
-                    F += ndelta/rn*f4;
+                    F += force_dir*f4;
                     
 
                 } //nj 
@@ -429,11 +429,13 @@ void main()
         atom_i.color == vec4(1.0,0.0,1.0,1.0);
     }
 
-    float lm = length(M);
-    if (lm!=0.0){
-        vec3 axis = M/lm;
-        float angle = 0.1* ROTA_KOEFF* lm/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
-        totalrot = normalize(vec4(sin(angle*0.5)* axis,cos(angle*0.5) )); // quat
+    atom_i.rotv.xyz += M;   // dL/dt = M ;
+    vec4 rotv = vec4(0,0,0,1); 
+    float ll = length(atom_i.rotv.xyz);
+    if (ll!=0.0){
+        vec3 axis = atom_i.rotv.xyz/ll;
+        float angle = 0.01* ROTA_KOEFF* ll/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
+        rotv = vec4(sin(angle*0.5)* axis,cos(angle*0.5) ); // quat
     }
 
 
@@ -461,10 +463,9 @@ void main()
 
     }
 
-
     //totalrot = vec4(0, sin(-0.01),sin(-0.01), cos(-0.01));    
     //atom_i.rotv = normalize(qmul(totalrot, atom_i.rotv));
-    atom_i.rotv = totalrot;
+    //atom_i.rotv = totalrot;
 
 
  // mixer
@@ -502,14 +503,16 @@ void main()
 
     if (atom_i.fxd==1)  v_i = vec3(0.0);
 
-    v_i = clamp(v_i , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
-    /*if (length(v_i)>1){
-        v_i = normalize(v_i);
-    }*/
+    //v_i = clamp(v_i , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
+    float vl = length(v_i);
+    if (vl>1){
+        v_i = v_i/vl;
+    }
 
     pos_i += v_i;
 
-    atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
+    //atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
+    atom_i.rot = normalize(qmul(rotv,atom_i.rot));
     
 
 // 

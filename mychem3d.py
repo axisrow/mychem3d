@@ -945,7 +945,7 @@ class OptionsFrame(QDialog):
 
         # Создание слайдеров и меток
         self.create_slider(layout, "Update delta", 1, 150, self.space.update_delta, self.set_delta)
-        self.create_slider(layout, "Interact koeff", 0, 1000, int(self.space.INTERACT_KOEFF), self.set_interk)
+        self.create_slider(layout, "Interact koeff", 0, 3000, int(self.space.INTERACT_KOEFF), self.set_interk)
         self.create_slider(layout, "Repulsion koeff1", -15, 50, int(self.space.REPULSION_KOEFF1), self.set_repulsek1)
         self.create_slider(layout, "Repulsion koeff2", 1, 15, int(self.space.REPULSION_KOEFF2), self.set_repulsek2)
         self.create_slider(layout, "Attracion koeff", 0, 100, int(self.space.ATTRACTION_KOEFF), self.set_attraction)

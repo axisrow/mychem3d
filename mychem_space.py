@@ -13,12 +13,12 @@ class Space:
         self.ucounter = 0
         self.setSize(width,height,depth)
         self.debug = False
-        self.BOND_KOEFF = 80
+        self.BOND_KOEFF = 200
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 500.0
         self.ROTA_KOEFF = 10.0
         self.REPULSION1 = -6
-        self.REPULSION_KOEFF1 = -5
+        self.REPULSION_KOEFF1 = 0
         self.REPULSION2 = 6
         self.REPULSION_KOEFF2= 6
         self.ATTRACTION_KOEFF = 1
