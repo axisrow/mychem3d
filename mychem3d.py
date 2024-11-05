@@ -137,9 +137,15 @@ class MainWindow(QMainWindow):
         self.shake_action = QAction("Random shake",self,triggered=self.handle_shake, shortcut="s",checkable=True)
         sim_menu.addAction(self.shake_action)
         self.shake_action.setChecked(self.space.shake)
+        
         self.gravity_action = QAction("Gravity",self,triggered=self.handle_gravity, shortcut="Alt+g",checkable=True)
         self.gravity_action.setChecked(self.space.gravity)
         sim_menu.addAction(self.gravity_action)
+        
+        self.efield_action = QAction("E-field",self,triggered=self.handle_efield, shortcut="Alt+e",checkable=True)
+        self.efield_action.setChecked(self.space.efield)
+        sim_menu.addAction(self.efield_action)
+
         self.highlight_unbond_action = QAction("Highlight unbond",self,triggered=self.handle_highlight_unbond, checkable=True)        
         self.highlight_unbond_action.setChecked(self.space.highlight_unbond)
         sim_menu.addAction(self.highlight_unbond_action)
@@ -195,6 +201,14 @@ class MainWindow(QMainWindow):
 
     def handle_test(self,checked):
         self.space.test = not self.space.test
+        self.glframe.update_uniforms = True            
+
+    def handle_efield(self,checked):
+        if checked:
+            self.space.efield = True
+        else:
+            self.space.efield = False
+        self.status_bar.set("E-field is "+ OnOff(self.space.efield))            
         self.glframe.update_uniforms = True            
 
 
@@ -958,6 +972,7 @@ class OptionsFrame(QDialog):
         self.create_slider(layout, "Bond koeff", 1, 1000, self.space.BOND_KOEFF, self.set_bondk)
         self.create_slider(layout, "Rotation koeff", 1, 50, int(self.space.ROTA_KOEFF), self.set_rotk)
         self.create_slider(layout, "Mass koeff", 1, 50, self.space.MASS_KOEFF, self.set_massk)
+        self.create_slider(layout, "E-Field koeff", 1, 100, self.space.FIELD_KOEFF, self.set_fieldk)
         self.sizex = self.create_slider(layout, "Container size X", 1, 50, int(self.space.WIDTH / 100), self.set_size)
         self.sizey = self.create_slider(layout, "Container size Y", 1, 50, int(self.space.HEIGHT / 100), self.set_size)
         self.sizez = self.create_slider(layout, "Container size Z", 1, 50, int(self.space.DEPTH / 100), self.set_size)
@@ -1029,6 +1044,10 @@ class OptionsFrame(QDialog):
         self.space.MASS_KOEFF = float(value)
         self.glframe.update_uniforms = True
 
+    def set_fieldk(self, value):
+        self.space.FIELD_KOEFF = float(value)
+        self.glframe.update_uniforms = True
+
     def set_sideheat(self,checked):
         if checked:
             self.space.sideheat = True
@@ -1037,6 +1056,7 @@ class OptionsFrame(QDialog):
         self.glframe.update_uniforms = True
 
     
+
     def set_shownodes(self,checked):
         if checked:
             self.glframe.drawnodes = True

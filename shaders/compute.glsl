@@ -11,6 +11,7 @@ uniform int gravity;
 uniform int redox;
 uniform int shake;
 uniform int test;
+uniform int efield;
 uniform int highlight_unbond;
 uniform int sideheat;
 
@@ -20,6 +21,7 @@ uniform float BOND_KOEFF;
 uniform float ATTRACTION_KOEFF;
 uniform float INTERACT_KOEFF;
 uniform float INTERACT_KOEFF2=30;
+uniform float FIELD_KOEFF;
 uniform float ROTA_KOEFF;
 uniform float CONUS_KOEFF = 0.866;
 float REPULSION1 = -6;
@@ -496,8 +498,8 @@ void main()
    F += Far.F[i].xyz;
 
 //e-field
-//   if (test==1)
-//    F.x += atom_i.q*INTERACT_KOEFF/500.0;
+   if (efield==1)
+     F.x += atom_i.q*FIELD_KOEFF;
 
 //next
     vec3 a = F/(atom_i.m*MASS_KOEFF);
