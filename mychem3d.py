@@ -73,6 +73,7 @@ class MainWindow(QMainWindow):
         QShortcut( 'b', self ).activated.connect(self.handle_bond)                                
         QShortcut( 'f', self ).activated.connect(self.handle_fix) 
         QShortcut( 'u', self ).activated.connect(self.handle_unfix) 
+        QShortcut( 'Alt+t', self ).activated.connect(self.handle_test) 
         #QShortcut( 'Alt+l', self ).activated.connect(self.handle_random_recent) 
         #QShortcut( 'Alt+g', self ).activated.connect(self.handle_gravity) 
         QShortcut( 'Ctrl+z', self ).activated.connect(self.handle_undo)         
@@ -191,6 +192,11 @@ class MainWindow(QMainWindow):
         self.space.heat = value
         self.status_bar.set('heat = ' + str(value))
         self.glframe.update_uniforms = True
+
+    def handle_test(self,checked):
+        self.space.test = not self.space.test
+        self.glframe.update_uniforms = True            
+
 
     def sim_run(self):
         self.space.pause = False
@@ -1029,6 +1035,7 @@ class OptionsFrame(QDialog):
         else:
             self.space.sideheat = False
         self.glframe.update_uniforms = True
+
     
     def set_shownodes(self,checked):
         if checked:

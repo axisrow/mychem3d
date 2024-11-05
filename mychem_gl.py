@@ -257,6 +257,7 @@ class GLWidget(QOpenGLWidget):
             self.loc.update( {"HEAT": gl.glGetUniformLocation(self.gpu_code, "HEAT") })
             self.loc.update( {"highlight_unbond": gl.glGetUniformLocation(self.gpu_code, "highlight_unbond") })
             self.loc.update( {"sideheat": gl.glGetUniformLocation(self.gpu_code, "sideheat") })
+            self.loc.update( {"test": gl.glGetUniformLocation(self.gpu_code, "test") })
             self.loc.update( {"view": gl.glGetUniformLocation(self.shader, "view") })
             self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
             self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
@@ -429,6 +430,7 @@ class GLWidget(QOpenGLWidget):
             gl.glUniform1f(self.loc["NODEDIST"],self.space.NODEDIST)
             gl.glUniform1f(self.loc["HEAT"],float(self.space.heat))
             gl.glUniform1i(self.loc["sideheat"],self.space.sideheat)
+            gl.glUniform1i(self.loc["test"],self.space.test)
             gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond)
             print("set compute vars")
 

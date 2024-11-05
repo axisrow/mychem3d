@@ -10,6 +10,7 @@ uniform int bondlock;
 uniform int gravity;
 uniform int redox;
 uniform int shake;
+uniform int test;
 uniform int highlight_unbond;
 uniform int sideheat;
 
@@ -363,7 +364,7 @@ void main()
                             f5 = f;
                         }
                         else {
-                            f4 = 1000*exp(-1.2*rn); // pauli!
+                            f4 = 500*exp(-1.2*rn); // pauli!
                             //atom_i.highlight = 50;
                         }
                     }
@@ -495,7 +496,8 @@ void main()
    F += Far.F[i].xyz;
 
 //e-field
-   //F.x += atom_i.q*INTERACT_KOEFF/20.0;
+//   if (test==1)
+//    F.x += atom_i.q*INTERACT_KOEFF/500.0;
 
 //next
     vec3 a = F/(atom_i.m*MASS_KOEFF);
@@ -505,7 +507,7 @@ void main()
 
     //v_i = clamp(v_i , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
     float vl = length(v_i);
-    if (vl>1){
+    if (vl>1.0){
         v_i = v_i/vl;
     }
 

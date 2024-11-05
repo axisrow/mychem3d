@@ -13,6 +13,7 @@ class Space:
         self.ucounter = 0
         self.setSize(width,height,depth)
         self.debug = False
+        self.test = False
         self.BOND_KOEFF = 200
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 500.0
