@@ -15,7 +15,9 @@ uniform int efield;
 uniform int highlight_unbond;
 uniform int sideheat;
 
+
 //uniform float frame_time;
+uniform float TDELTA;
 float BONDR = 4;
 uniform float BOND_KOEFF;
 uniform float ATTRACTION_KOEFF;
@@ -373,11 +375,11 @@ void main()
 
                     else {
                     
-                        /*if (rn < BONDR*1.5  ){
-                            float f= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
+                        if (rn < BONDR*1.5  ){
+                            float f= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF/rn/rn;
                             f4+=f;
                             f5+=f;
-                        }*/
+                        }
 
                         if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0 ){
                             float f= ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
@@ -432,12 +434,12 @@ void main()
         atom_i.color == vec4(1.0,0.0,1.0,1.0);
     }
 
-    atom_i.rotv.xyz += M;   // dL/dt = M ;
+    atom_i.rotv.xyz += M*TDELTA;   // dL/dt = M ;
     vec4 rotv = vec4(0,0,0,1); 
     float ll = length(atom_i.rotv.xyz);
     if (ll!=0.0){
         vec3 axis = atom_i.rotv.xyz/ll;
-        float angle = 0.01* ROTA_KOEFF* ll/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
+        float angle = 0.01* ROTA_KOEFF* TDELTA* ll/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
         rotv = vec4(sin(angle*0.5)* axis,cos(angle*0.5) ); // quat
     }
 
@@ -503,17 +505,18 @@ void main()
 
 //next
     vec3 a = F/(atom_i.m*MASS_KOEFF);
-    v_i += a;
+    v_i += a*TDELTA;
 
     if (atom_i.fxd==1)  v_i = vec3(0.0);
 
     //v_i = clamp(v_i , vec3(-MAXVEL,-MAXVEL,-MAXVEL), vec3(MAXVEL,MAXVEL,MAXVEL));
     float vl = length(v_i);
-    if (vl>1.0){
+    if (vl>MAXVEL){
+        //atom_i.color = vec4(0,0,0,1);
         v_i = v_i/vl;
     }
 
-    pos_i += v_i;
+    pos_i += v_i*TDELTA;
 
     //atom_i.rot = normalize(qmul(atom_i.rotv,atom_i.rot));
     atom_i.rot = normalize(qmul(rotv,atom_i.rot));

@@ -16,7 +16,7 @@ from molex import load_sdf
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, \
                             QVBoxLayout, QWidget, QShortcut,QHBoxLayout,QStatusBar, \
                             QSlider,QFileDialog, QMessageBox,QLabel,QDialog,QCheckBox, \
-                            QMenu,QComboBox,QPushButton,QInputDialog
+                            QMenu,QComboBox,QPushButton,QInputDialog,QLineEdit,QDoubleSpinBox
 from PyQt5.QtCore import Qt
 
 class mychemApp(QApplication):
@@ -97,8 +97,8 @@ class MainWindow(QMainWindow):
         self.merge_mode = False
         self.ttype = "mx"
         self.heat = QSlider()
-        self.heat.setMinimum(-50)
-        self.heat.setMaximum(50)
+        self.heat.setMinimum(-150)
+        self.heat.setMaximum(150)
         self.heat.setMinimumHeight(300)
         self.heat.setMaximumWidth(20)
         self.heat.valueChanged.connect(self.setHeat)
@@ -959,7 +959,7 @@ class OptionsFrame(QDialog):
         self.space = app.space
         self.glframe = app.glframe
         self.setWindowTitle("Fine tuning (options)")
-        self.setFixedSize(420, 500)
+        self.setFixedSize(420, 600)
 
         layout = QVBoxLayout()
 
@@ -976,6 +976,7 @@ class OptionsFrame(QDialog):
         self.sizex = self.create_slider(layout, "Container size X", 1, 50, int(self.space.WIDTH / 100), self.set_size)
         self.sizey = self.create_slider(layout, "Container size Y", 1, 50, int(self.space.HEIGHT / 100), self.set_size)
         self.sizez = self.create_slider(layout, "Container size Z", 1, 50, int(self.space.DEPTH / 100), self.set_size)
+        self.create_field(layout, "TDELTA", 0.0, 1.0, self.space.TDELTA, self.set_tdelta)
 
         self.show_nodes_checkbox = QCheckBox("Show nodes")
         self.show_nodes_checkbox.setChecked(self.glframe.drawnodes)
@@ -991,7 +992,19 @@ class OptionsFrame(QDialog):
         self.show()
         self.exec()
 
-
+    def create_field(self, layout, label_text, min_value, max_value, initial, callback):
+        field_frame = QWidget()
+        h_layout = QHBoxLayout(field_frame)
+        layout.addWidget(field_frame)
+        label = QLabel(label_text)
+        h_layout.addWidget(label)
+        input_field = QDoubleSpinBox(self)
+        input_field.setRange(min_value, max_value)
+        input_field.setDecimals(5)
+        input_field.setSingleStep(0.1)
+        input_field.setValue(initial)
+        input_field.valueChanged.connect(callback)
+        h_layout.addWidget(input_field)
     def create_slider(self, layout, label_text, min_value, max_value, initial_value, callback):
         slider_frame = QWidget()
         h_layout = QHBoxLayout(slider_frame)
@@ -1011,10 +1024,13 @@ class OptionsFrame(QDialog):
         slider.valueChanged.connect(lambda  value: label.setText(str(value)))
         return slider
 
-    
+    def set_tdelta(self,value):
+        self.space.TDELTA = float(value)
+        self.glframe.update_uniforms = True
 
     def set_delta(self, value):
         self.space.update_delta = int(value)
+
 
     def set_interk(self, value):
         self.space.INTERACT_KOEFF = float(value)

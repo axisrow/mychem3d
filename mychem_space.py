@@ -15,6 +15,7 @@ class Space:
         self.debug = False
         self.test = False
         self.efield = False
+        self.TDELTA = 1.0
         self.BOND_KOEFF = 200
         self.BONDR = 4.0
         self.INTERACT_KOEFF= 500.0
