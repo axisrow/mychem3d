@@ -883,15 +883,8 @@ class MainWindow(QMainWindow):
                 self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1)) * self.space.merge_rot
          elif self.space.select_mode==1: #select molecule
             if delta>0:
-                new_selected = self.space.selected_atoms.copy()
-                for i in self.space.selected_atoms:
-                    for j in range(0, len(self. space.atoms)):
-                        if i==j: continue
-                        sumrad = self.space.atoms[i].r + self.space.atoms[j].r
-                        if glm.distance(self.space.atoms[i].pos, self.space.atoms[j].pos)<= sumrad+self.space.BONDR+2:
-                            if not j in new_selected:
-                                new_selected.append(j)
-                self.space.selected_atoms = new_selected.copy()
+                new_selected = self.glframe.expand_selection(self.space.selected_atoms)
+                self.space.selected_atoms += new_selected
                 if len(self.space.selected_atoms)==2:
                     double_info(self.space.atoms[self.space.selected_atoms[0]],self.space.atoms[self.space.selected_atoms[1]],self.space)
             else:

@@ -65,6 +65,8 @@ class GLWidget(QOpenGLWidget):
         compute_shader = compute_shader.replace("NEARATOMSMAX",str(self.nearatomsmax))
         compute_shader = compute_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
         compute_shader = compute_shader.replace("MAXVEL",str(self.space.MAXVELOCITY))
+        select_shader = open("shaders/select.glsl","r").read()
+        select_shader = select_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
 #        geom_shader = open("shaders/atom_geom1.glsl","r").read()
 
         self.shader = OpenGL.GL.shaders.compileProgram(
@@ -73,15 +75,25 @@ class GLWidget(QOpenGLWidget):
             OpenGL.GL.shaders.compileShader(fragment_shader, gl.GL_FRAGMENT_SHADER),validate=False
         )
         
-        OpenGL.GL.shaders.compileShader(compute_shader, gl.GL_COMPUTE_SHADER)
-        self.compute_shader = gl.glCreateShader(gl.GL_COMPUTE_SHADER)
-        gl.glShaderSource(self.compute_shader, compute_shader)
-        gl.glCompileShader(self.compute_shader)
+        self.compute_shader = OpenGL.GL.shaders.compileShader(compute_shader, gl.GL_COMPUTE_SHADER)
+        #self.compute_shader = gl.glCreateShader(gl.GL_COMPUTE_SHADER)
+        #gl.glShaderSource(self.compute_shader, compute_shader)
+        #res1= gl.glCompileShader(self.compute_shader)
+
+        self.select_shader = OpenGL.GL.shaders.compileShader(select_shader, gl.GL_COMPUTE_SHADER)
+        #self.select_shader = gl.glCreateShader(gl.GL_COMPUTE_SHADER)
+        #gl.glShaderSource(self.select_shader, select_shader)
+        #res2= gl.glCompileShader(self.select_shader)
+        #gl.glGetShaderInfoLog(self.select_shader,)
         
         self.gpu_code = gl.glCreateProgram()
         gl.glAttachShader(self.gpu_code, self.compute_shader)
-        gl.glLinkProgram(self.gpu_code)
+        res3 = gl.glLinkProgram(self.gpu_code)
    
+        self.select_program = gl.glCreateProgram()
+        gl.glAttachShader(self.select_program, self.select_shader)
+        res4= gl.glLinkProgram(self.select_program)
+
         #self.doneCurrent()
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
@@ -524,3 +536,45 @@ class GLWidget(QOpenGLWidget):
             if self.framedelta!=0:
                 tm = time.time() - self.start
                 self.status_bar.setFPS(self.nframes/tm)
+
+    def expand_selection(self, selected_atoms):
+        sel_time_begin = time.time()
+        self.makeCurrent()
+        gl.glUseProgram(self.select_program)
+        #print("atoms N=", self.N)
+        int_array = np.array(selected_atoms, dtype=np.int32)
+        int_array = int_array.tobytes()
+        sel_buffer = gl.glGenBuffers(1)
+        sel_buffer2 = gl.glGenBuffers(1)
+        counter_buffer = gl.glGenBuffers(1)
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, sel_buffer)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, sel_buffer)
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, len(int_array), int_array , gl.GL_DYNAMIC_DRAW);
+        
+        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, sel_buffer2)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
+        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, 5000*4, None , gl.GL_DYNAMIC_DRAW);
+
+        gl.glBindBuffer(gl.GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
+        gl.glBindBufferBase(gl.GL_ATOMIC_COUNTER_BUFFER, 0, counter_buffer)
+        zero_array = np.array([0], dtype=np.int32)
+        gl.glBufferData(gl.GL_ATOMIC_COUNTER_BUFFER, 4, zero_array , gl.GL_DYNAMIC_DRAW);
+
+#        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)        
+#        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
+        #gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
+        gl.glDispatchCompute(self.N,1,1)        
+        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+
+        gl.glBindBuffer(gl.GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
+        counter = gl.glGetBufferSubData(gl.GL_ATOMIC_COUNTER_BUFFER, 0, 4)
+        counter = int.from_bytes(counter, "little")
+        print("counter = ", counter)
+        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
+        sel_data = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, counter*4)
+        selected_atoms2 = list(np.frombuffer(sel_data, dtype=np.int32))
+        #print(selected_atoms)
+        gl.glUseProgram(0)
+        sel_time_end = time.time()
+        print(f"Selection time = {sel_time_end-sel_time_begin}")
+        return selected_atoms2
