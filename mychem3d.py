@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
         self.lastX = 512
         self.lastY = 300
         self.motion = False
+        self.optionsframe = None
         #QShortcut( '1', self ).activated.connect(self.handle_add_atom2)
         #QShortcut( '2', self ).activated.connect(self.handle_add_atom2)
         #QShortcut( '3', self ).activated.connect(self.handle_add_atom2)
@@ -907,7 +908,19 @@ class MainWindow(QMainWindow):
 
     def options_window(self):
         print("options")
-        o = OptionsFrame(self)
+        if not self.optionsframe == None:
+            self.optionsframe.show()
+            self.optionsframe.raise_()
+        else:
+            self.optionsframe = OptionsFrame(self)
+            self.optionsframe.show()
+            #self.optionsframe.exec()
+
+    def closeEvent(self, event):  
+        for window in QApplication.topLevelWidgets():
+            if window != self:
+                window.close()
+        event.accept()
         
 
 
@@ -982,8 +995,6 @@ class OptionsFrame(QDialog):
         layout.addWidget(self.side_heat_checkbox)
 
         self.setLayout(layout)
-        self.show()
-        self.exec()
 
     def create_field(self, layout, label_text, min_value, max_value, initial, callback):
         field_frame = QWidget()
