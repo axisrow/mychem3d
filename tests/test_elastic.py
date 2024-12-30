@@ -44,7 +44,7 @@ if __name__ == '__main__':
     space.setSize(1000,1000,1000)
     space.action = action1
     #space.INTERACT_KOEFF = 0.1
-    space.BOND_KOEFF = 100
+    space.BOND_KOEFF = 50
     space.ROTA_KOEFF = 10
     #space.REPULSION_KOEFF1=30
     #space.REPULSION_KOEFF2=0.2

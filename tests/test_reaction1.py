@@ -38,7 +38,9 @@ if __name__ == '__main__':
      #space.recording = True
     #space.INTERACT_KOEFF = 5.0
     #space.REPULSION_KOEFF2=50
-    #space.BOND_KOEFF = 0.2
+    space.REPULSION_KOEFF1=0
+    space.BOND_KOEFF = 100
+#    space.MASS_KOEFF = 5
     space.appendmixer(1)
     #space.redox.set(True)
     space.NODEDIST = 40
@@ -55,4 +57,5 @@ if __name__ == '__main__':
 #300 - 23 fps update_delta=5    nodesinter 40  near field 200, 3600 atoms
 #300 - 40.5 fps update_delta=5    nodesinter 40  near field 200, 3600 atoms 
 #300 - 27-29 fps update_delta=10    nodesinter 40  near field 200, 3600 atoms 
+#300 - 32 fps update_delta=10    nodesinter 40  near field 200, 3600 atoms 
 

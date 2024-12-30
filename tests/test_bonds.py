@@ -21,36 +21,36 @@ def action1(space:Space):
         space.appendatom(c2)
 
 
-        n1 = Atom(400,500,900, 7,f=0,f2=-pi/2)
-        n2 = Atom(400,500,883, 7,f=0,f2=0)
-        space.appendatom(n1)
-        space.appendatom(n2)
+        ##n1 = Atom(400,500,900, 7,f=0,f2=-pi/2)
+        #n2 = Atom(400,500,883, 7,f=0,f2=0)
+        #space.appendatom(n1)
+        #space.appendatom(n2)
 
 
-        c3 = Atom(350,500,900, 6,f=0,f2=0)
-        n3 = Atom(350,500,882, 7,f=0,f2=0)
-        space.appendatom(c3)
-        space.appendatom(n3)
+        #c3 = Atom(350,500,900, 6,f=0,f2=0)
+        #n3 = Atom(350,500,882, 7,f=0,f2=0)
+        #space.appendatom(c3)
+        #space.appendatom(n3)
 
-        c4 =  Atom(500,500,800,6)
-        o1 =  Atom(500,500,785,8)
-        space.appendatom(c4)
-        space.appendatom(o1)
+        #c4 =  Atom(500,500,800,6)
+        #o1 =  Atom(500,500,785,8)
+        #space.appendatom(c4)
+        #space.appendatom(o1)
 
-        n4 = Atom(600,500, 800,7)
-        o2 = Atom(600,500, 785,8)
-        space.appendatom(n4)
-        space.appendatom(o2)
-
-
-        na1 = Atom(100,100,900,11)
-        space.appendatom(na1)
-
-        cl = Atom(200,100,900,17)
-        space.appendatom(cl)
+        #n4 = Atom(600,500, 800,7)
+        #o2 = Atom(600,500, 785,8)
+        #space.appendatom(n4)
+        #space.appendatom(o2)
 
 
-        space.pause=True
+        #na1 = Atom(100,100,900,11)
+        #space.appendatom(na1)
+
+        #cl = Atom(200,100,900,17)
+        #space.appendatom(cl)
+
+
+        #space.pause=True
         space.atoms2compute()
 
     if space.t==100:
