@@ -312,7 +312,7 @@ void main()
             if (r<NODEDIST) {
                 //if (r>sumradius+REPULSION_KOEFF1){
                     float sgm = sumradius+REPULSION_KOEFF1;
-                    f3 = pow(sgm/r,REPULSION_KOEFF2);
+                    f3 = 0.5* pow(sgm/r,REPULSION_KOEFF2);
                     F += delta/r*f3; 
                 //}
                 /*if (r<(sumradius+REPULSION1) && r>1.0 ){
@@ -404,8 +404,9 @@ void main()
                                 if (ld==0.0) continue;
                                 float conus_i  = dot(ni_realpos,-delta)/atom_i.r/ld;
                                 if(  conus_i>CONUS_KOEFF ){   
-                                    float f = atom_j.q* ni_q * INTERACT_KOEFF2/rc/rc;
+                                    float f = atom_j.q* ni_q * INTERACT_KOEFF/rc/rc;
                                     FN+= cdelta/rc*f;
+                                    
                                 }
                     }
 
@@ -438,6 +439,8 @@ void main()
     vec4 rotv = vec4(0,0,0,1); 
     float ll = length(atom_i.rotv.xyz);
     if (ll!=0.0){
+        if (ll>50) atom_i.rotv.xyz = normalize(atom_i.rotv.xyz)*50.0;
+
         vec3 axis = atom_i.rotv.xyz/ll;
         float angle = 0.01* ROTA_KOEFF* TDELTA* ll/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
         rotv = vec4(sin(angle*0.5)* axis,cos(angle*0.5) ); // quat
@@ -488,7 +491,7 @@ void main()
  
 
  //gravity
-   if (gravity==1) v_i.y -= 0.0001; //gravity
+   if (gravity==1) v_i.y -= 0.001; //gravity
 
    //if (pos_i.y < 30) v_i.y += 0.1;
      
@@ -513,7 +516,7 @@ void main()
     float vl = length(v_i);
     if (vl>MAXVEL){
         //atom_i.color = vec4(0,0,0,1);
-        v_i = v_i/vl;
+        v_i = v_i/vl*MAXVEL;
     }
 
     pos_i += v_i*TDELTA;

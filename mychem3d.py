@@ -971,12 +971,12 @@ class OptionsFrame(QDialog):
 
         # Создание слайдеров и меток
         self.create_slider(layout, "Update delta", 1, 150, self.space.update_delta, self.set_delta)
-        self.create_slider(layout, "Interact koeff", 0, 3000, int(self.space.INTERACT_KOEFF), self.set_interk)
+        self.create_slider(layout, "Interact koeff", 0, 10000, int(self.space.INTERACT_KOEFF), self.set_interk)
         self.create_slider(layout, "Repulsion koeff1", -15, 50, int(self.space.REPULSION_KOEFF1), self.set_repulsek1)
         self.create_slider(layout, "Repulsion koeff2", 1, 15, int(self.space.REPULSION_KOEFF2), self.set_repulsek2)
-        self.create_slider(layout, "Attracion koeff", 0, 100, int(self.space.ATTRACTION_KOEFF), self.set_attraction)
+        self.create_slider(layout, "Attracion koeff", 0, 200, int(self.space.ATTRACTION_KOEFF), self.set_attraction)
         self.create_slider(layout, "Bond koeff", 1, 1000, self.space.BOND_KOEFF, self.set_bondk)
-        self.create_slider(layout, "Rotation koeff", 1, 50, int(self.space.ROTA_KOEFF), self.set_rotk)
+        self.create_slider(layout, "Rotation koeff", 1, 200, int(self.space.ROTA_KOEFF), self.set_rotk)
         self.create_slider(layout, "Mass koeff", 1, 50, self.space.MASS_KOEFF, self.set_massk)
         self.create_slider(layout, "E-Field koeff", 1, 100, self.space.FIELD_KOEFF, self.set_fieldk)
         self.sizex = self.create_slider(layout, "Container size X", 1, 50, int(self.space.WIDTH / 100), self.set_size)

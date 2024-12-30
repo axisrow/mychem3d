@@ -212,7 +212,7 @@ class GLWidget(QOpenGLWidget):
 
 
         self.set_compute_uniforms()
-        self.doneCurrent()
+        #self.doneCurrent()
 
 
     def ssbo2atoms(self):
