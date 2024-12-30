@@ -44,32 +44,7 @@ float tbl_elneg[18]= float[] (0, 2.2, 0.0, 0.0, 0.0,
                                 0.0,  0.0,  2.19, 2.58, 3.16);
 
 
-// Structure of the ball data
-struct Node {
-    vec4 pos;
-    float q;
-    float bonded;
-    float type;
-    float spin;
-};
-
-struct Atom
-{
-    vec4 pos;
-    vec4 v;
-    float type;
-    float r;
-    float m;
-    float ncount;
-    vec4 rot;
-    vec4 rotv;
-    float highlight;
-    float q;
-    float fxd;
-    float _pad;
-    vec4 color;
-    Node nodes[5];
-};
+#include <common>
 
 // Input buffer
 layout(std430, binding=0) buffer atoms_in
