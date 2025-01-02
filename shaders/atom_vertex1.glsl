@@ -1,6 +1,6 @@
 #version 430 
 
-#include <common>
+#include "common.glsl"
 
 
 layout(std430, binding=0) buffer atoms_in

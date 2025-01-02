@@ -44,7 +44,7 @@ float tbl_elneg[18]= float[] (0, 2.2, 0.0, 0.0, 0.0,
                                 0.0,  0.0,  2.19, 2.58, 3.16);
 
 
-#include <common>
+#include "common.glsl"
 
 // Input buffer
 layout(std430, binding=0) buffer atoms_in

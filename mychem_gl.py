@@ -20,6 +20,26 @@ from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtCore import QTimer
 #from PyQt5.QtGui import QOpenGLWindow,
 #from OpenGL.GL import *
+import re
+
+def load_shader_source(filepath, current_line=1, is_root=True):
+    with open("shaders/"+filepath, 'r') as file:
+        lines = file.readlines()
+    source = ""
+    if not is_root:
+        source += f'#line {current_line+10000}\n'
+    for line in lines:
+        include_match = re.match(r'#include\s+"([^"]+)"', line)
+        if include_match:
+            included_file = include_match.group(1)
+            included_source = load_shader_source(included_file, current_line=1, is_root=False)
+            source += included_source
+            source += f'#line {current_line}\n'
+        else:
+            source += line
+            current_line += 1
+    return source
+
 
 
 class GLWidget(QOpenGLWidget):
@@ -59,18 +79,13 @@ class GLWidget(QOpenGLWidget):
         self.update_uniforms = True
     
         #self.makeCurrent()
-        common_shader = open("shaders/common.glsl","r").read()
-        vertex_shader = open("shaders/atom_vertex1.glsl","r").read()
-        vertex_shader = vertex_shader.replace("#include <common>",common_shader)
-        fragment_shader = open("shaders/atom_frag1.glsl","r").read()
-        fragment_shader = fragment_shader.replace("#include <common>",common_shader)
-        compute_shader = open("shaders/compute.glsl","r").read()
-        compute_shader = compute_shader.replace("#include <common>",common_shader)
+        vertex_shader = load_shader_source("atom_vertex1.glsl")
+        fragment_shader = load_shader_source("atom_frag1.glsl")
+        compute_shader = load_shader_source("compute.glsl")
         compute_shader = compute_shader.replace("NEARATOMSMAX",str(self.nearatomsmax))
         compute_shader = compute_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
         compute_shader = compute_shader.replace("MAXVEL",str(self.space.MAXVELOCITY))
-        select_shader = open("shaders/select.glsl","r").read()
-        select_shader = select_shader.replace("#include <common>",common_shader)
+        select_shader = load_shader_source("select.glsl")
         select_shader = select_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
 #        geom_shader = open("shaders/atom_geom1.glsl","r").read()
 

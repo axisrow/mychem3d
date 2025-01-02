@@ -24,3 +24,4 @@ struct Atom
     vec4 color;
     Node nodes[5];
 };
+

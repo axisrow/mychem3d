@@ -10,7 +10,7 @@ float BONDR = 4;
 uniform float BOND_KOEFF;
 layout(binding = 0) uniform atomic_uint nselected;
 
-#include <common>
+#include "common.glsl"
 
 // Input buffer
 layout(std430, binding=0) buffer atoms_in
