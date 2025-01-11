@@ -241,6 +241,9 @@ class Atom():
         for n in self.nodes:
             n.pos = glm.quat(glm.vec3(0,-n.f2,n.f)) * glm.vec3(self.r,0,0)
     
+    def get_node_rpos(self,i):
+        return self.rot * self.nodes[i].pos
+     
     def info(self):
         print("type=", self.type)
         bs = ""

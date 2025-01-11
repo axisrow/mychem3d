@@ -658,28 +658,51 @@ class MainWindow(QMainWindow):
 
     def handle_add_atom(self,keysym=""):
         self.sim_pause()
-        self.undostack.push(self.space.make_export())
-        self.space.merge_pos.x +=25
-        self.mergemode()
-        self.ttype = "mx"
         if keysym in ["1","2","3","4","5","6"]:
-            table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
-            createtype = table[int(keysym)]
-            a = Atom(500,500,500,createtype)
-        self.space.merge_atoms = [a]
-        self.space.merge_center = self.space.get_mergeobject_center()    
-        
-         #if not event.keysym in self.keypressed:
-         #    self.keypressed.append(event.keysym)
+           table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
+           createtype = table[int(keysym)]
 
-    # def handle_keyrelease(self,event):
-    #     if event.keysym in self.keypressed:
-    #          self.keypressed.remove(event.keysym)
+        if self.space.select_mode==1:  #extending molecule by new atom
+            self.undostack.push(self.space.make_export())
+            if len(self.space.selected_atoms)>1:
+                return
+            a = self.space.atoms[self.space.selected_atoms[0]]
+            if a.nodeselect==-1:
+                a.select_first_unbond()
+            n1i = a.nodeselect
+            if a.nodes[n1i].bonded: return
+            n1pos = a.get_node_rpos(n1i)
+            a2 = Atom(500,500,500,createtype)
+            a2.pos = a.pos + (a.r + a2.r)*glm.normalize(n1pos) 
+            n2pos = a2.nodes[0].pos
+            a2.rot = glm.quat(n2pos,-n1pos)
+            bond_atoms(a,a2,n1i,0)
+            a.select_first_unbond()
+            a2.select_first_unbond()
+            self.space.appendatom(a2)
+            self.space.selected_atoms=[len(self.space.atoms)-1]
+            self.space.atoms2compute()
+            self.status_bar.set("Extended")
+            
+
+        else:
+            self.undostack.push(self.space.make_export())
+            self.space.merge_pos.x +=25
+            self.mergemode()
+            self.ttype = "mx"
+            if keysym in ["1","2","3","4","5","6"]:
+                table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
+                createtype = table[int(keysym)]
+                a = Atom(500,500,500,createtype)
+            self.space.merge_atoms = [a]
+            self.space.merge_center = self.space.get_mergeobject_center()    
+
 
     def handle_escape(self,event):
         if self.merge_mode:
             self.merge_mode = False
             self.space.merge_atoms = []
+
 
     def handle_delete(self,event=None):
         if self.merge_mode:
@@ -693,6 +716,7 @@ class MainWindow(QMainWindow):
             self.space.merge_atoms = []
             #self.merge_mode = True
             self.space.atoms2compute()
+            self.unselect()
 
     
     def mousePressEvent(self, event):

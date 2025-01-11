@@ -36,7 +36,7 @@ Selection atoms
   -  "b" - try to bond two selected atoms with selected nodes, resutl in statusbar
   -   middle button for change selected node in selected atom
   - Right mouse button on selected - context menu for actions
-
+  - a new atom can be grown from the selected atom node using the numeric keys
 
 *qt5 issue*
 issue error: could not find or load the Qt platform plugin "windows" in ""
