@@ -328,17 +328,7 @@ class GLWidget(QOpenGLWidget):
 
     def render(self):
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
-       
         gl.glUseProgram(self.shader)
-        front = ( cos(glm.radians(self.pitch))*cos(glm.radians(self.yaw)),
-                 sin(glm.radians(self.pitch)),
-                 cos(glm.radians(self.pitch))*sin(glm.radians(self.yaw)),
-                )
-        self.cameraFront = glm.normalize(front)
-        self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
-        a = self.width()
-        b=  self.height()
-        self.projection = glm.perspective(glm.radians(self.fov), a/b, 0.01,20.0)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
         gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0]+self.view[0,1],
@@ -528,6 +518,16 @@ class GLWidget(QOpenGLWidget):
         """Render a single frame"""
         #gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         self.N = len(self.space.atoms)
+        front = ( cos(glm.radians(self.pitch))*cos(glm.radians(self.yaw)),
+                 sin(glm.radians(self.pitch)),
+                 cos(glm.radians(self.pitch))*sin(glm.radians(self.yaw)),
+                )
+        self.cameraFront = glm.normalize(front)
+        self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
+        a = self.width()
+        b=  self.height()
+        self.projection = glm.perspective(glm.radians(self.fov), a/b, 0.01,20.0)
+
         self.render()
         self.compute()
 
