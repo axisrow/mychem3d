@@ -35,6 +35,7 @@ class Space:
         self.stoptime = -1
         self.recordtime = 0
         self.recording = False
+        self.recording3D = False
         self.record_data = False
         self.atoms = []	
         self.Ek = 0

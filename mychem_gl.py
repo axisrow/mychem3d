@@ -22,6 +22,8 @@ from PyQt5.QtCore import QTimer
 #from OpenGL.GL import *
 import re
 
+RENDER_SIZE=1280
+
 def load_shader_source(filepath, current_line=1, is_root=True):
     with open("shaders/"+filepath, 'r') as file:
         lines = file.readlines()
@@ -140,13 +142,40 @@ class GLWidget(QOpenGLWidget):
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
+        self.setup_framebuffer()
         self.space.atoms2compute()
         self.start = time.time()
         self.nframes = 0          
         self.rframes = 0
         self.initok = True
+
         
-    
+    def setup_framebuffer(self):
+        print("setup additional framebuffer")
+        # Создаем framebuffer
+        self.framebuffer = gl.glGenFramebuffers(1)
+        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.framebuffer)
+
+        # Создаем renderbuffer для цвета
+        color_buffer = gl.glGenRenderbuffers(1)
+        gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, color_buffer)
+        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_RGB, RENDER_SIZE, RENDER_SIZE)
+
+        # Прикрепляем renderbuffer к framebuffer
+        gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_RENDERBUFFER, color_buffer)
+
+        # Создаем renderbuffer для глубины
+        depth_buffer = gl.glGenRenderbuffers(1)
+        gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, depth_buffer)
+        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, RENDER_SIZE, RENDER_SIZE)
+
+        # Прикрепляем renderbuffer глубины к framebuffer
+        gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, depth_buffer)
+
+        # Проверяем, что framebuffer готов
+        if gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER) != gl.GL_FRAMEBUFFER_COMPLETE:
+            raise RuntimeError("Framebuffer is not complete!")
+
 
     def atoms2ssbo(self):
         self.makeCurrent()
@@ -507,12 +536,25 @@ class GLWidget(QOpenGLWidget):
         img3 = ImageDraw.Draw(img2)
         img3.text((10,10),str(rframes))
         img2.save("output/frame"+str(rframes)+".png")
-        
+
+    def recordframe3d(self,pix,rframes):
+        cubemap_image = Image.new("RGB", (RENDER_SIZE * 3, RENDER_SIZE * 2))
+        for i in range(6):
+            img = Image.frombytes("RGB", (RENDER_SIZE,RENDER_SIZE), pix[i])
+            img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
+            x = (i % 3) * RENDER_SIZE  # Столбец (0, 1, 2)
+            y = (i // 3) * RENDER_SIZE  # Строка (0 или 1)
+            cubemap_image.paste(img2, (x,y))
+        cubemap_image.save("output/frame"+str(rframes)+".png")              
+
+
     def recorddata(self,rframes):
         data = self.space.make_export()
         f = open("output/data/frame"+str(rframes)+".json","w")
         f.write(json.dumps(data))
         f.close()
+
+
 
     def paintGL(self):
         """Render a single frame"""
@@ -528,6 +570,8 @@ class GLWidget(QOpenGLWidget):
         b=  self.height()
         self.projection = glm.perspective(glm.radians(self.fov), a/b, 0.01,20.0)
 
+        #gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, None)
+        gl.glViewport(0, 0, self.width(), self.height())
         self.render()
         self.compute()
 
@@ -543,6 +587,33 @@ class GLWidget(QOpenGLWidget):
                 thread.daemon = True
                 thread.start()
             self.rframes+=1
+
+        if self.space.recording3D and not self.space.pause:
+                pix = [None] *6
+                directions = [
+                    (glm.vec3(1, 0, 0), glm.vec3(0, -1, 0)),  # Право
+                    (glm.vec3(-1, 0, 0), glm.vec3(0, -1, 0)), # Лево
+                    (glm.vec3(0, -1, 0), glm.vec3(0, 0, -1)), # Вниз
+                    (glm.vec3(0, 1, 0), glm.vec3(0, 0, 1)),   # Вверх
+                    (glm.vec3(0, 0, 1), glm.vec3(0, -1, 0)),  # Вперед
+                    (glm.vec3(0, 0, -1), glm.vec3(0, -1, 0)), # Назад
+                ]                
+                gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.framebuffer)
+                gl.glViewport(0, 0, RENDER_SIZE, RENDER_SIZE)
+                cubemap_camera_pos = glm.vec3(1.0,1.0,1.0)
+                for i, (direction, up) in enumerate(directions):
+                    self.projection = glm.perspective(glm.radians(90.0), 1.0, 0.001, 100.0)
+                    self.view = glm.lookAt(cubemap_camera_pos, cubemap_camera_pos + direction, up)
+                    self.render()
+                    pix[i] = gl.glReadPixels(0,0,RENDER_SIZE, RENDER_SIZE,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+                dirs = ['right', 'left', 'bottom', 'top', 'front', 'back']
+                    #img2.save("output/frame"+str(self.rframes)+"_"+dirs[i]+".png")
+
+                thread = threading.Thread(target=self.recordframe3d,args=(pix,self.rframes))
+                thread.daemon = True
+                thread.start() 
+                gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)   
+                self.rframes+=1
 
         self.curframe_time = time.time()
         self.framedelta = self.curframe_time - self.lastframe_time 

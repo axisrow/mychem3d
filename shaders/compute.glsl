@@ -414,7 +414,7 @@ void main()
     vec4 rotv = vec4(0,0,0,1); 
     float ll = length(atom_i.rotv.xyz);
     if (ll!=0.0){
-        if (ll>50) atom_i.rotv.xyz = normalize(atom_i.rotv.xyz)*50.0;
+        if (ll>300) atom_i.rotv.xyz = normalize(atom_i.rotv.xyz)*300.0;
 
         vec3 axis = atom_i.rotv.xyz/ll;
         float angle = 0.01* ROTA_KOEFF* TDELTA* ll/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
@@ -482,6 +482,9 @@ void main()
      F.x += atom_i.q*FIELD_KOEFF;
 
 //next
+    //if (length(F)>3){
+//        F = normalize(F)*3;
+    //}
     vec3 a = F/(atom_i.m*MASS_KOEFF);
     v_i += a*TDELTA;
 

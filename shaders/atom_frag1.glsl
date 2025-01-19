@@ -11,7 +11,7 @@ void main()
 {
 //    color = vec4(1,1,1,1);
 
-//    vec3 lightPos = vec3(1.0f,1.0f,1.0f);
+    vec3 lightPos2 = vec3(1.0f,1.0f,1.0f);
     
     if (transparency==2){
         if (ObjectColor.w==1.0) discard;
@@ -23,7 +23,7 @@ void main()
     vec3 lightColor = vec3(1.0f,1.0f,1.0f);
     float ambientStrength = 0.5f;
     vec3 ambient = ambientStrength * lightColor;
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDir = normalize(lightPos2 - FragPos);
     float diff = max(dot(Normal, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
     vec3 result = (diffuse + ambient) * ObjectColor.xyz;
