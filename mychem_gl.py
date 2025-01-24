@@ -22,7 +22,7 @@ from PyQt5.QtCore import QTimer
 #from OpenGL.GL import *
 import re
 
-RENDER_SIZE=1280
+
 
 def load_shader_source(filepath, current_line=1, is_root=True):
     with open("shaders/"+filepath, 'r') as file:
@@ -79,6 +79,7 @@ class GLWidget(QOpenGLWidget):
         self.nearflag = False
         self.drawnodes =  True
         self.update_uniforms = True
+        self.CUBESIZE = 1280
     
         #self.makeCurrent()
         vertex_shader = load_shader_source("atom_vertex1.glsl")
@@ -120,8 +121,9 @@ class GLWidget(QOpenGLWidget):
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
         self.cameraPos = glm.vec3(0.5,0.5,2)
-        #self.cameraPos = glm.vec3(0.5,0.5,0.5)
+        self.cubemap_cameraPos = glm.vec3(1.0,0.5,1.0)        
         self.cameraTarget = glm.vec3(0.5,0.5,0.5)
+        self.lightPos = glm.vec3(1.0,0.5,1.0)
 
         #self.cameraDirection = glm.normalize(self.cameraPos - self.cameraTarget)
         self.keypressed = []
@@ -131,8 +133,6 @@ class GLWidget(QOpenGLWidget):
         self.yaw = -90
         self.pitch = 0 
         self.fov = 45
-        self.light_pos = glm.vec3(1.2,1.0,2.0)
-
         self.factor = 0.001
         self.curpos = glm.vec3(0.,0.,0.)
         self.sphere_vertices = np.array(make_sphere_vert(1,20), dtype=np.float32)
@@ -159,7 +159,7 @@ class GLWidget(QOpenGLWidget):
         # Создаем renderbuffer для цвета
         color_buffer = gl.glGenRenderbuffers(1)
         gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, color_buffer)
-        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_RGB, RENDER_SIZE, RENDER_SIZE)
+        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_RGB, self.CUBESIZE, self.CUBESIZE)
 
         # Прикрепляем renderbuffer к framebuffer
         gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_RENDERBUFFER, color_buffer)
@@ -167,7 +167,7 @@ class GLWidget(QOpenGLWidget):
         # Создаем renderbuffer для глубины
         depth_buffer = gl.glGenRenderbuffers(1)
         gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, depth_buffer)
-        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, RENDER_SIZE, RENDER_SIZE)
+        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, self.CUBESIZE, self.CUBESIZE)
 
         # Прикрепляем renderbuffer глубины к framebuffer
         gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, depth_buffer)
@@ -360,9 +360,7 @@ class GLWidget(QOpenGLWidget):
         gl.glUseProgram(self.shader)
         gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
         gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
-        gl.glUniform3f(self.loc["lightPos"],self.cameraPos.x+self.view[0,0]+self.view[0,1],
-                                            self.cameraPos.y+self.view[1,0]+self.view[1,1],
-                                            self.cameraPos.z+self.view[2,0]+self.view[2,1])
+        gl.glUniform3f(self.loc["lightPos"],self.lightPos.x, self.lightPos.y, self.lightPos.z)
 
         # draw container            
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
@@ -538,12 +536,12 @@ class GLWidget(QOpenGLWidget):
         img2.save("output/frame"+str(rframes)+".png")
 
     def recordframe3d(self,pix,rframes):
-        cubemap_image = Image.new("RGB", (RENDER_SIZE * 3, RENDER_SIZE * 2))
+        cubemap_image = Image.new("RGB", (self.CUBESIZE * 3, self.CUBESIZE * 2))
         for i in range(6):
-            img = Image.frombytes("RGB", (RENDER_SIZE,RENDER_SIZE), pix[i])
+            img = Image.frombytes("RGB", (self.CUBESIZE,self.CUBESIZE), pix[i])
             img2 = img.transpose(method=Image.FLIP_TOP_BOTTOM)
-            x = (i % 3) * RENDER_SIZE  # Столбец (0, 1, 2)
-            y = (i // 3) * RENDER_SIZE  # Строка (0 или 1)
+            x = (i % 3) * self.CUBESIZE  # Столбец (0, 1, 2)
+            y = (i // 3) * self.CUBESIZE  # Строка (0 или 1)
             cubemap_image.paste(img2, (x,y))
         cubemap_image.save("output/frame"+str(rframes)+".png")              
 
@@ -566,6 +564,9 @@ class GLWidget(QOpenGLWidget):
                 )
         self.cameraFront = glm.normalize(front)
         self.view = glm.lookAt(self.cameraPos, self.cameraPos + self.cameraFront, self.cameraUp)
+        self.lightPos = glm.vec3(self.cameraPos.x+self.view[0,0]+self.view[0,1],
+                                            self.cameraPos.y+self.view[1,0]+self.view[1,1],
+                                            self.cameraPos.z+self.view[2,0]+self.view[2,1])
         a = self.width()
         b=  self.height()
         self.projection = glm.perspective(glm.radians(self.fov), a/b, 0.01,20.0)
@@ -599,15 +600,17 @@ class GLWidget(QOpenGLWidget):
                     (glm.vec3(0, 0, -1), glm.vec3(0, -1, 0)), # Назад
                 ]                
                 gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.framebuffer)
-                gl.glViewport(0, 0, RENDER_SIZE, RENDER_SIZE)
-                cubemap_camera_pos = glm.vec3(1.0,1.0,1.0)
+                gl.glViewport(0, 0, self.CUBESIZE, self.CUBESIZE)
+                self.projection = glm.perspective(glm.radians(90.0), 1.0, 0.001, 100.0)
+                self.lightPos = glm.vec3(self.cubemap_cameraPos.x, self.cubemap_cameraPos.y, self.cubemap_cameraPos.z)
+                self.lightPos.y -=0.5
+                self.lightPos.x -=0.2
                 for i, (direction, up) in enumerate(directions):
-                    self.projection = glm.perspective(glm.radians(90.0), 1.0, 0.001, 100.0)
-                    self.view = glm.lookAt(cubemap_camera_pos, cubemap_camera_pos + direction, up)
+                    self.view = glm.lookAt(self.cubemap_cameraPos, self.cubemap_cameraPos + direction, up)
                     self.render()
-                    pix[i] = gl.glReadPixels(0,0,RENDER_SIZE, RENDER_SIZE,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
-                dirs = ['right', 'left', 'bottom', 'top', 'front', 'back']
-                    #img2.save("output/frame"+str(self.rframes)+"_"+dirs[i]+".png")
+                    pix[i] = gl.glReadPixels(0,0,self.CUBESIZE, self.CUBESIZE,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+                #dirs = ['right', 'left', 'bottom', 'top', 'front', 'back']
+                #img2.save("output/frame"+str(self.rframes)+"_"+dirs[i]+".png")
 
                 thread = threading.Thread(target=self.recordframe3d,args=(pix,self.rframes))
                 thread.daemon = True

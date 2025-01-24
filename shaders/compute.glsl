@@ -350,11 +350,11 @@ void main()
 
                     else {
                     
-                        if (rn < BONDR*1.5  ){
+                        /*if (rn < BONDR*1.5  ){
                             float f= abs(edelta) * ni_spin * nj_spin * INTERACT_KOEFF/rn/rn;
                             f4+=f;
                             f5+=f;
-                        }
+                        }*/
 
                         if (ni_bonded == 0.0 && nj_bonded ==0.0 &&  ni_spin + nj_spin==0 ){
                             float f= ni_spin * nj_spin * INTERACT_KOEFF2/rn/rn;
@@ -414,7 +414,7 @@ void main()
     vec4 rotv = vec4(0,0,0,1); 
     float ll = length(atom_i.rotv.xyz);
     if (ll!=0.0){
-        if (ll>300) atom_i.rotv.xyz = normalize(atom_i.rotv.xyz)*300.0;
+        //if (ll>300) atom_i.rotv.xyz = normalize(atom_i.rotv.xyz)*300.0;
 
         vec3 axis = atom_i.rotv.xyz/ll;
         float angle = 0.01* ROTA_KOEFF* TDELTA* ll/atom_i.m/MASS_KOEFF/atom_i.r/atom_i.r;
