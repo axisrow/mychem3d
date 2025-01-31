@@ -375,9 +375,9 @@ class GLWidget(QOpenGLWidget):
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
             for a in self.space.merge_atoms:
                 pos = glm.vec3(a.pos)
-                pos -= self.space.merge_center
-                pos = self.space.merge_rot * pos
-                pos += self.space.merge_pos
+                #pos -= self.space.merge_center
+                #pos = self.space.merge_rot * pos
+                #pos += self.space.merge_pos
                 pos *= self.factor
                 model =  glm.translate(pos)
                 model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
@@ -386,18 +386,21 @@ class GLWidget(QOpenGLWidget):
                 self.atomMesh.draw(self.shader)
                 #render merge atoms nodes
                 for n in a.nodes:
-                    pos = a.rot * n.pos
-                    pos += a.pos
-                    pos -= self.space.merge_center
-                    pos = self.space.merge_rot * pos
-                    pos += self.space.merge_pos
+                    #pos = a.rot * n.pos
+                    pos = a.pos + a.rot * n.pos
+                    #pos -= self.space.merge_center
+                    #pos = self.space.merge_rot * pos
+                    #pos += self.space.merge_pos
                     pos *= self.factor
                     model =  glm.translate(pos)
                     model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
-                    if n.bonded:
-                        self.nodeMesh.color = (0.0,1.0,0.0,1.0) 
+                    if n.type==2:
+                        self.nodeMesh.color = glm.vec4(30/256.0,144/255.0,1.0,1.0)
                     else:
-                        self.nodeMesh.color = (1.0,1.0,1.0,1.0) 
+                        if n.bonded:
+                            self.nodeMesh.color = (0.0,1.0,0.0,1.0) 
+                        else:
+                            self.nodeMesh.color = (1.0,1.0,1.0,1.0) 
                     self.nodeMesh.modelmatrix = model
                     self.nodeMesh.draw(self.shader)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)

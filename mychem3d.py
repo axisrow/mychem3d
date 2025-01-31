@@ -71,6 +71,7 @@ class MainWindow(QMainWindow):
         QShortcut( 'z', self ).activated.connect(lambda : self.handle_movemode("z"))                        
         QShortcut( 'r', self ).activated.connect(lambda : self.handle_movemode("r"))                        
         QShortcut( 'g', self ).activated.connect(lambda : self.handle_movemode("g"))                        
+        QShortcut( 'a', self ).activated.connect(self.handle_axis)                                
         QShortcut( 'b', self ).activated.connect(self.handle_bond)                                
         QShortcut( 'f', self ).activated.connect(self.handle_fix) 
         QShortcut( 'u', self ).activated.connect(self.handle_unfix) 
@@ -281,11 +282,14 @@ class MainWindow(QMainWindow):
         else:
             self.sim_pause()
 
+    
     def handle_g(self):
         self.handle_movemode("g")
 
     def handle_r(self):
         self.handle_movemode("r")
+
+
 
     def unselect(self):
         self.space.select_mode = 0
@@ -320,6 +324,10 @@ class MainWindow(QMainWindow):
            self.ttype ="m" + self.ttype[1]
            self.status_bar.set("Move "+ self.ttype[1] )
            return
+#        if keysym == "a":
+#           self.ttype ="ra" 
+#           self.status_bar.set("Rotate by defined axis" )
+#           return
         self.ttype=self.ttype[0]
         if keysym == "x":
             self.ttype+="x"
@@ -327,10 +335,21 @@ class MainWindow(QMainWindow):
             self.ttype+="y"
         if keysym == "z":
             self.ttype+="z"
+        if keysym == "a":
+            self.ttype="ra"
         if self.ttype[0]=="r":
             self.status_bar.set("Rotate "+ self.ttype[1] )
         else:
             self.status_bar.set("Move "+ self.ttype[1] )
+
+    def handle_axis(self):
+        if self.space.select_mode:
+            if len(self.space.selected_atoms)==1:
+                a=self.space.atoms[self.space.selected_atoms[0]]
+                if not a.nodeselect==-1:
+                    self.space.axis = glm.normalize(a.get_node_rpos(a.nodeselect))
+                    self.space.axis_origin = a.pos
+        self.handle_movemode("a")
 
 
     def handle_shake(self,checked):
@@ -428,7 +447,9 @@ class MainWindow(QMainWindow):
         self.recentdata = mergedata
         self.mergemode()
         r = self.space.load_data(mergedata, merge=True)
-        self.space.merge_center = self.space.get_mergeobject_center()
+        c=  self.space.get_mergeobject_center()
+        self.space.move_atoms(self.space.merge_atoms,(self.space.box/2-c))
+
         #self.space.atoms2compute()
         #self.canvas.configure(cursor="hand2")
         if r: 
@@ -895,17 +916,19 @@ class MainWindow(QMainWindow):
                 angle*=-1
                 offset*=-1
             if self.ttype=="mx":
-                self.space.merge_pos.x -=offset
+                self.space.move_atoms(self.space.merge_atoms, glm.vec3(-offset,0,0))
             if self.ttype=="my":
-                self.space.merge_pos.y -=offset
+                self.space.move_atoms(self.space.merge_atoms, glm.vec3(0,-offset,0))
             if self.ttype=="mz":
-                self.space.merge_pos.z -=offset
+                self.space.move_atoms(self.space.merge_atoms, glm.vec3(0,0,-offset))
             if self.ttype=="rx":
-                self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(1,0,0)) * self.space.merge_rot
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.get_mergeobject_center(), glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(1,0,0))  )
             if self.ttype=="ry":
-                self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,1,0)) * self.space.merge_rot
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.get_mergeobject_center(), glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,1,0))  )
             if self.ttype=="rz":
-                self.space.merge_rot = glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1)) * self.space.merge_rot
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.get_mergeobject_center(), glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1))  )
+            if self.ttype=="ra":
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.axis_origin, glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*self.space.axis) )
          elif self.space.select_mode==1: #select molecule
             if delta>0:
                 new_selected = self.glframe.expand_selection(self.space.selected_atoms)

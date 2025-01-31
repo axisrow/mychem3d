@@ -43,6 +43,8 @@ class Space:
         self.merge_atoms = []
         self.merge_rot = glm.quat()
         self.merge_center = glm.vec3(0,0,0)
+        self.axis = glm.vec3(0)
+        self.axis_origin = glm.vec3(0)
         self.select_mode = 0
         self.selected_atoms = [] 
         self.gravity = False
@@ -100,6 +102,18 @@ class Space:
          center = sum/N
          return center
 
+    def move_atoms(self, atoms, vector):
+         for a in atoms:
+              a.pos += vector
+
+    def rotate_atoms(self, atoms, origin, rot):
+         for a in atoms:
+              a.pos = a.pos - origin
+              a.pos = rot * a.pos
+              a.pos = a.pos +  origin
+              a.rot = rot * a.rot
+        
+
 
     def selected2merge(self,duble=False):
         for i in self.selected_atoms:
@@ -114,10 +128,10 @@ class Space:
                 self.atoms.remove(m)
         self.selected_atoms = []
         self.merge_rot = glm.quat()
-        self.merge_center = self.get_mergeobject_center()
-        self.merge_pos = glm.vec3(self.merge_center)
-        if duble:
-            self.merge_pos+=glm.vec3(5,0,0)
+#        self.merge_center = self.get_mergeobject_center()
+#        self.merge_pos = glm.vec3(self.merge_center)
+#        if duble:
+#            self.merge_pos+=glm.vec3(5,0,0)
 
 
     def get_atoms_distant(self,atoms=None):
@@ -175,13 +189,13 @@ class Space:
         N = len(self.atoms)
         self.merge_center = self.get_mergeobject_center()
         for a in self.merge_atoms:
-            pos = a.pos.xyz
-            pos -= self.merge_center
-            pos = self.merge_rot * pos
-            pos += self.merge_pos
-            a.pos = pos.xyz
-            a.rot = glm.normalize(self.merge_rot * a.rot)
-            a.calc_node_positions()
+            #pos = a.pos.xyz
+            #pos -= self.merge_center
+            #pos = self.merge_rot * pos
+            #pos += self.merge_pos
+            #a.pos = pos.xyz
+            #a.rot = glm.normalize(self.merge_rot * a.rot)
+            #a.calc_node_positions()
             self.appendatom(a)
         self.merge_atoms = []
         return N
@@ -193,11 +207,15 @@ class Space:
         self.merge_atoms = []
         mergedata = json.loads(f.read())
         r = self.load_data(mergedata, merge=True)
-        self.merge_pos = glm.vec3(x,y,z)
-        self.merge_rot = merge_rot
+        c = self.get_mergeobject_center()
+        print(f'center= {c}')
+        self.move_atoms(self.merge_atoms,(-c) + glm.vec3(x,y,z))
+        self.rotate_atoms(self.merge_atoms,glm.vec3(x,y,z), merge_rot)
+        #self.merge_pos = glm.vec3(x,y,z) 
+        #self.merge_rot = merge_rot
         first = self.merge2atoms()
-        self.merge_pos = self.box/2
-        self.merge_rot = glm.quat()
+        #self.merge_pos = self.box/2
+        #self.merge_rot = glm.quat()
         return first
     
 
