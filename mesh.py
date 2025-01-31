@@ -23,24 +23,23 @@ class Mesh():
         gl.glBufferData(gl.GL_ARRAY_BUFFER, 4*self.vertices.size, self.vertices, gl.GL_STATIC_DRAW)
         gl.glBindVertexArray( 0 )
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER,0)
-
         pass
+
+    def setShader(self,s):
+        self.shader = s
+
     def bind(self):
         gl.glBindVertexArray(self.VAO)
         
-    def draw(self, shader):
+    def draw(self):
         gl.glBindVertexArray(self.VAO)
-        objcol_loc = gl.glGetUniformLocation(shader, "objectColor")
-        model_loc = gl.glGetUniformLocation(shader, "model")
-        gl.glUniform4f(objcol_loc,self.color[0],self.color[1],self.color[2], self.color[3])
-        gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
+        #self.shader.set4f("objectColor",self.color[0],self.color[1],self.color[2], self.color[3])
+        #self.shader.setMatrix4("model", self.modelmatrix)        
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/6))
     
-    def drawQuads(self, shader):
+    def drawQuads(self):
         gl.glBindVertexArray(self.VAO)
-        objcol_loc = gl.glGetUniformLocation(shader, "objectColor")
-        model_loc = gl.glGetUniformLocation(shader, "model")
-        gl.glUniform4f(objcol_loc,self.color[0],self.color[1],self.color[2],self.color[3])
-        gl.glUniformMatrix4fv(model_loc,1, gl.GL_FALSE, glm.value_ptr(self.modelmatrix))
+        #self.shader.set4f("objectColor",self.color[0],self.color[1],self.color[2],self.color[3])
+        #self.shader.setMatrix4("model", self.modelmatrix)
         gl.glDrawArrays(gl.GL_QUADS, 0, int(self.vertices.size/6))
 

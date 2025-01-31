@@ -208,14 +208,9 @@ class Space:
         mergedata = json.loads(f.read())
         r = self.load_data(mergedata, merge=True)
         c = self.get_mergeobject_center()
-        print(f'center= {c}')
         self.move_atoms(self.merge_atoms,(-c) + glm.vec3(x,y,z))
         self.rotate_atoms(self.merge_atoms,glm.vec3(x,y,z), merge_rot)
-        #self.merge_pos = glm.vec3(x,y,z) 
-        #self.merge_rot = merge_rot
         first = self.merge2atoms()
-        #self.merge_pos = self.box/2
-        #self.merge_rot = glm.quat()
         return first
     
 

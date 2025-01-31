@@ -1,5 +1,7 @@
-import OpenGL.GL as gl
+#import OpenGL.GL as gl
 import OpenGL.GL.shaders
+from OpenGL.GL import *
+
 #import glfw
 import ctypes
 #from pyopengltk import OpenGLFrame
@@ -20,29 +22,7 @@ from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtCore import QTimer
 #from PyQt5.QtGui import QOpenGLWindow,
 #from OpenGL.GL import *
-import re
-
-
-
-def load_shader_source(filepath, current_line=1, is_root=True):
-    with open("shaders/"+filepath, 'r') as file:
-        lines = file.readlines()
-    source = ""
-    if not is_root:
-        source += f'#line {current_line+10000}\n'
-    for line in lines:
-        include_match = re.match(r'#include\s+"([^"]+)"', line)
-        if include_match:
-            included_file = include_match.group(1)
-            included_source = load_shader_source(included_file, current_line=1, is_root=False)
-            source += included_source
-            source += f'#line {current_line}\n'
-        else:
-            source += line
-            current_line += 1
-    return source
-
-
+from shader import Shader,ComputeShader
 
 class GLWidget(QOpenGLWidget):
     def __init__(self,space):
@@ -58,21 +38,21 @@ class GLWidget(QOpenGLWidget):
         #self.w
         #self.setMinimumSize(self.width, self.height)
         
-        gl.glViewport(0, 0, self.width(), self.height())
-        gl.glClearColor(0.3, 0.3, 0.3, 0.0)
-        gl.glEnable(gl.GL_DEPTH_TEST)
-        gl.glBlendEquation(gl.GL_FUNC_ADD)
-        gl.glBlendFuncSeparate(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA, gl.GL_ONE,gl.GL_ZERO)
-        #gl.glEnable(gl.GL_CULL_FACE);
-        #gl.glCullFace(gl.GL_FRONT); 
-        #gl.glFrontFace(gl.GL_CW) 
-        #gl.glEnable(gl.GL_DEBUG_OUTPUT)
-        #gl.glEnable(gl.GL_CULL_FACE); 
-        #gl.glEnable(gl.GL_FRAMEBUFFER_SRGB);
-        #gl.glEnable(gl.GL_DEPTH_TEST)
-        #gl.glEnable (gl.GL_LINE_SMOOTH);    
-        #gl.glfwWindowHint(gl.GLFW_SAMPLES, 4);
-        #gl.glEnable(gl.GL_MULTISAMPLE); 
+        glViewport(0, 0, self.width(), self.height())
+        glClearColor(0.3, 0.3, 0.3, 0.0)
+        glEnable(GL_DEPTH_TEST)
+        glBlendEquation(GL_FUNC_ADD)
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE,GL_ZERO)
+        #glEnable(GL_CULL_FACE);
+        #glCullFace(GL_FRONT); 
+        #glFrontFace(GL_CW) 
+        #glEnable(GL_DEBUG_OUTPUT)
+        #glEnable(GL_CULL_FACE); 
+        #glEnable(GL_FRAMEBUFFER_SRGB);
+        #glEnable(GL_DEPTH_TEST)
+        #glEnable (GL_LINE_SMOOTH);    
+        #glfwWindowHint(GLFW_SAMPLES, 4);
+        #glEnable(GL_MULTISAMPLE); 
         self.iconic = False
         self.nearatomsmax = 5000
         self.LOCALSIZEX = 64
@@ -80,44 +60,20 @@ class GLWidget(QOpenGLWidget):
         self.drawnodes =  True
         self.update_uniforms = True
         self.CUBESIZE = 1280
-    
-        #self.makeCurrent()
-        vertex_shader = load_shader_source("atom_vertex1.glsl")
-        fragment_shader = load_shader_source("atom_frag1.glsl")
-        compute_shader = load_shader_source("compute.glsl")
-        compute_shader = compute_shader.replace("NEARATOMSMAX",str(self.nearatomsmax))
-        compute_shader = compute_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
-        compute_shader = compute_shader.replace("MAXVEL",str(self.space.MAXVELOCITY))
-        select_shader = load_shader_source("select.glsl")
-        select_shader = select_shader.replace("LOCALSIZEX",str(self.LOCALSIZEX))
-#        geom_shader = open("shaders/atom_geom1.glsl","r").read()
 
-        self.shader = OpenGL.GL.shaders.compileProgram(
-            OpenGL.GL.shaders.compileShader(vertex_shader, gl.GL_VERTEX_SHADER),
-#            OpenGL.GL.shaders.compileShader(geom_shader, gl.GL_GEOMETRY_SHADER),
-            OpenGL.GL.shaders.compileShader(fragment_shader, gl.GL_FRAGMENT_SHADER),validate=False
-        )
+        self.shader =  Shader("atom_vertex1.glsl", "atom_frag1.glsl")
         
-        self.compute_shader = OpenGL.GL.shaders.compileShader(compute_shader, gl.GL_COMPUTE_SHADER)
-        #self.compute_shader = gl.glCreateShader(gl.GL_COMPUTE_SHADER)
-        #gl.glShaderSource(self.compute_shader, compute_shader)
-        #res1= gl.glCompileShader(self.compute_shader)
+        params = {"NEARATOMSMAX":str(self.nearatomsmax) ,
+                  "LOCALSIZEX":str(self.LOCALSIZEX),
+                  "MAXVEL":str(self.space.MAXVELOCITY)
+                  }
+        self.compute_shader = ComputeShader("compute.glsl", params)
 
-        self.select_shader = OpenGL.GL.shaders.compileShader(select_shader, gl.GL_COMPUTE_SHADER)
-        #self.select_shader = gl.glCreateShader(gl.GL_COMPUTE_SHADER)
-        #gl.glShaderSource(self.select_shader, select_shader)
-        #res2= gl.glCompileShader(self.select_shader)
-        #gl.glGetShaderInfoLog(self.select_shader,)
+        params = {"LOCALSIZEX":str(self.LOCALSIZEX)}
+        self.select_shader = ComputeShader("select.glsl", params)
         
-        self.gpu_code = gl.glCreateProgram()
-        gl.glAttachShader(self.gpu_code, self.compute_shader)
-        res3 = gl.glLinkProgram(self.gpu_code)
-   
-        self.select_program = gl.glCreateProgram()
-        gl.glAttachShader(self.select_program, self.select_shader)
-        res4= gl.glLinkProgram(self.select_program)
+        self.init_loc()
 
-        #self.doneCurrent()
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
         self.cameraPos = glm.vec3(0.5,0.5,2)
@@ -153,27 +109,27 @@ class GLWidget(QOpenGLWidget):
     def setup_framebuffer(self):
         print("setup additional framebuffer")
         # Создаем framebuffer
-        self.framebuffer = gl.glGenFramebuffers(1)
-        gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.framebuffer)
+        self.framebuffer = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.framebuffer)
 
         # Создаем renderbuffer для цвета
-        color_buffer = gl.glGenRenderbuffers(1)
-        gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, color_buffer)
-        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_RGB, self.CUBESIZE, self.CUBESIZE)
+        color_buffer = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, color_buffer)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, self.CUBESIZE, self.CUBESIZE)
 
         # Прикрепляем renderbuffer к framebuffer
-        gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_COLOR_ATTACHMENT0, gl.GL_RENDERBUFFER, color_buffer)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_buffer)
 
         # Создаем renderbuffer для глубины
-        depth_buffer = gl.glGenRenderbuffers(1)
-        gl.glBindRenderbuffer(gl.GL_RENDERBUFFER, depth_buffer)
-        gl.glRenderbufferStorage(gl.GL_RENDERBUFFER, gl.GL_DEPTH_COMPONENT, self.CUBESIZE, self.CUBESIZE)
+        depth_buffer = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, self.CUBESIZE, self.CUBESIZE)
 
         # Прикрепляем renderbuffer глубины к framebuffer
-        gl.glFramebufferRenderbuffer(gl.GL_FRAMEBUFFER, gl.GL_DEPTH_ATTACHMENT, gl.GL_RENDERBUFFER, depth_buffer)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer)
 
         # Проверяем, что framebuffer готов
-        if gl.glCheckFramebufferStatus(gl.GL_FRAMEBUFFER) != gl.GL_FRAMEBUFFER_COMPLETE:
+        if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
             raise RuntimeError("Framebuffer is not complete!")
 
 
@@ -202,62 +158,62 @@ class GLWidget(QOpenGLWidget):
         a_data = np.array(a_data,dtype=np.byte)
 #        print_bytes_with_highlights(a_data,[(ctypes.sizeof(AtomC)+9*4,4)])
         print(f"  buffer size={datasize}")
-        self.atoms_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
+        self.atoms_buffer = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
        
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, a_data , gl.GL_DYNAMIC_DRAW);
-        self.atoms_buffer2 = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, datasize, None , gl.GL_DYNAMIC_DRAW);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, datasize, a_data , GL_DYNAMIC_DRAW);
+        self.atoms_buffer2 = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, datasize, None , GL_DYNAMIC_DRAW);
     
         #nearbuffer
-        self.near_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.near_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 2, self.near_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*(self.nearatomsmax+1), None , gl.GL_DYNAMIC_DRAW);
+        self.near_buffer = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.near_buffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, self.near_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4*(self.nearatomsmax+1), None , GL_DYNAMIC_DRAW);
         self.nearflag = True    
 
         #far field buffer
-        self.far_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.far_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4, None , gl.GL_DYNAMIC_DRAW);
+        self.far_buffer = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.far_buffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4, None , GL_DYNAMIC_DRAW);
 
         # real pos buffer
-        self.rpos_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.rpos_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , gl.GL_DYNAMIC_DRAW);
+        self.rpos_buffer = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.rpos_buffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , GL_DYNAMIC_DRAW);
 
 
-        self.qshift_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.qshift_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 6, self.qshift_buffer);
+        self.qshift_buffer = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.qshift_buffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.qshift_buffer);
         zero = np.zeros(self.N*4*6,dtype=np.byte)
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, self.N*4*6, zero , gl.GL_DYNAMIC_DRAW); 
+        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4*6, zero , GL_DYNAMIC_DRAW); 
         
 
 
 
         #spin set
-        gl.glUseProgram(self.gpu_code)
-        gl.glUniform1i(self.loc["stage"],1) # rpos of nodes and atom q
-        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-        gl.glUniform1i(self.loc["stage"],3) #autospinset
-        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+        self.compute_shader.use()
+        self.compute_shader.setInt("stage",1) # rpos of nodes and atom q
+        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+        self.compute_shader.setInt("stage",3) #autospinset
+        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-        gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
-        gl.glUniform1i(self.loc["stage"],2) #nearatoms
-        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+        self.compute_shader.setFloat("NEARDIST",self.space.NEARDIST)
+        self.compute_shader.setInt("stage",2) #nearatoms
+        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-        gl.glUniform1i(self.loc["stage"],4)   # bonded state
-        gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+        self.compute_shader.setInt("stage",4)   # bonded state
+        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
 
         self.set_compute_uniforms()
@@ -269,13 +225,13 @@ class GLWidget(QOpenGLWidget):
         self.N = len(self.space.atoms)
         print(f"  ssbo2atoms N={self.N}")
         asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        a_data8 = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, self.N*asize)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
+        a_data8 = glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.N*asize)
         #print_bytes_with_highlights(a_data8,[(ctypes.sizeof(AtomC)+9*4,4)])
         print("  getbuffersubdata size=", self.N*asize)
         #print("sizeof AtomC", ctypes.sizeof(AtomC))
         #print("sizeof NodeC", ctypes.sizeof(NodeC))
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, 0)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0)
         self.doneCurrent()
         offset = 0
         self.space.Ek = 0
@@ -298,54 +254,36 @@ class GLWidget(QOpenGLWidget):
 
 
     def init_loc(self):
-            self.loc = {}
-            self.loc.update( {"stage": gl.glGetUniformLocation(self.gpu_code, "stage")})
-            self.loc.update( {"box": gl.glGetUniformLocation(self.gpu_code, "box")})
-            self.loc.update( {"iTime": gl.glGetUniformLocation(self.gpu_code, "iTime")})
-            self.loc.update( {"bondlock": gl.glGetUniformLocation(self.gpu_code, "bondlock") })
-            self.loc.update( {"gravity": gl.glGetUniformLocation(self.gpu_code, "gravity") })
-            self.loc.update( {"redox": gl.glGetUniformLocation(self.gpu_code, "redox") })
-            self.loc.update( {"shake": gl.glGetUniformLocation(self.gpu_code, "shake") })
-            self.loc.update( {"TDELTA": gl.glGetUniformLocation(self.gpu_code, "TDELTA") })
-            self.loc.update( {"BOND_KOEFF": gl.glGetUniformLocation(self.gpu_code, "BOND_KOEFF") })
-            self.loc.update( {"INTERACT_KOEFF": gl.glGetUniformLocation(self.gpu_code, "INTERACT_KOEFF") })
-            self.loc.update( {"REPULSION_KOEFF1": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF1") })
-            self.loc.update( {"REPULSION_KOEFF2": gl.glGetUniformLocation(self.gpu_code, "REPULSION_KOEFF2") })
-            self.loc.update( {"ATTRACTION_KOEFF": gl.glGetUniformLocation(self.gpu_code, "ATTRACTION_KOEFF") })
-            self.loc.update( {"ROTA_KOEFF": gl.glGetUniformLocation(self.gpu_code, "ROTA_KOEFF") })
-            self.loc.update( {"MASS_KOEFF": gl.glGetUniformLocation(self.gpu_code, "MASS_KOEFF") })
-            self.loc.update( {"FIELD_KOEFF": gl.glGetUniformLocation(self.gpu_code, "FIELD_KOEFF") })
-            self.loc.update( {"NEARDIST": gl.glGetUniformLocation(self.gpu_code, "NEARDIST") })
-            self.loc.update( {"NODEDIST": gl.glGetUniformLocation(self.gpu_code, "NODEDIST") })
-            self.loc.update( {"HEAT": gl.glGetUniformLocation(self.gpu_code, "HEAT") })
-            self.loc.update( {"highlight_unbond": gl.glGetUniformLocation(self.gpu_code, "highlight_unbond") })
-            self.loc.update( {"sideheat": gl.glGetUniformLocation(self.gpu_code, "sideheat") })
-            self.loc.update( {"efield": gl.glGetUniformLocation(self.gpu_code, "efield") })
-            self.loc.update( {"test": gl.glGetUniformLocation(self.gpu_code, "test") })
-            self.loc.update( {"view": gl.glGetUniformLocation(self.shader, "view") })
-            self.loc.update( {"projection": gl.glGetUniformLocation(self.shader, "projection") })
-            self.loc.update( {"mode": gl.glGetUniformLocation(self.shader, "mode") })
-            self.loc.update( {"nodeindex": gl.glGetUniformLocation(self.shader, "nodeindex") })
-            self.loc.update( {"lightPos": gl.glGetUniformLocation(self.shader, "lightPos") })
-            self.loc.update( {"transparency": gl.glGetUniformLocation(self.shader, "transparency") })
-            
-
+            self.compute_shader.init_uniforms(["stage", "box", "iTime",
+                                                "bondlock", "gravity", "redox",
+                                                "shake", "TDELTA", "BOND_KOEFF",
+                                                "INTERACT_KOEFF", "REPULSION_KOEFF1", "REPULSION_KOEFF2",
+                                                "ATTRACTION_KOEFF",  "ROTA_KOEFF", "MASS_KOEFF",
+                                                "FIELD_KOEFF",  "NEARDIST", "NODEDIST", "HEAT",
+                                                "highlight_unbond",  "sideheat", "efield", "test"
+                                               ]
+                                              )
+            self.shader.init_uniforms([ "model", "objectColor", "view", "projection", "mode", "nodeindex",
+                                         "lightPos", "transparency" 
+                                      ])
 
     def create_objects(self):
         print("create objects")
         self.atomMesh = Mesh(self.sphere_vertices)
+        self.atomMesh.setShader(self.shader)
         self.atomMesh.setup()
         self.nodeMesh = Mesh(self.sphere_vertices2)
+        self.nodeMesh.setShader(self.shader)
         self.nodeMesh.setup()
         self.containerMesh = Mesh(self.cube_vertices)
+        self.containerMesh.setShader(self.shader)
         self.containerMesh.setup()
         model =  glm.mat4()
         model =  glm.scale(model,self.space.box/glm.vec3(1/self.factor))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
         model =  glm.translate(model, glm.vec3(1, 1, 1))
-        self.containerMesh.color = (1,1,1,1)
-        self.containerMesh.modelmatrix = model
-        self.init_loc()
+        self.containerMatrix = model
+        
 
     def updateContainerSize(self):
         if not self.containerMesh: return
@@ -353,37 +291,37 @@ class GLWidget(QOpenGLWidget):
         model =  glm.scale(model,self.space.box/glm.vec3(1/self.factor))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
         model =  glm.translate(model, glm.vec3(1, 1, 1))
-        self.containerMesh.modelmatrix = model
+        self.containerMatrix = model
 
     def render(self):
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT )
-        gl.glUseProgram(self.shader)
-        gl.glUniformMatrix4fv(self.loc["view"],1, gl.GL_FALSE, glm.value_ptr(self.view))
-        gl.glUniformMatrix4fv(self.loc["projection"],1, gl.GL_FALSE, glm.value_ptr(self.projection))
-        gl.glUniform3f(self.loc["lightPos"],self.lightPos.x, self.lightPos.y, self.lightPos.z)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT )
+        self.shader.use()
+        self.shader.setMatrix4("view", self.view)
+        self.shader.setMatrix4("projection", self.projection)
+        self.shader.set3f("lightPos", self.lightPos.x, self.lightPos.y, self.lightPos.z)
 
         # draw container            
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
-        self.containerMesh.drawQuads(self.shader)
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE )
+        self.shader.setMatrix4("model",self.containerMatrix)
+        self.shader.set4f("objectColor",1,1,1,1)
+        self.containerMesh.drawQuads()
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL )
 
-        gl.glEnable(gl.GL_CULL_FACE)
-        gl.glCullFace(gl.GL_FRONT)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_FRONT)
 
         #render merge_atom
-        if len(self.space.merge_atoms)>0:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+        #if len(self.space.merge_atoms)>0:
+        if self.main.merge_mode:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             for a in self.space.merge_atoms:
                 pos = glm.vec3(a.pos)
-                #pos -= self.space.merge_center
-                #pos = self.space.merge_rot * pos
-                #pos += self.space.merge_pos
                 pos *= self.factor
                 model =  glm.translate(pos)
                 model =  glm.scale(model,glm.vec3(1)*self.factor*a.r)
-                self.atomMesh.modelmatrix = model
-                self.atomMesh.color = a.color
-                self.atomMesh.draw(self.shader)
+                self.shader.setMatrix4("model", model)
+                self.shader.set4f("objectColor",a.color[0],a.color[1],a.color[2],a.color[3])
+                self.atomMesh.draw()
                 #render merge atoms nodes
                 for n in a.nodes:
                     #pos = a.rot * n.pos
@@ -395,45 +333,45 @@ class GLWidget(QOpenGLWidget):
                     model =  glm.translate(pos)
                     model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
                     if n.type==2:
-                        self.nodeMesh.color = glm.vec4(30/256.0,144/255.0,1.0,1.0)
+                        color = glm.vec4(30/256.0,144/255.0,1.0,1.0)
                     else:
                         if n.bonded:
-                            self.nodeMesh.color = (0.0,1.0,0.0,1.0) 
+                            color = (0.0,1.0,0.0,1.0) 
                         else:
-                            self.nodeMesh.color = (1.0,1.0,1.0,1.0) 
-                    self.nodeMesh.modelmatrix = model
-                    self.nodeMesh.draw(self.shader)
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+                            color = (1.0,1.0,1.0,1.0) 
+                    self.shader.setMatrix4("model", model)
+                    self.shader.set4f("objectColor",color[0],color[1],color[2],color[3])
+                    self.nodeMesh.draw()
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
         # render computed atoms
         if self.N>0:
             self.atomMesh.bind()
             if self.space.tranparentmode:
-                gl.glUniform1i(self.loc["transparency"],1)
-            gl.glUniform1i(self.loc["mode"],1)
-            gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+                self.shader.setInt("transparency",1)
+            self.shader.setInt("mode",1)
+            glDrawArraysInstanced(GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
             if self.drawnodes:
-                gl.glUniform1i(self.loc["mode"],2)
+                self.shader.setInt("mode",2)
                 self.nodeMesh.bind()
                 for i in range(0,5):
-                        gl.glUniform1i(self.loc["nodeindex"],i)
-                        gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
+                        self.shader.setInt("nodeindex",i)
+                        glDrawArraysInstanced(GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
 
             #draw transparent atoms after opaque
             if self.space.tranparentmode:
-                gl.glEnable(gl.GL_BLEND)
-                gl.glDepthMask(gl.GL_FALSE)
+                glEnable(GL_BLEND)
+                glDepthMask(GL_FALSE)
                 self.atomMesh.bind()
-                gl.glUniform1i(self.loc["transparency"],2)
-                gl.glUniform1i(self.loc["mode"],1)
-                gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
-                gl.glUniform1i(self.loc["transparency"],0)
-                gl.glDisable(gl.GL_BLEND)
-                gl.glDepthMask(gl.GL_TRUE)
+                self.shader.setInt("transparency",2)
+                self.shader.setInt("mode",1)
+                glDrawArraysInstanced(GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+                self.shader.setInt("transparency",0)
+                glDisable(GL_BLEND)
+                glDepthMask(GL_TRUE)
         
-
-        gl.glUniform1i(self.loc["mode"],0)
-        gl.glBindVertexArray( 0 )
+        self.shader.setInt("mode",0)
+        glBindVertexArray( 0 )
 
 
 
@@ -444,11 +382,13 @@ class GLWidget(QOpenGLWidget):
                 model =  glm.mat4()
                 model =  glm.translate(model, a.pos * self.factor  )
                 model =  glm.scale(model, glm.vec3(a.r * self.factor*1.1))
-                self.atomMesh.color = (0,1.0,0,1.0)
-                self.atomMesh.modelmatrix = model
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE );
-                self.atomMesh.draw(self.shader)
-                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+                color = (0,1.0,0,1.0)
+                self.shader.setMatrix4("model", model)
+                self.shader.set4f("objectColor",color[0],color[1],color[2],color[3])
+
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE );
+                self.atomMesh.draw()
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
                 if len(self.space.selected_atoms)<=2 and a.nodeselect!=-1:
                     n = a.nodes[a.nodeselect]
                     pos = a.rot * n.pos *1.1
@@ -456,40 +396,42 @@ class GLWidget(QOpenGLWidget):
                     model =  glm.mat4()
                     model =  glm.translate(model, pos * self.factor  )
                     model =  glm.scale(model,glm.vec3(self.factor*0.2*a.r))
-                    self.nodeMesh.color = (1.0,0.0,1.0,1.0) 
-                    self.nodeMesh.modelmatrix = model
-                    self.nodeMesh.draw(self.shader)                
-                    gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL );
+                    color = (1.0,0.0,1.0,1.0) 
+                    self.shader.setMatrix4("model", model)
+                    self.shader.set4f("objectColor",color[0],color[1],color[2],color[3])
+                    self.nodeMesh.draw()                
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL );
 
 
-        gl.glDisable(gl.GL_CULL_FACE);
-        gl.glUseProgram(0)
+        glDisable(GL_CULL_FACE);
+        glUseProgram(0)
 
 
     def set_compute_uniforms(self):
-            gl.glUseProgram(self.gpu_code)
-            gl.glUniform1i(self.loc["bondlock"],self.space.bondlock)
-            gl.glUniform3fv(self.loc["box"], 1, glm.value_ptr(self.space.box))
-            gl.glUniform1i(self.loc["iTime"],self.space.t)
-            gl.glUniform1f(self.loc["TDELTA"],self.space.TDELTA)
-            gl.glUniform1i(self.loc["gravity"],self.space.gravity)
-            gl.glUniform1i(self.loc["redox"],self.space.redox)
-            gl.glUniform1i(self.loc["shake"],self.space.shake)
-            gl.glUniform1f(self.loc["BOND_KOEFF"],self.space.BOND_KOEFF)
-            gl.glUniform1f(self.loc["INTERACT_KOEFF"],self.space.INTERACT_KOEFF)
-            gl.glUniform1f(self.loc["REPULSION_KOEFF1"],self.space.REPULSION_KOEFF1)
-            gl.glUniform1f(self.loc["REPULSION_KOEFF2"],self.space.REPULSION_KOEFF2)
-            gl.glUniform1f(self.loc["ATTRACTION_KOEFF"],self.space.ATTRACTION_KOEFF)
-            gl.glUniform1f(self.loc["ROTA_KOEFF"],self.space.ROTA_KOEFF)
-            gl.glUniform1f(self.loc["MASS_KOEFF"],self.space.MASS_KOEFF)
-            gl.glUniform1f(self.loc["FIELD_KOEFF"],self.space.FIELD_KOEFF)
-            gl.glUniform1f(self.loc["NEARDIST"],self.space.NEARDIST)
-            gl.glUniform1f(self.loc["NODEDIST"],self.space.NODEDIST)
-            gl.glUniform1f(self.loc["HEAT"],float(self.space.heat))
-            gl.glUniform1i(self.loc["sideheat"],self.space.sideheat)
-            gl.glUniform1i(self.loc["efield"],self.space.efield)
-            gl.glUniform1i(self.loc["test"],self.space.test)
-            gl.glUniform1i(self.loc["highlight_unbond"],self.space.highlight_unbond)
+            s = self.compute_shader
+            s.use()
+            s.setInt("bondlock", self.space.bondlock )
+            glUniform3fv(s.loc["box"], 1, glm.value_ptr(self.space.box))
+            s.setInt("iTime", self.space.t )
+            s.setFloat("TDELTA", self.space.TDELTA )
+            s.setInt("gravity",self.space.gravity)
+            s.setInt("redox",self.space.redox)
+            s.setInt("shake",self.space.shake)
+            s.setFloat("BOND_KOEFF",self.space.BOND_KOEFF)
+            s.setFloat("INTERACT_KOEFF",self.space.INTERACT_KOEFF)
+            s.setFloat("REPULSION_KOEFF1",self.space.REPULSION_KOEFF1)
+            s.setFloat("REPULSION_KOEFF2",self.space.REPULSION_KOEFF2)
+            s.setFloat("ATTRACTION_KOEFF",self.space.ATTRACTION_KOEFF)
+            s.setFloat("ROTA_KOEFF",self.space.ROTA_KOEFF)
+            s.setFloat("MASS_KOEFF",self.space.MASS_KOEFF)
+            s.setFloat("FIELD_KOEFF",self.space.FIELD_KOEFF)
+            s.setFloat("NEARDIST",self.space.NEARDIST)
+            s.setFloat("NODEDIST",self.space.NODEDIST)
+            s.setFloat("HEAT",float(self.space.heat))
+            s.setInt("sideheat",self.space.sideheat)
+            s.setInt("efield",self.space.efield)
+            s.setInt("test",self.space.test)
+            s.setInt("highlight_unbond",self.space.highlight_unbond)
             print("set compute vars")
 
     def compute(self):
@@ -500,35 +442,35 @@ class GLWidget(QOpenGLWidget):
             self.set_compute_uniforms()
             self.update_uniforms=False
         if not self.space.pause:
-            gl.glUseProgram(self.gpu_code)
+            self.compute_shader.use()
 
             for i in range(0,self.space.update_delta):
                     self.space.t+=1
-                    gl.glUniform1i(self.loc["stage"],1) #calc q and rpos of nodes
-                    gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
-                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    self.compute_shader.setInt("stage",1) #calc q and rpos of nodes
+                    self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
+                    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
                     if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
                         self.nearflag = False
-                        gl.glUniform1i(self.loc["stage"],2)   #calc near atoms  and far field
-                        gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
-                        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
-                        #gl.glUniform1i(self.loc["stage"],4)   # bonded state
-                        #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                        #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                        self.compute_shader.setInt("stage",2)   #calc near atoms  and far field
+                        self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
+                        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+                        #self.compute_shader.setInt("stage",4)   # bonded state
+                        #self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                        #glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-                    #gl.glUniform1i(self.loc["stage"],4) #bond state
-                    #gl.glDispatchCompute(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    #gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    #self.compute_shader.setInt("stage",4) #bond state
+                    #self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+                    #glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-                    gl.glUniform1i(self.loc["stage"],5)  #main
-                    gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
-                    gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+                    self.compute_shader.setInt("stage",5)  #main
+                    self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
+                    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
-                    gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
-                    gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
                     if self.space.action:
                         self.space.action(self.space)   
-            gl.glUseProgram(0)
+            glUseProgram(0)
 
 
     def recordframe(self,pix,rframes):
@@ -559,7 +501,7 @@ class GLWidget(QOpenGLWidget):
 
     def paintGL(self):
         """Render a single frame"""
-        #gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+        #glClear(GL_COLOR_BUFFER_BIT)
         self.N = len(self.space.atoms)
         front = ( cos(glm.radians(self.pitch))*cos(glm.radians(self.yaw)),
                  sin(glm.radians(self.pitch)),
@@ -574,14 +516,14 @@ class GLWidget(QOpenGLWidget):
         b=  self.height()
         self.projection = glm.perspective(glm.radians(self.fov), a/b, 0.01,20.0)
 
-        #gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, None)
-        gl.glViewport(0, 0, self.width(), self.height())
+        #glBindFramebuffer(GL_FRAMEBUFFER, None)
+        glViewport(0, 0, self.width(), self.height())
         self.render()
         self.compute()
 
         if (self.space.recording or self.space.record_data) and not self.space.pause:
             if self.space.recording:
-                pix = gl.glReadPixels(0,0,self.width(), self.height(),gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+                pix = glReadPixels(0,0,self.width(), self.height(),GL_RGB,GL_UNSIGNED_BYTE)
                 thread = threading.Thread(target=self.recordframe,args=(pix,self.rframes))
                 thread.daemon = True
                 thread.start()
@@ -602,8 +544,8 @@ class GLWidget(QOpenGLWidget):
                     (glm.vec3(0, 0, 1), glm.vec3(0, -1, 0)),  # Вперед
                     (glm.vec3(0, 0, -1), glm.vec3(0, -1, 0)), # Назад
                 ]                
-                gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.framebuffer)
-                gl.glViewport(0, 0, self.CUBESIZE, self.CUBESIZE)
+                glBindFramebuffer(GL_FRAMEBUFFER, self.framebuffer)
+                glViewport(0, 0, self.CUBESIZE, self.CUBESIZE)
                 self.projection = glm.perspective(glm.radians(90.0), 1.0, 0.001, 100.0)
                 self.lightPos = glm.vec3(self.cubemap_cameraPos.x, self.cubemap_cameraPos.y, self.cubemap_cameraPos.z)
                 self.lightPos.y -=0.5
@@ -611,14 +553,14 @@ class GLWidget(QOpenGLWidget):
                 for i, (direction, up) in enumerate(directions):
                     self.view = glm.lookAt(self.cubemap_cameraPos, self.cubemap_cameraPos + direction, up)
                     self.render()
-                    pix[i] = gl.glReadPixels(0,0,self.CUBESIZE, self.CUBESIZE,gl.GL_RGB,gl.GL_UNSIGNED_BYTE)
+                    pix[i] = glReadPixels(0,0,self.CUBESIZE, self.CUBESIZE,GL_RGB,GL_UNSIGNED_BYTE)
                 #dirs = ['right', 'left', 'bottom', 'top', 'front', 'back']
                 #img2.save("output/frame"+str(self.rframes)+"_"+dirs[i]+".png")
 
                 thread = threading.Thread(target=self.recordframe3d,args=(pix,self.rframes))
                 thread.daemon = True
                 thread.start() 
-                gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)   
+                glBindFramebuffer(GL_FRAMEBUFFER, 0)   
                 self.rframes+=1
 
         self.curframe_time = time.time()
@@ -637,41 +579,41 @@ class GLWidget(QOpenGLWidget):
     def expand_selection(self, selected_atoms):
         sel_time_begin = time.time()
         self.makeCurrent()
-        gl.glUseProgram(self.select_program)
+        self.select_shader.use()
         #print("atoms N=", self.N)
         int_array = np.array(selected_atoms, dtype=np.int32)
         int_array = int_array.tobytes()
-        sel_buffer = gl.glGenBuffers(1)
-        sel_buffer2 = gl.glGenBuffers(1)
-        counter_buffer = gl.glGenBuffers(1)
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, sel_buffer)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 7, sel_buffer)
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, len(int_array), int_array , gl.GL_DYNAMIC_DRAW);
+        sel_buffer = glGenBuffers(1)
+        sel_buffer2 = glGenBuffers(1)
+        counter_buffer = glGenBuffers(1)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, sel_buffer)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, sel_buffer)
+        glBufferData(GL_SHADER_STORAGE_BUFFER, len(int_array), int_array , GL_DYNAMIC_DRAW);
         
-        gl.glBindBuffer(gl.GL_SHADER_STORAGE_BUFFER, sel_buffer2)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
-        gl.glBufferData(gl.GL_SHADER_STORAGE_BUFFER, 5000*4, None , gl.GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, sel_buffer2)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
+        glBufferData(GL_SHADER_STORAGE_BUFFER, 5000*4, None , GL_DYNAMIC_DRAW);
 
-        gl.glBindBuffer(gl.GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
-        gl.glBindBufferBase(gl.GL_ATOMIC_COUNTER_BUFFER, 0, counter_buffer)
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
+        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, counter_buffer)
         zero_array = np.array([0], dtype=np.int32)
-        gl.glBufferData(gl.GL_ATOMIC_COUNTER_BUFFER, 4, zero_array , gl.GL_DYNAMIC_DRAW);
+        glBufferData(GL_ATOMIC_COUNTER_BUFFER, 4, zero_array , GL_DYNAMIC_DRAW);
 
-#        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)        
-#        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
-        #gl.glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
-        gl.glDispatchCompute(self.N,1,1)        
-        gl.glMemoryBarrier(gl.GL_SHADER_STORAGE_BARRIER_BIT)
+#        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)        
+#        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
+        #glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
+        self.select_shader.run(self.N,1,1)        
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-        gl.glBindBuffer(gl.GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
-        counter = gl.glGetBufferSubData(gl.GL_ATOMIC_COUNTER_BUFFER, 0, 4)
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
+        counter = glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, 4)
         counter = int.from_bytes(counter, "little")
         print("counter = ", counter)
-        gl.glBindBufferBase(gl.GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
-        sel_data = gl.glGetBufferSubData(gl.GL_SHADER_STORAGE_BUFFER, 0, counter*4)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
+        sel_data = glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, counter*4)
         selected_atoms2 = list(np.frombuffer(sel_data, dtype=np.int32))
         #print(selected_atoms)
-        gl.glUseProgram(0)
+        glUseProgram(0)
         sel_time_end = time.time()
         print(f"Selection time = {sel_time_end-sel_time_begin}")
         return selected_atoms2

@@ -85,6 +85,7 @@ class MainWindow(QMainWindow):
         self.qw = QWidget(self)
         self.layout = QHBoxLayout()
         self.glframe = GLWidget(space)        
+        self.glframe.main = self
         self.layout.addWidget(self.glframe)
         self.qw.setLayout(self.layout)
         self.resize(1024, 600)
@@ -1254,7 +1255,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.exit(0)
     #print(f"Exception: {exc_value}")
     traceback.print_last()
-sys.excepthook = handle_exception
+#sys.excepthook = handle_exception
 
 
 if __name__ == '__main__':
