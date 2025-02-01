@@ -24,6 +24,8 @@ Controls:
 - mouse wheel + control - move camera forward and back
 - g - move,  x,y,z for select axis
 - r - rotate object, x,y,z for select rotate axis
+- a - rotate object in special axis, setted in selection mode
+
 
 Selection atoms
 1. molecule selection mode
@@ -37,6 +39,7 @@ Selection atoms
   -   middle button for change selected node in selected atom
   - Right mouse button on selected - context menu for actions
   - a new atom can be grown from the selected atom node using the numeric keys
+  - "a" - set axis in direction of selected node
 
 *qt5 issue*
 issue error: could not find or load the Qt platform plugin "windows" in ""

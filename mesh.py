@@ -6,10 +6,6 @@ import glm
 class Mesh():
     def __init__(self,vertices):
         self.vertices = vertices
-        self.modelmatrix = glm.mat4()
-        #self.color = (1,1,1)
-        
-    def setup(self):
         self.VAO = gl.glGenVertexArrays(1)
         gl.glBindVertexArray(self.VAO )
         self.buffer = gl.glGenBuffers(1)
@@ -33,13 +29,12 @@ class Mesh():
         
     def draw(self):
         gl.glBindVertexArray(self.VAO)
-        #self.shader.set4f("objectColor",self.color[0],self.color[1],self.color[2], self.color[3])
-        #self.shader.setMatrix4("model", self.modelmatrix)        
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/6))
     
     def drawQuads(self):
         gl.glBindVertexArray(self.VAO)
-        #self.shader.set4f("objectColor",self.color[0],self.color[1],self.color[2],self.color[3])
-        #self.shader.setMatrix4("model", self.modelmatrix)
         gl.glDrawArrays(gl.GL_QUADS, 0, int(self.vertices.size/6))
 
+    def drawLines(self):
+        gl.glBindVertexArray(self.VAO)
+        gl.glDrawArrays(gl.GL_LINES, 0, int(self.vertices.size/6))

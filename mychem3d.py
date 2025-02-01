@@ -304,6 +304,9 @@ class MainWindow(QMainWindow):
     def mergemode(self):
         self.unselect()
         self.merge_mode = True
+        self.space.merge_center = self.space.get_mergeobject_center()
+        print(self.space.merge_center)
+
 
     def mergefinish(self):
         pass
@@ -446,10 +449,10 @@ class MainWindow(QMainWindow):
         self.space.merge_atoms = []
         mergedata = json.loads(f.read())
         self.recentdata = mergedata
-        self.mergemode()
         r = self.space.load_data(mergedata, merge=True)
-        c=  self.space.get_mergeobject_center()
-        self.space.move_atoms(self.space.merge_atoms,(self.space.box/2-c))
+        self.space.move_atoms(self.space.merge_atoms,(self.space.box/2-self.space.get_mergeobject_center()))
+        self.mergemode()
+                              
 
         #self.space.atoms2compute()
         #self.canvas.configure(cursor="hand2")
@@ -485,7 +488,6 @@ class MainWindow(QMainWindow):
 
         self.recentdata = mergedata
         self.mergemode()
-        self.space.merge_center = self.space.get_mergeobject_center()
         self.space.atoms2compute()
         if result:
             self.status_bar.set("Imported")
@@ -501,10 +503,9 @@ class MainWindow(QMainWindow):
         self.sim_pause()
         self.undostack.push(self.space.make_export())
         self.merge_atoms = []
-        self.mergemode()
         self.space.load_data(self.recentdata, merge=True)
+        self.mergemode()
         #self.space.atoms2compute()
-        self.space.merge_center = self.space.get_mergeobject_center()
         self.space.merge_pos+=glm.vec3(20,0,0)    
         self.status_bar.set("Merging mode")
         self.update_status()
@@ -710,14 +711,14 @@ class MainWindow(QMainWindow):
         else:
             self.undostack.push(self.space.make_export())
             self.space.merge_pos.x +=25
-            self.mergemode()
             self.ttype = "mx"
             if keysym in ["1","2","3","4","5","6"]:
                 table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
                 createtype = table[int(keysym)]
                 a = Atom(500,500,500,createtype)
             self.space.merge_atoms = [a]
-            self.space.merge_center = self.space.get_mergeobject_center()    
+            self.mergemode()
+
 
 
     def handle_escape(self,event):
@@ -907,6 +908,7 @@ class MainWindow(QMainWindow):
          shift = modifiers & Qt.ShiftModifier
          ctrl = modifiers & Qt.ControlModifier
          if self.merge_mode and not ctrl:
+            self.space.merge_center = self.space.get_mergeobject_center()
             if not shift:
                 offset = 15
                 angle = 5
@@ -923,11 +925,11 @@ class MainWindow(QMainWindow):
             if self.ttype=="mz":
                 self.space.move_atoms(self.space.merge_atoms, glm.vec3(0,0,-offset))
             if self.ttype=="rx":
-                self.space.rotate_atoms(self.space.merge_atoms, self.space.get_mergeobject_center(), glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(1,0,0))  )
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.merge_center, glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(1,0,0))  )
             if self.ttype=="ry":
-                self.space.rotate_atoms(self.space.merge_atoms, self.space.get_mergeobject_center(), glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,1,0))  )
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.merge_center, glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,1,0))  )
             if self.ttype=="rz":
-                self.space.rotate_atoms(self.space.merge_atoms, self.space.get_mergeobject_center(), glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1))  )
+                self.space.rotate_atoms(self.space.merge_atoms, self.space.merge_center, glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*glm.vec3(0,0,1))  )
             if self.ttype=="ra":
                 self.space.rotate_atoms(self.space.merge_atoms, self.space.axis_origin, glm.quat(cos(glm.radians(angle)), sin(glm.radians(angle))*self.space.axis) )
          elif self.space.select_mode==1: #select molecule

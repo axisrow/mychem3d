@@ -91,9 +91,6 @@ class GLWidget(QOpenGLWidget):
         self.fov = 45
         self.factor = 0.001
         self.curpos = glm.vec3(0.,0.,0.)
-        self.sphere_vertices = np.array(make_sphere_vert(1,20), dtype=np.float32)
-        self.sphere_vertices2 = np.array(make_sphere_vert(1,5), dtype=np.float32)
-        self.cube_vertices = np.array(make_cube2(), dtype=np.float32)
         #np.array(make_cube2(), dtype=np.float32)
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
@@ -269,15 +266,20 @@ class GLWidget(QOpenGLWidget):
 
     def create_objects(self):
         print("create objects")
+        self.sphere_vertices = np.array(make_sphere_vert(1,20), dtype=np.float32)
+        self.sphere_vertices2 = np.array(make_sphere_vert(1,5), dtype=np.float32)
+        self.cube_vertices = np.array(make_cube2(), dtype=np.float32)
         self.atomMesh = Mesh(self.sphere_vertices)
         self.atomMesh.setShader(self.shader)
-        self.atomMesh.setup()
         self.nodeMesh = Mesh(self.sphere_vertices2)
         self.nodeMesh.setShader(self.shader)
-        self.nodeMesh.setup()
         self.containerMesh = Mesh(self.cube_vertices)
         self.containerMesh.setShader(self.shader)
-        self.containerMesh.setup()
+        self.lineMesh = Mesh(np.array([-1.0,0.0,0.0,0.0,0.0,1.0, 
+                              1.0,0.0,0.0,0.0,0.0,1.0, 
+                              ],dtype=np.float32))
+        self.lineMesh.setShader(self.shader)
+
         model =  glm.mat4()
         model =  glm.scale(model,self.space.box/glm.vec3(1/self.factor))
         model =  glm.scale(model, glm.vec3(0.5,0.5,0.5))
@@ -343,6 +345,30 @@ class GLWidget(QOpenGLWidget):
                     self.shader.set4f("objectColor",color[0],color[1],color[2],color[3])
                     self.nodeMesh.draw()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            #draw axis
+            model =  glm.mat4()
+            model =  glm.translate(model, self.space.merge_center*self.factor)
+
+            if self.main.ttype[1]=="x":
+                color = (1.0,0.0,0.0,1.0)
+            if self.main.ttype[1]=="y":
+                color = (0.0,1.0,0.0,1.0)
+                model = glm.rotate(model, pi/2, glm.vec3(0,0,1) )
+            if self.main.ttype[1]=="z":
+                color = (0.0,0.0,1.0,1.0)
+                model = glm.rotate(model, pi/2, glm.vec3(0,1,0) )                
+            if self.main.ttype[1]=="a":
+                color = (1.0,1.0,1.0,1.0)
+                model =  glm.mat4()
+                model =  glm.translate(model, self.space.axis_origin*self.factor)
+                q = glm.quat(glm.vec3(1,0,0), self.space.axis)
+                #model = glm.rotate(model, glm.mat4(q))
+                model = model * glm.mat4(q)
+            model =  glm.scale(model, glm.vec3(10))
+            self.shader.setMatrix4("model", model)
+            self.shader.set4f("objectColor",color[0],color[1],color[2],color[3])
+            self.lineMesh.drawLines()
+
 
         # render computed atoms
         if self.N>0:
@@ -616,4 +642,4 @@ class GLWidget(QOpenGLWidget):
         glUseProgram(0)
         sel_time_end = time.time()
         print(f"Selection time = {sel_time_end-sel_time_begin}")
-        return selected_atoms2
+        return selected_atoms2 
