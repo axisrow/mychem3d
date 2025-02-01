@@ -313,7 +313,6 @@ class GLWidget(QOpenGLWidget):
         glCullFace(GL_FRONT)
 
         #render merge_atom
-        #if len(self.space.merge_atoms)>0:
         if self.main.merge_mode:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
             for a in self.space.merge_atoms:
@@ -326,11 +325,7 @@ class GLWidget(QOpenGLWidget):
                 self.atomMesh.draw()
                 #render merge atoms nodes
                 for n in a.nodes:
-                    #pos = a.rot * n.pos
                     pos = a.pos + a.rot * n.pos
-                    #pos -= self.space.merge_center
-                    #pos = self.space.merge_rot * pos
-                    #pos += self.space.merge_pos
                     pos *= self.factor
                     model =  glm.translate(pos)
                     model =  glm.scale(model,glm.vec3(1)*self.factor*0.1*a.r)
@@ -421,7 +416,7 @@ class GLWidget(QOpenGLWidget):
                     pos += a.pos
                     model =  glm.mat4()
                     model =  glm.translate(model, pos * self.factor  )
-                    model =  glm.scale(model,glm.vec3(self.factor*0.2*a.r))
+                    model =  glm.scale(model,glm.vec3(self.factor*0.4*a.r))
                     color = (1.0,0.0,1.0,1.0) 
                     self.shader.setMatrix4("model", model)
                     self.shader.set4f("objectColor",color[0],color[1],color[2],color[3])
