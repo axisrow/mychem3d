@@ -30,6 +30,9 @@ class Mesh():
     def draw(self):
         gl.glBindVertexArray(self.VAO)
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, int(self.vertices.size/6))
+
+    def drawInstanced(self, N):
+        gl.glDrawArraysInstanced(gl.GL_TRIANGLES, 0, int(self.vertices.size/6), N)
     
     def drawQuads(self):
         gl.glBindVertexArray(self.VAO)

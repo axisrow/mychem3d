@@ -357,7 +357,6 @@ class GLWidget(QOpenGLWidget):
                 model =  glm.mat4()
                 model =  glm.translate(model, self.space.axis_origin*self.factor)
                 q = glm.quat(glm.vec3(1,0,0), self.space.axis)
-                #model = glm.rotate(model, glm.mat4(q))
                 model = model * glm.mat4(q)
             model =  glm.scale(model, glm.vec3(10))
             self.shader.setMatrix4("model", model)
@@ -371,13 +370,13 @@ class GLWidget(QOpenGLWidget):
             if self.space.tranparentmode:
                 self.shader.setInt("transparency",1)
             self.shader.setInt("mode",1)
-            glDrawArraysInstanced(GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+            self.atomMesh.drawInstanced(len(self.space.atoms))
             if self.drawnodes:
                 self.shader.setInt("mode",2)
                 self.nodeMesh.bind()
                 for i in range(0,5):
                         self.shader.setInt("nodeindex",i)
-                        glDrawArraysInstanced(GL_TRIANGLES, 0, int(self.sphere_vertices2.size/6), len(self.space.atoms))
+                        self.nodeMesh.drawInstanced(len(self.space.atoms))
 
             #draw transparent atoms after opaque
             if self.space.tranparentmode:
@@ -386,7 +385,7 @@ class GLWidget(QOpenGLWidget):
                 self.atomMesh.bind()
                 self.shader.setInt("transparency",2)
                 self.shader.setInt("mode",1)
-                glDrawArraysInstanced(GL_TRIANGLES, 0, int(self.sphere_vertices.size/6), len(self.space.atoms))
+                self.atomMesh.drawInstanced(len(self.space.atoms))
                 self.shader.setInt("transparency",0)
                 glDisable(GL_BLEND)
                 glDepthMask(GL_TRUE)
