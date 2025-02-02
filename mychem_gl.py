@@ -23,6 +23,7 @@ from PyQt5.QtCore import QTimer
 #from PyQt5.QtGui import QOpenGLWindow,
 #from OpenGL.GL import *
 from shader import Shader,ComputeShader
+from buffer import Buffer
 
 class GLWidget(QOpenGLWidget):
     def __init__(self,space):
@@ -72,7 +73,7 @@ class GLWidget(QOpenGLWidget):
         params = {"LOCALSIZEX":str(self.LOCALSIZEX)}
         self.select_shader = ComputeShader("select.glsl", params)
         
-        self.init_loc()
+        self.init_uniforms()
 
         self.cameraUp = glm.vec3(0,1,0)
         self.cameraFront = glm.vec3(0.5,0.5,-1)
@@ -95,7 +96,8 @@ class GLWidget(QOpenGLWidget):
         #cameraRight = glm.normalize(glm.cross(up, cameraDirection))
         #cameraUp = glm.cross(cameraDirection, cameraRight)
         self.create_objects()
-        self.setup_framebuffer()
+        if self.space.recording3D:
+            self.setup_framebuffer()
         self.space.atoms2compute()
         self.start = time.time()
         self.nframes = 0          
@@ -105,27 +107,21 @@ class GLWidget(QOpenGLWidget):
         
     def setup_framebuffer(self):
         print("setup additional framebuffer")
-        # Создаем framebuffer
         self.framebuffer = glGenFramebuffers(1)
         glBindFramebuffer(GL_FRAMEBUFFER, self.framebuffer)
 
-        # Создаем renderbuffer для цвета
         color_buffer = glGenRenderbuffers(1)
         glBindRenderbuffer(GL_RENDERBUFFER, color_buffer)
         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, self.CUBESIZE, self.CUBESIZE)
 
-        # Прикрепляем renderbuffer к framebuffer
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, color_buffer)
 
-        # Создаем renderbuffer для глубины
         depth_buffer = glGenRenderbuffers(1)
         glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer)
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, self.CUBESIZE, self.CUBESIZE)
 
-        # Прикрепляем renderbuffer глубины к framebuffer
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_buffer)
 
-        # Проверяем, что framebuffer готов
         if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
             raise RuntimeError("Framebuffer is not complete!")
 
@@ -155,50 +151,41 @@ class GLWidget(QOpenGLWidget):
         a_data = np.array(a_data,dtype=np.byte)
 #        print_bytes_with_highlights(a_data,[(ctypes.sizeof(AtomC)+9*4,4)])
         print(f"  buffer size={datasize}")
-        self.atoms_buffer = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer);
-       
-        glBufferData(GL_SHADER_STORAGE_BUFFER, datasize, a_data , GL_DYNAMIC_DRAW);
-        self.atoms_buffer2 = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.atoms_buffer2)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, datasize, None , GL_DYNAMIC_DRAW);
+
+        self.atoms_buffer = Buffer()
+        self.atoms_buffer.bind_to(0)
+        self.atoms_buffer.write(a_data)
+
+        self.atoms_buffer2 = Buffer()
+        self.atoms_buffer2.bind_to(1)
+        self.atoms_buffer2.write(a_data)
     
         #nearbuffer
-        self.near_buffer = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.near_buffer)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, self.near_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4*(self.nearatomsmax+1), None , GL_DYNAMIC_DRAW);
+        self.near_buffer = Buffer()
+        self.near_buffer.bind_to(2)
+        self.near_buffer.zero(self.N*4*(self.nearatomsmax+1))
         self.nearflag = True    
 
         #far field buffer
-        self.far_buffer = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.far_buffer)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, self.far_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4, None , GL_DYNAMIC_DRAW);
+        self.far_buffer = Buffer()
+        self.far_buffer.bind_to(3)
+        self.far_buffer.zero(self.N*4)
 
         # real pos buffer
-        self.rpos_buffer = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.rpos_buffer)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4*4*6, None , GL_DYNAMIC_DRAW);
+        self.rpos_buffer = Buffer()
+        self.rpos_buffer.bind_to(4)
+        self.rpos_buffer.zero(self.N*4*4*6)
 
-
-        self.qshift_buffer = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.qshift_buffer)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, self.qshift_buffer);
-        zero = np.zeros(self.N*4*6,dtype=np.byte)
-        glBufferData(GL_SHADER_STORAGE_BUFFER, self.N*4*6, zero , GL_DYNAMIC_DRAW); 
-        
-
-
+        self.qshift_buffer = Buffer()
+        self.qshift_buffer.bind_to(6)
+        self.qshift_buffer.zero(self.N*4*6)
 
         #spin set
         self.compute_shader.use()
         self.compute_shader.setInt("stage",1) # rpos of nodes and atom q
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+
         self.compute_shader.setInt("stage",3) #autospinset
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
@@ -212,7 +199,6 @@ class GLWidget(QOpenGLWidget):
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-
         self.set_compute_uniforms()
         #self.doneCurrent()
 
@@ -222,13 +208,11 @@ class GLWidget(QOpenGLWidget):
         self.N = len(self.space.atoms)
         print(f"  ssbo2atoms N={self.N}")
         asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.atoms_buffer)
-        a_data8 = glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.N*asize)
+        a_data8 = self.atoms_buffer.subread(self.N*asize)
         #print_bytes_with_highlights(a_data8,[(ctypes.sizeof(AtomC)+9*4,4)])
         print("  getbuffersubdata size=", self.N*asize)
         #print("sizeof AtomC", ctypes.sizeof(AtomC))
         #print("sizeof NodeC", ctypes.sizeof(NodeC))
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0)
         self.doneCurrent()
         offset = 0
         self.space.Ek = 0
@@ -248,9 +232,7 @@ class GLWidget(QOpenGLWidget):
                 offset+= ctypes.sizeof(NodeC)
 
 
-
-
-    def init_loc(self):
+    def init_uniforms(self):
             self.compute_shader.init_uniforms(["stage", "box", "iTime",
                                                 "bondlock", "gravity", "redox",
                                                 "shake", "TDELTA", "BOND_KOEFF",
@@ -486,8 +468,8 @@ class GLWidget(QOpenGLWidget):
                     self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, self.atoms_buffer2)
+                    self.atoms_buffer.bind_to(0)
+                    self.atoms_buffer2.bind_to(1)
                     if self.space.action:
                         self.space.action(self.space)   
             glUseProgram(0)
@@ -602,37 +584,32 @@ class GLWidget(QOpenGLWidget):
         self.select_shader.use()
         #print("atoms N=", self.N)
         int_array = np.array(selected_atoms, dtype=np.int32)
-        int_array = int_array.tobytes()
-        sel_buffer = glGenBuffers(1)
-        sel_buffer2 = glGenBuffers(1)
-        counter_buffer = glGenBuffers(1)
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, sel_buffer)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, sel_buffer)
-        glBufferData(GL_SHADER_STORAGE_BUFFER, len(int_array), int_array , GL_DYNAMIC_DRAW);
+        uint8_array = int_array.view(np.uint8)
+        sel_buffer = Buffer()
+        sel_buffer.bind_to(7)
+        sel_buffer.write(uint8_array)
         
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, sel_buffer2)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
-        glBufferData(GL_SHADER_STORAGE_BUFFER, 5000*4, None , GL_DYNAMIC_DRAW);
+        sel_buffer2 = Buffer()
+        sel_buffer2.bind_to(8)
+        sel_buffer2.zero(5000*4)
 
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
-        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, counter_buffer)
-        zero_array = np.array([0], dtype=np.int32)
-        glBufferData(GL_ATOMIC_COUNTER_BUFFER, 4, zero_array , GL_DYNAMIC_DRAW);
+        counter_buffer = Buffer(GL_ATOMIC_COUNTER_BUFFER)
+        counter_buffer.bind_to(0)
+        counter_buffer.zero(4)
 
-#        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.atoms_buffer)        
-#        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, self.rpos_buffer);
-        #glDispatchCompute(int(self.N/self.LOCALSIZEX)+1,1,1)        
+        self.atoms_buffer.bind_to(0)
+        self.rpos_buffer.bind_to(4)
+       
         self.select_shader.run(self.N,1,1)        
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, counter_buffer)
-        counter = glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, 4)
+        counter = counter_buffer.subread(4)
         counter = int.from_bytes(counter, "little")
         print("counter = ", counter)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, sel_buffer2)
-        sel_data = glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, counter*4)
+        
+        sel_data = sel_buffer2.subread(counter*4)
         selected_atoms2 = list(np.frombuffer(sel_data, dtype=np.int32))
-        #print(selected_atoms)
+        print(selected_atoms2)
         glUseProgram(0)
         sel_time_end = time.time()
         print(f"Selection time = {sel_time_end-sel_time_begin}")
