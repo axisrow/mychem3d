@@ -528,11 +528,12 @@ class MainWindow(QMainWindow):
             y= random.randint(distant.y+10,self.space.HEIGHT-distant.y-10)
             z= random.randint(distant.z+10,self.space.DEPTH-distant.z-10)
             self.space.load_data(self.recentdata, merge=True)
-            self.space.merge_pos = glm.vec3(x,y,z)
+            self.space.move_atoms(self.space.merge_atoms, glm.vec3(x,y,z))
             f = random.random()*3.1415
             rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
+            c = self.space.get_mergeobject_center()
+            self.space.rotate_atoms(self.space.merge_atoms, c, rot)
             self.space.merge_rot = rot
-    #        self.merge_rot = merge_rot
             self.space.merge2atoms()
         self.space.merge_pos = self.space.box/2
         self.space.merge_rot = glm.quat()
