@@ -184,7 +184,6 @@ class GLWidget(QOpenGLWidget):
         self.compute_shader.use()
         self.compute_shader.setInt("stage",1) # rpos of nodes and atom q
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        
 
         self.compute_shader.setInt("stage",3) #autospinset
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
