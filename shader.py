@@ -94,5 +94,8 @@ class ComputeShader(CommonShader):
         self.compute_shader = OpenGL.GL.shaders.compileShader(source, GL_COMPUTE_SHADER)
         glAttachShader(self.program, self.compute_shader)
         glLinkProgram(self.program)            
-    def run(self, x,y,z):
-        glDispatchCompute(x,y,z)        
+ 
+    def run(self, x,y,z, barrier=True):
+        glDispatchCompute(x,y,z)     
+        if barrier: 
+            glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)  
