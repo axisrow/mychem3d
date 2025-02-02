@@ -184,20 +184,16 @@ class GLWidget(QOpenGLWidget):
         self.compute_shader.use()
         self.compute_shader.setInt("stage",1) # rpos of nodes and atom q
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         self.compute_shader.setInt("stage",3) #autospinset
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         self.compute_shader.setFloat("NEARDIST",self.space.NEARDIST)
         self.compute_shader.setInt("stage",2) #nearatoms
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         self.compute_shader.setInt("stage",4)   # bonded state
         self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         self.set_compute_uniforms()
         #self.doneCurrent()
@@ -450,23 +446,18 @@ class GLWidget(QOpenGLWidget):
                     self.space.t+=1
                     self.compute_shader.setInt("stage",1) #calc q and rpos of nodes
                     self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
-                    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
                     if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
                         self.nearflag = False
                         self.compute_shader.setInt("stage",2)   #calc near atoms  and far field
                         self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
-                        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
                         #self.compute_shader.setInt("stage",4)   # bonded state
                         #self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                        #glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
                     #self.compute_shader.setInt("stage",4) #bond state
                     #self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
-                    #glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
                     self.compute_shader.setInt("stage",5)  #main
                     self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
-                    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     self.atoms_buffer.bind_to(0)
                     self.atoms_buffer2.bind_to(1)
@@ -601,7 +592,6 @@ class GLWidget(QOpenGLWidget):
         self.rpos_buffer.bind_to(4)
        
         self.select_shader.run(self.N,1,1)        
-        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
         counter = counter_buffer.subread(4)
         counter = int.from_bytes(counter, "little")
