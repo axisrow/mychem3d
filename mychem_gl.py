@@ -98,6 +98,7 @@ class GLWidget(QOpenGLWidget):
         self.create_objects()
         if self.space.recording3D:
             self.setup_framebuffer()
+        self.init_buffers()
         self.space.atoms2compute()
         self.start = time.time()
         self.nframes = 0          
@@ -126,15 +127,63 @@ class GLWidget(QOpenGLWidget):
             raise RuntimeError("Framebuffer is not complete!")
 
 
-    def atoms2ssbo(self):
+    def init_buffers(self):
         self.makeCurrent()
-        self.N = len(self.space.atoms)
-        print(f"  Atoms2ssbo N={self.N}")
+        self.compute_shader.use()
+        print(f'init buffers: maxatoms = {self.space.maxatoms}')
+        asize = ctypes.sizeof(AtomC) + 5 * ctypes.sizeof(NodeC)
+        self.atoms_buffer = Buffer()
+        self.atoms_buffer.bind_to(0)
+        self.atoms_buffer.zero(asize*self.space.maxatoms)
+
+        self.atoms_buffer2 = Buffer()
+        self.atoms_buffer2.bind_to(1)
+        self.atoms_buffer2.zero(asize*self.space.maxatoms)
+    
+        #nearbuffer
+        self.near_buffer = Buffer()
+        self.near_buffer.bind_to(2)
+        self.near_buffer.zero(self.space.maxatoms*4*(self.nearatomsmax+1))
+        self.nearflag = True    
+
+        #far field buffer
+        self.far_buffer = Buffer()
+        self.far_buffer.bind_to(3)
+        self.far_buffer.zero(self.space.maxatoms*4)
+
+        # real pos buffer
+        self.rpos_buffer = Buffer()
+        self.rpos_buffer.bind_to(4)
+        self.rpos_buffer.zero(self.space.maxatoms*4*4*6)
+
+        self.qshift_buffer = Buffer()
+        self.qshift_buffer.bind_to(6)
+        self.qshift_buffer.zero(self.space.maxatoms*4*6)
+
+
+
+
+    def atoms2ssbo(self, atoms=None):
+        self.space.N = len(self.space.atoms)
+        if atoms == None:
+            print(f"  Atoms2ssbo N={self.space.N}")
+            if self.space.N==0: return
+            atoms = self.space.atoms
+            offset=0
+            if self.space.N> self.space.maxatoms:
+                print("too much atoms!")
+                return
+        else:
+            asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
+            offset = len(self.space.atoms)*asize
+            print(f"  Atoms2ssbo N+={len(atoms)} offset = {offset} ")
+
+        #self.makeCurrent()
+        
         ac = AtomC()
         nc = NodeC()
-        if self.N>0:
-            a_data = bytearray()
-            for a in self.space.atoms:
+        a_data = bytearray()
+        for a in atoms:
                 ac.to_ctypes(a)
                 abytearray =  bytearray(ac)               
                 a_data += abytearray
@@ -145,74 +194,103 @@ class GLWidget(QOpenGLWidget):
                 for i in range(0,5-len(a.nodes)):
                     nbytearray = bytearray(ctypes.sizeof(NodeC))
                     a_data += nbytearray
-        else:
-            a_data = bytearray(1)
         datasize = len(a_data)
         a_data = np.array(a_data,dtype=np.byte)
 #        print_bytes_with_highlights(a_data,[(ctypes.sizeof(AtomC)+9*4,4)])
         print(f"  buffer size={datasize}")
 
-        self.atoms_buffer = Buffer()
-        self.atoms_buffer.bind_to(0)
-        self.atoms_buffer.write(a_data)
+        #self.atoms_buffer.bind_to(0)
+        self.atoms_buffer.subwrite(a_data, offset)
 
-        self.atoms_buffer2 = Buffer()
-        self.atoms_buffer2.bind_to(1)
-        self.atoms_buffer2.write(a_data)
+        #self.atoms_buffer2.bind_to(1)
+        self.atoms_buffer2.subwrite(a_data, offset)
     
         #nearbuffer
-        self.near_buffer = Buffer()
         self.near_buffer.bind_to(2)
-        self.near_buffer.zero(self.N*4*(self.nearatomsmax+1))
+        offset = len(self.space.atoms)*4*(self.nearatomsmax)
+        self.near_buffer.subzero(len(atoms)*4*(self.nearatomsmax), offset)
         self.nearflag = True    
 
         #far field buffer
-        self.far_buffer = Buffer()
         self.far_buffer.bind_to(3)
-        self.far_buffer.zero(self.N*4)
+        offset = len(self.space.atoms)*4
+        self.far_buffer.subzero(len(atoms)*4,offset)
 
         # real pos buffer
-        self.rpos_buffer = Buffer()
         self.rpos_buffer.bind_to(4)
-        self.rpos_buffer.zero(self.N*4*4*6)
+        offset = len(self.space.atoms)*4*4*6        
+        self.rpos_buffer.subzero(len(atoms)*4*4*6,offset)
 
-        self.qshift_buffer = Buffer()
         self.qshift_buffer.bind_to(6)
-        self.qshift_buffer.zero(self.N*4*6)
+        offset = len(self.space.atoms)*4*6
+        self.qshift_buffer.subzero(len(atoms)*4*6,offset)
+
 
         #spin set
-        self.compute_shader.use()
-        self.compute_shader.setInt("stage",1) # rpos of nodes and atom q
-        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        #self.doneCurrent() 
 
-        self.compute_shader.setInt("stage",3) #autospinset
-        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+    def calcfirst(self):
+        print("calc first")
+        self.compute_shader.use()
+        self.set_compute_uniforms()        
+        self.compute_shader.setInt("N",self.space.N)
+        self.compute_shader.setInt("stage",1) # rpos of nodes and atom q
+        self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
 
         self.compute_shader.setFloat("NEARDIST",self.space.NEARDIST)
         self.compute_shader.setInt("stage",2) #nearatoms
-        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
+        self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
 
-        self.compute_shader.setInt("stage",4)   # bonded state
-        self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
 
-        self.set_compute_uniforms()
-        #self.doneCurrent()
+        self.compute_shader.setInt("stage",3) #autospinset
+        self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
 
+
+        #self.compute_shader.setInt("stage",4)   # bonded state
+        #self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
+
+
+    def atom2ssbo(self,a):
+        self.makeCurrent()
+        self.compute_shader.use()
+        ac = AtomC()
+        nc = NodeC()
+        a_data = bytearray()
+        ac.to_ctypes(a)
+        abytearray =  bytearray(ac)               
+        a_data += abytearray
+        for n in a.nodes:
+             nc.to_ctypes(n, self.space)
+             nbytearray = bytearray(nc)
+             a_data += nbytearray
+        for i in range(0,5-len(a.nodes)):
+                    nbytearray = bytearray(ctypes.sizeof(NodeC))
+                    a_data += nbytearray
+        a_data = np.array(a_data,dtype=np.byte)
+        datasize = len(a_data)
+        offset = (self.space.N)*datasize
+        self.atoms_buffer.bind_to(0)
+        self.atoms_buffer.subwrite(a_data, offset)
+        self.atoms_buffer2.bind_to(1)
+        self.atoms_buffer2.subwrite(a_data, offset)
+
+        #print(f"atom2ssbo  datasize={datasize} offset={offset}")
+       
 
     def ssbo2atoms(self):
         self.makeCurrent()
-        self.N = len(self.space.atoms)
-        print(f"  ssbo2atoms N={self.N}")
+        self.space.N = len(self.space.atoms)
+        print(f"  ssbo2atoms N={self.space.N}")
         asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
-        a_data8 = self.atoms_buffer.subread(self.N*asize)
+        a_data8 = self.atoms_buffer.subread(self.space.N*asize)
         #print_bytes_with_highlights(a_data8,[(ctypes.sizeof(AtomC)+9*4,4)])
-        print("  getbuffersubdata size=", self.N*asize)
+        print("  getbuffersubdata size=", self.space.N*asize)
         #print("sizeof AtomC", ctypes.sizeof(AtomC))
         #print("sizeof NodeC", ctypes.sizeof(NodeC))
-        self.doneCurrent()
+        #self.doneCurrent()
         offset = 0
         self.space.Ek = 0
-        for i in range(0,self.N):
+        for i in range(0,self.space.N):
             a = self.space.atoms[i]
             abytearray = a_data8[offset:offset+ctypes.sizeof(AtomC)]
             ac = AtomC.from_buffer(abytearray)
@@ -229,7 +307,7 @@ class GLWidget(QOpenGLWidget):
 
 
     def init_uniforms(self):
-            self.compute_shader.init_uniforms(["stage", "box", "iTime",
+            self.compute_shader.init_uniforms(["N","stage", "box", "iTime",
                                                 "bondlock", "gravity", "redox",
                                                 "shake", "TDELTA", "BOND_KOEFF",
                                                 "INTERACT_KOEFF", "REPULSION_KOEFF1", "REPULSION_KOEFF2",
@@ -343,7 +421,7 @@ class GLWidget(QOpenGLWidget):
 
 
         # render computed atoms
-        if self.N>0:
+        if self.space.N>0:
             self.atomMesh.bind()
             if self.space.tranparentmode:
                 self.shader.setInt("transparency",1)
@@ -442,14 +520,16 @@ class GLWidget(QOpenGLWidget):
         if not self.space.pause:
             self.compute_shader.use()
 
+            self.compute_shader.setInt("N",self.space.N)
+
             for i in range(0,self.space.update_delta):
                     self.space.t+=1
                     self.compute_shader.setInt("stage",1) #calc q and rpos of nodes
-                    self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
+                    self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
                     if self.space.t%(int(self.space.NEARDIST/2.0))==0 or self.nearflag==True:  #near field calc
                         self.nearflag = False
                         self.compute_shader.setInt("stage",2)   #calc near atoms  and far field
-                        self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
+                        self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
                         #self.compute_shader.setInt("stage",4)   # bonded state
                         #self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
 
@@ -457,7 +537,7 @@ class GLWidget(QOpenGLWidget):
                     #self.compute_shader.run(int(len(self.space.atoms)/self.LOCALSIZEX)+1,1,1)        
 
                     self.compute_shader.setInt("stage",5)  #main
-                    self.compute_shader.run(int(self.N/self.LOCALSIZEX)+1,1,1)        
+                    self.compute_shader.run(int(self.space.N/self.LOCALSIZEX)+1,1,1)        
                     self.atoms_buffer,self.atoms_buffer2 = self.atoms_buffer2,self.atoms_buffer
                     self.atoms_buffer.bind_to(0)
                     self.atoms_buffer2.bind_to(1)
@@ -495,7 +575,7 @@ class GLWidget(QOpenGLWidget):
     def paintGL(self):
         """Render a single frame"""
         #glClear(GL_COLOR_BUFFER_BIT)
-        self.N = len(self.space.atoms)
+        self.space.N = len(self.space.atoms)
         front = ( cos(glm.radians(self.pitch))*cos(glm.radians(self.yaw)),
                  sin(glm.radians(self.pitch)),
                  cos(glm.radians(self.pitch))*sin(glm.radians(self.yaw)),
@@ -568,6 +648,7 @@ class GLWidget(QOpenGLWidget):
             if self.framedelta!=0:
                 tm = time.time() - self.start
                 self.status_bar.setFPS(self.nframes/tm)
+        #self.doneCurrent()
 
     def expand_selection(self, selected_atoms):
         sel_time_begin = time.time()
@@ -591,7 +672,7 @@ class GLWidget(QOpenGLWidget):
         self.atoms_buffer.bind_to(0)
         self.rpos_buffer.bind_to(4)
        
-        self.select_shader.run(self.N,1,1)        
+        self.select_shader.run(self.space.N,1,1)        
 
         counter = counter_buffer.subread(4)
         counter = int.from_bytes(counter, "little")
