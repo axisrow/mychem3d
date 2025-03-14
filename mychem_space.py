@@ -8,9 +8,10 @@ import glm
 import time
 
 class Space:
-    def __init__(self,width=1500,height=1000,depth=1000):
+    def __init__(self,N=50000,width=1500,height=1000,depth=1000):
         self.pause = False
         self.ucounter = 0
+        self.maxatoms = N
         self.setSize(width,height,depth)
         self.debug = False
         self.test = False
@@ -74,6 +75,15 @@ class Space:
     def appendatom(self,a):
         a.space = self
         self.atoms.append(a)
+
+    def appendatom2(self,a):
+        a.space = self
+        self.atoms.append(a)
+        self.glframe.atom2ssbo(a)
+        self.N = len(self.atoms)
+
+
+
 
     def appendmixer(self,n=1):
         for i in range(0,n):
@@ -185,20 +195,16 @@ class Space:
         print("  delta=", delta)     
 
     def merge2atoms(self):
+        print("merge2atoms")
         #self.compute2atoms()
-        N = len(self.atoms)
         self.merge_center = self.get_mergeobject_center()
+        self.glframe.atoms2ssbo(self.merge_atoms)        
         for a in self.merge_atoms:
-            #pos = a.pos.xyz
-            #pos -= self.merge_center
-            #pos = self.merge_rot * pos
-            #pos += self.merge_pos
-            #a.pos = pos.xyz
-            #a.rot = glm.normalize(self.merge_rot * a.rot)
-            #a.calc_node_positions()
             self.appendatom(a)
         self.merge_atoms = []
-        return N
+        self.N = len(self.atoms)
+        self.glframe.calcfirst()
+        return self.N
         #self.atoms2compute()
 
 

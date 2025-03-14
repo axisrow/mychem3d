@@ -3,6 +3,7 @@
 layout(local_size_x=LOCALSIZEX, local_size_y=1,local_size_z=1) in;
 
 // Input uniforms go here if you need them.
+uniform int N;
 uniform int stage;
 uniform vec3 box;
 uniform int iTime;
@@ -138,7 +139,7 @@ void main()
     if (stage==2){ //calc near atoms  and far field
         int index = 0;
         vec3 E = vec3(0,0,0);
-        for (int j=0;j<In.atoms.length();j++){
+        for (int j=0;j<N;j++){
             if (i == j) continue;
             float r = distance(pos_i, In.atoms[j].pos.xyz);
             if (r==0.0) continue;

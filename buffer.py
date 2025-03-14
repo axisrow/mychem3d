@@ -15,10 +15,24 @@ class Buffer():
         glBindBuffer(self.buffertype, self.buffer)
         glBufferData(self.buffertype, data.size, data , GL_DYNAMIC_DRAW)
 
+
+    def subwrite(self, data, offset=0):
+        glBindBuffer(self.buffertype, self.buffer)
+        glBufferSubData(self.buffertype, offset, data.size,data)
+
+
     def zero(self, size):
         zero = np.zeros(size,dtype=np.byte)
         glBindBuffer(self.buffertype, self.buffer)
         glBufferData(self.buffertype, size, zero , GL_DYNAMIC_DRAW)
+
+    def subzero(self, size,offset=0):
+        #zero = np.zeros(size,dtype=np.byte)
+        glBindBuffer(self.buffertype, self.buffer)
+        #glBufferSubData(self.buffertype, offset,  size, zero)
+        zero_data = ctypes.c_uint(0)  
+        glClearBufferSubData(self.buffertype, GL_R8, offset, size,GL_RED, GL_UNSIGNED_BYTE, ctypes.byref(zero_data))
+
 
     def subread(self,size, offset=0):
         glBindBuffer(self.buffertype, self.buffer)
