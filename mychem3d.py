@@ -840,7 +840,7 @@ class MainWindow(QMainWindow):
             self.merge_mode = False 
             self.space.merge2atoms()
             self.resetdata = self.space.make_export()
-            #self.space.atoms2compute()
+            self.space.atoms2compute()
             #self.resetdata = self.space.make_export()
             self.status_bar.set("Merged")
 
