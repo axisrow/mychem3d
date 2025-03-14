@@ -197,6 +197,7 @@ class Space:
     def merge2atoms(self,ssbo=False):
         print("merge2atoms")
         #self.compute2atoms()
+        first = len(self.atoms)
         self.merge_center = self.get_mergeobject_center()
         if ssbo:
             self.glframe.atoms2ssbo(self.merge_atoms)        
@@ -206,7 +207,7 @@ class Space:
         self.N = len(self.atoms)
         if ssbo:
             self.glframe.calcfirst()
-        return self.N
+        return first
         #self.atoms2compute()
 
 
