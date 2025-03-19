@@ -194,24 +194,20 @@ class Space:
         delta = time.time() - t
         print("  delta=", delta)     
 
-    def merge2atoms(self,ssbo=False):
+    def merge2atoms(self):
         print("merge2atoms")
         #self.compute2atoms()
         first = len(self.atoms)
         self.merge_center = self.get_mergeobject_center()
-        if ssbo:
-            self.glframe.atoms2ssbo(self.merge_atoms)        
+        size = len(self.merge_atoms)
         for a in self.merge_atoms:
             self.appendatom(a)
         self.merge_atoms = []
-        self.N = len(self.atoms)
-        if ssbo:
-            self.glframe.calcfirst()
-        return first
+        return first, size
         #self.atoms2compute()
 
 
-    def merge_from_file(self, filename, x=0,y=0,z=0, merge_rot=glm.quat(), ssbo=False):
+    def merge_from_file(self, filename, x=0,y=0,z=0, merge_rot=glm.quat()):
         f =  open(filename,"r")		
         self.merge_atoms = []
         mergedata = json.loads(f.read())
@@ -219,8 +215,8 @@ class Space:
         c = self.get_mergeobject_center()
         self.move_atoms(self.merge_atoms,(-c) + glm.vec3(x,y,z))
         self.rotate_atoms(self.merge_atoms,glm.vec3(x,y,z), merge_rot)
-        first = self.merge2atoms(ssbo)
-        return first
+        first,size = self.merge2atoms()
+        return first,size
     
 
     def make_export(self, atoms=None):

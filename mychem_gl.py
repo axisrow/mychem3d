@@ -163,9 +163,10 @@ class GLWidget(QOpenGLWidget):
 
 
 
-    def atoms2ssbo(self, atoms=None):
+    def atoms2ssbo(self, first=None, size=None):
         self.space.N = len(self.space.atoms)
-        if atoms == None:
+        if first == None:
+            first = 0
             print(f"  Atoms2ssbo N={self.space.N}")
             if self.space.N==0: return
             atoms = self.space.atoms
@@ -174,8 +175,9 @@ class GLWidget(QOpenGLWidget):
                 print("too much atoms!")
                 return
         else:
+            atoms = self.space.atoms[first:first+size]
             asize = ctypes.sizeof(AtomC)+ctypes.sizeof(NodeC)*5
-            offset = len(self.space.atoms)*asize
+            offset = first*asize
             print(f"  Atoms2ssbo N+={len(atoms)} offset = {offset} ")
 
         #self.makeCurrent()
@@ -207,30 +209,30 @@ class GLWidget(QOpenGLWidget):
     
         #nearbuffer
         self.near_buffer.bind_to(2)
-        offset = len(self.space.atoms)*4*(self.nearatomsmax)
+        offset = first*4*(self.nearatomsmax)
         self.near_buffer.subzero(len(atoms)*4*(self.nearatomsmax), offset)
         self.nearflag = True    
 
         #far field buffer
         self.far_buffer.bind_to(3)
-        offset = len(self.space.atoms)*4
+        offset = first*4
         self.far_buffer.subzero(len(atoms)*4,offset)
 
         # real pos buffer
         self.rpos_buffer.bind_to(4)
-        offset = len(self.space.atoms)*4*4*6        
+        offset = first*4*4*6        
         self.rpos_buffer.subzero(len(atoms)*4*4*6,offset)
 
         self.qshift_buffer.bind_to(6)
-        offset = len(self.space.atoms)*4*6
+        offset = first*4*6
         self.qshift_buffer.subzero(len(atoms)*4*6,offset)
-
 
         #spin set
         #self.doneCurrent() 
 
     def calcfirst(self):
         print("calc first")
+        self.space.N = len(self.space.atoms)
         self.compute_shader.use()
         self.set_compute_uniforms()        
         self.compute_shader.setInt("N",self.space.N)
