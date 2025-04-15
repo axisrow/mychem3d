@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
         #self.glframe.bind("<MouseWheel>", self.handle_scroll)
         self.space.glframe = self.glframe
         print("glframe created")
+        self.recentdata = None
         self.merge_mode = False
         self.ttype = "mx"
         self.heat = QSlider()
@@ -503,11 +504,12 @@ class MainWindow(QMainWindow):
             return
         self.sim_pause()
         self.undostack.push(self.space.make_export())
-        self.merge_atoms = []
+        self.space.merge_atoms = []
         self.space.load_data(self.recentdata, merge=True)
-        self.mergemode()
         #self.space.atoms2compute()
         self.space.merge_pos+=glm.vec3(20,0,0)    
+        self.space.move_atoms(self.space.merge_atoms,(self.space.box/2-self.space.get_mergeobject_center()))
+        self.mergemode()
         self.status_bar.set("Merging mode")
         self.update_status()
         
@@ -529,7 +531,8 @@ class MainWindow(QMainWindow):
             y= random.randint(distant.y+10,self.space.HEIGHT-distant.y-10)
             z= random.randint(distant.z+10,self.space.DEPTH-distant.z-10)
             self.space.load_data(self.recentdata, merge=True)
-            self.space.move_atoms(self.space.merge_atoms, glm.vec3(x,y,z))
+            ##self.space.move_atoms(self.space.merge_atoms,(self.space.box/2-self.space.get_mergeobject_center()))
+            self.space.move_atoms(self.space.merge_atoms, glm.vec3(x,y,z)-self.space.get_mergeobject_center())
             f = random.random()*3.1415
             rot = glm.normalize(glm.quat(cos(f/2), sin(f/2)* glm.vec3(random.random(),random.random(),random.random())))
             c = self.space.get_mergeobject_center()
@@ -594,6 +597,7 @@ class MainWindow(QMainWindow):
         if self.space.select_mode:
             self.undostack.push(self.space.make_export())
             self.space.selected2merge(duble=True)
+            self.space.move_atoms(self.space.merge_atoms, glm.vec3(30,0,0))
             self.mergemode()
             
 
@@ -717,8 +721,9 @@ class MainWindow(QMainWindow):
             if keysym in ["1","2","3","4","5","6"]:
                 table = {1:1, 2:8, 3:7, 4:6, 5:15, 6:16 }
                 createtype = table[int(keysym)]
-                a = Atom(500,500,500,createtype)
+                a = Atom(0,0,0,createtype)
             self.space.merge_atoms = [a]
+            self.space.move_atoms(self.space.merge_atoms, self.space.merge_pos)
             self.mergemode()
 
 
@@ -1259,7 +1264,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.exit(0)
     #print(f"Exception: {exc_value}")
     traceback.print_last()
-#sys.excepthook = handle_exception
+sys.excepthook = handle_exception
 
 
 if __name__ == '__main__':
