@@ -116,6 +116,7 @@ class MainWindow(QMainWindow):
         if not os.path.exists('output/data'):
             os.makedirs('output/data')
         #self.run()
+        self.showMaximized()
         self.show()
         self.status_bar.set("Ready")
 
@@ -177,7 +178,7 @@ class MainWindow(QMainWindow):
 
     def create_json_menu(self,menu, lpath):
         files_last = []
-        for filename in os.listdir(lpath):
+        for filename in sorted(os.listdir(lpath)):
             filepath = os.path.join(lpath, filename)
             if os.path.isdir(filepath):
                 submenu = menu.addMenu(filename)
@@ -1016,7 +1017,7 @@ class OptionsFrame(QDialog):
         self.space = app.space
         self.glframe = app.glframe
         self.setWindowTitle("Fine tuning (options)")
-        self.setFixedSize(420, 600)
+        self.setFixedSize(420, 700)
 
         layout = QVBoxLayout()
 

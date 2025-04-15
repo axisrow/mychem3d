@@ -1,0 +1,5 @@
+pillow
+numpy
+pyglm
+pyopengl
+pyqt5
