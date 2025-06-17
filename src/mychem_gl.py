@@ -36,8 +36,13 @@ class GLWidget(QOpenGLWidget):
     def initializeGL(self):
         """Initalize gl states when the frame is created"""
         print("init gl")
-        #self.w
-        #self.setMinimumSize(self.width, self.height)
+        
+        # Print OpenGL info for debugging
+        print("=== OpenGL Debug Info ===")
+        print("Vendor:", glGetString(GL_VENDOR).decode() if glGetString(GL_VENDOR) else "Unknown")
+        print("Renderer:", glGetString(GL_RENDERER).decode() if glGetString(GL_RENDERER) else "Unknown")
+        print("Version:", glGetString(GL_VERSION).decode() if glGetString(GL_VERSION) else "Unknown") 
+        print("GLSL Version:", glGetString(GL_SHADING_LANGUAGE_VERSION).decode() if glGetString(GL_SHADING_LANGUAGE_VERSION) else "Unknown")
         
         glViewport(0, 0, self.width(), self.height())
         glClearColor(0.3, 0.3, 0.3, 0.0)

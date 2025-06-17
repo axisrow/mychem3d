@@ -51,6 +51,10 @@ class CommonShader:
 
     def setMatrix4(self, name, value):
         glUniformMatrix4fv(self.loc[name],1, GL_FALSE, glm.value_ptr(value))
+        
+    def setMat4(self, name, value):
+        """Alias for setMatrix4"""
+        self.setMatrix4(name, value)
 
 
 

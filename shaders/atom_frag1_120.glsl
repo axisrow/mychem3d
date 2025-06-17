@@ -1,6 +1,6 @@
 #version 120
 
-// Varying inputs from vertex shader (GLSL 1.20 style)  
+// Varying inputs from vertex shader
 varying vec4 ObjectColor;
 varying vec3 Normal;
 varying vec3 FragPos;
@@ -30,5 +30,5 @@ void main()
     vec3 diffuse = diff * lightColor;
     
     vec3 result = (diffuse + ambient) * ObjectColor.xyz;
-    gl_FragColor = vec4(result, ObjectColor.w);  // GLSL 1.20 uses gl_FragColor
+    gl_FragColor = vec4(result, ObjectColor.w);
 }

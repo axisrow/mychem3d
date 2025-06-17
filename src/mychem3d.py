@@ -1,23 +1,110 @@
-#!/usr/bin/python3.9
+#!/usr/bin/env python3
+"""
+MyChem3D - 3D Molecular Visualization Tool
+
+Automatically detects OpenGL version and uses appropriate renderer:
+- OpenGL 4.3+: Full featured version with compute shaders
+- OpenGL 2.1-4.2: Compatibility version for macOS M1 and older systems
+"""
+
 import time
 from math import sin,cos,log,sqrt
 import os, sys
 import json
 from json import encoder
+import platform
 from PIL import ImageGrab
 from mychem_atom import Atom
 from mychem_space import Space
-from mychem_gl import GLWidget
 from mychem_functions import OnOff,UndoStack,bond_atoms,double_info
 import glm
 import random
 import OpenGL.GL as gl
-from molex import load_sdf
+try:
+    from molex import load_sdf
+except ImportError:
+    print("Warning: molex module not available")
+    def load_sdf(*args, **kwargs):
+        return []
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction, \
                             QVBoxLayout, QWidget, QShortcut,QHBoxLayout,QStatusBar, \
                             QSlider,QFileDialog, QMessageBox,QLabel,QDialog,QCheckBox, \
                             QMenu,QComboBox,QPushButton,QInputDialog,QLineEdit,QDoubleSpinBox
 from PyQt5.QtCore import Qt
+
+def detect_opengl_version():
+    """Detect OpenGL version and determine which renderer to use"""
+    try:
+        # Quick test of OpenGL capabilities
+        from PyQt5.QtWidgets import QApplication
+        from PyQt5.QtOpenGL import QGLWidget
+        
+        # Create temporary app if needed
+        app = QApplication.instance()
+        if app is None:
+            app = QApplication([])
+            temp_app = True
+        else:
+            temp_app = False
+            
+        # Create temporary OpenGL context
+        widget = QGLWidget()
+        widget.makeCurrent()
+        
+        # Get OpenGL version
+        version_string = gl.glGetString(gl.GL_VERSION)
+        if version_string:
+            version_string = version_string.decode()
+            print(f"Detected OpenGL version: {version_string}")
+            
+            # Parse version number
+            version_parts = version_string.split()
+            if len(version_parts) > 0:
+                version_num = version_parts[0]
+                major, minor = map(int, version_num.split('.')[:2])
+                
+                # Check if we have OpenGL 4.3+ (required for compute shaders)
+                if major > 4 or (major == 4 and minor >= 3):
+                    print("✅ Using full-featured OpenGL 4.3+ version")
+                    return "full"
+                else:
+                    print(f"⚠️  OpenGL {major}.{minor} detected - using compatibility version")
+                    return "compat"
+        
+        if temp_app:
+            app.quit()
+            
+    except Exception as e:
+        print(f"OpenGL detection failed: {e}")
+        
+    # Fallback: check platform
+    if platform.system() == "Darwin":
+        print("🍎 macOS detected - using compatibility version")
+        return "compat"
+    else:
+        print("🖥️  Assuming OpenGL 4.3+ support")
+        return "full"
+
+# Detect OpenGL capabilities
+opengl_mode = detect_opengl_version()
+
+# Import appropriate GL widget based on capabilities
+if opengl_mode == "compat":
+    print("Loading compatibility GL widget...")
+    try:
+        # Try to import from macOS version
+        sys.path.insert(0, os.path.dirname(__file__))
+        exec(open('mychem3d_macos.py').read())
+        print("✅ Successfully loaded macOS compatibility version")
+        exit(0)  # Exit after running the compatibility version
+    except Exception as e:
+        print(f"❌ Failed to load compatibility version: {e}")
+        print("Falling back to original version...")
+        from mychem_gl import GLWidget
+else:
+    print("Loading full-featured GL widget...")
+    from mychem_gl import GLWidget
 
 class mychemApp(QApplication):
     def __init__(self,a=[]):
