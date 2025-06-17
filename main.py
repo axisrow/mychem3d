@@ -228,7 +228,7 @@ class MyChem3DLauncher(QMainWindow):
         
         # System info text
         self.info_label = QLabel()
-        self.info_label.setAlignment(Qt.AlignLeft)
+        self.info_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.info_label)
         
         # Buttons layout
@@ -268,7 +268,7 @@ class MyChem3DLauncher(QMainWindow):
         bottom_layout.addWidget(self.help_button)
         
         self.exit_button = QPushButton("7. Exit")
-        self.exit_button.clicked.connect(self.close)
+        self.exit_button.clicked.connect(self._handle_exit)
         bottom_layout.addWidget(self.exit_button)
         
         buttons_layout.addLayout(bottom_layout)
@@ -277,6 +277,10 @@ class MyChem3DLauncher(QMainWindow):
         # Show initial info
         self.update_info("Platform: Detecting...", "OpenGL: Detecting...")
         
+    def _handle_exit(self):
+        """Handles the exit button click."""
+        self.close()
+
     def detect_system(self):
         """Detect system capabilities and build menu"""
         # Get system info immediately
