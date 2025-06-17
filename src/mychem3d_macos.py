@@ -61,11 +61,12 @@ class MyChem3DGLWidget(QGLWidget):
             print("🧬 Loading Water demo from launcher...")
             self.load_molecule_from_json('examples/simple/H2O.json')
         else:
-            # Default fallback - simple water molecule
+            # Default fallback - simple water molecule with better visibility
+            print("🧬 Using fallback water molecule (H2O.json not found)")
             self.atoms = [
-                {'pos': glm.vec3(0, 0, 0), 'color': glm.vec4(1, 0, 0, 1), 'radius': 0.1, 'type': 8},      # O - Red
-                {'pos': glm.vec3(0.15, 0, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.06, 'type': 1},  # H - White
-                {'pos': glm.vec3(-0.12, 0.1, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.06, 'type': 1}, # H - White
+                {'pos': glm.vec3(0, 0, 0), 'color': glm.vec4(1, 0, 0, 1), 'radius': 0.15, 'type': 2},       # O - Red (type 2)
+                {'pos': glm.vec3(0.25, 0, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.08, 'type': 1},    # H - White
+                {'pos': glm.vec3(-0.2, 0.15, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.08, 'type': 1}, # H - White
             ]
         
         # Clear demo mode after use
@@ -75,16 +76,16 @@ class MyChem3DGLWidget(QGLWidget):
     def get_atom_color_and_radius(self, atom_type):
         """Get color and radius for atom type - using project's custom numbering"""
         atom_properties = {
-            1:  {'color': glm.vec4(1.0, 1.0, 1.0, 1.0), 'radius': 0.03},  # Hydrogen - White
-            2:  {'color': glm.vec4(1.0, 0.0, 0.0, 1.0), 'radius': 0.06},  # Oxygen (in H2O) - Red
-            4:  {'color': glm.vec4(0.3, 0.3, 0.3, 1.0), 'radius': 0.07},  # Carbon (in CH4) - Dark gray
-            6:  {'color': glm.vec4(1.0, 1.0, 0.0, 1.0), 'radius': 0.08},  # Carbon - Yellow (like in screenshots)
-            7:  {'color': glm.vec4(0.0, 0.0, 1.0, 1.0), 'radius': 0.07},  # Nitrogen - Blue
-            8:  {'color': glm.vec4(1.0, 0.0, 0.0, 1.0), 'radius': 0.06},  # Oxygen - Red
-            15: {'color': glm.vec4(0.5, 0.25, 0.2, 1.0), 'radius': 0.12},  # Phosphorus - Brown
-            16: {'color': glm.vec4(1.0, 1.0, 0.0, 1.0), 'radius': 0.10},  # Sulfur - Yellow
-            11: {'color': glm.vec4(0.7, 0.7, 0.9, 1.0), 'radius': 0.09},  # Sodium - Light blue
-            17: {'color': glm.vec4(0.0, 1.0, 0.0, 1.0), 'radius': 0.08},  # Chlorine - Green
+            1:  {'color': glm.vec4(1.0, 1.0, 1.0, 1.0), 'radius': 0.08},  # Hydrogen - White - Increased size
+            2:  {'color': glm.vec4(1.0, 0.0, 0.0, 1.0), 'radius': 0.15},  # Oxygen (in H2O) - Red - Increased size
+            4:  {'color': glm.vec4(0.3, 0.3, 0.3, 1.0), 'radius': 0.12},  # Carbon (in CH4) - Dark gray
+            6:  {'color': glm.vec4(1.0, 1.0, 0.0, 1.0), 'radius': 0.14},  # Carbon - Yellow (like in screenshots)
+            7:  {'color': glm.vec4(0.0, 0.0, 1.0, 1.0), 'radius': 0.12},  # Nitrogen - Blue
+            8:  {'color': glm.vec4(1.0, 0.0, 0.0, 1.0), 'radius': 0.15},  # Oxygen - Red - Increased size
+            15: {'color': glm.vec4(0.5, 0.25, 0.2, 1.0), 'radius': 0.18},  # Phosphorus - Brown
+            16: {'color': glm.vec4(1.0, 1.0, 0.0, 1.0), 'radius': 0.16},  # Sulfur - Yellow
+            11: {'color': glm.vec4(0.7, 0.7, 0.9, 1.0), 'radius': 0.14},  # Sodium - Light blue
+            17: {'color': glm.vec4(0.0, 1.0, 0.0, 1.0), 'radius': 0.13},  # Chlorine - Green
         }
         
         return atom_properties.get(atom_type, {
@@ -125,11 +126,11 @@ class MyChem3DGLWidget(QGLWidget):
             range_z = max_z - min_z
             max_range = max(range_x, range_y, range_z)
             
-            # Scale factor: smaller molecules get 0.001, larger ones get smaller scale
+            # Scale factor: smaller molecules get better scaling for visibility
             if max_range > 100:  # Large molecule (like fullerene, ATP)
                 scale_factor = 0.01 / max_range  # Adaptive scaling
-            else:  # Small molecules
-                scale_factor = 0.001
+            else:  # Small molecules like H2O, CH4 - need bigger scale for visibility
+                scale_factor = 0.01  # Increase scale factor for small molecules
             
             for atom_data in data['atoms']:
                 atom_type = atom_data.get('type', 1)
@@ -164,6 +165,11 @@ class MyChem3DGLWidget(QGLWidget):
             })
             
             print(f"Added {len(new_atoms)} atoms from {os.path.basename(file_path)} (Total: {len(self.atoms)})")
+            print(f"Scale factor used: {scale_factor}, Max range: {max_range}")
+            
+            # Debug: Print first few atoms' positions and properties
+            for i, atom in enumerate(new_atoms[:3]):  # Show max 3 atoms
+                print(f"  Atom {i+1}: type={atom['type']}, pos=({atom['pos'].x:.3f}, {atom['pos'].y:.3f}, {atom['pos'].z:.3f}), radius={atom['radius']:.3f}")
             
             # Adjust camera for total number of atoms
             if len(self.atoms) > 50:  # Large scene
