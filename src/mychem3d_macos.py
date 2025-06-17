@@ -59,14 +59,16 @@ class MyChem3DGLWidget(QGLWidget):
             self.load_molecule_from_json('examples/nanotubes/fullerene.json')
         elif demo_mode == 'water' and os.path.exists('examples/simple/H2O.json'):
             print("🧬 Loading Water demo from launcher...")
+            print(f"📁 File path: examples/simple/H2O.json")
             self.load_molecule_from_json('examples/simple/H2O.json')
+            print(f"✅ Loaded {len(self.atoms)} atoms total")
         else:
             # Default fallback - simple water molecule with better visibility
             print("🧬 Using fallback water molecule (H2O.json not found)")
             self.atoms = [
                 {'pos': glm.vec3(0, 0, 0), 'color': glm.vec4(1, 0, 0, 1), 'radius': 0.15, 'type': 2},       # O - Red (type 2)
-                {'pos': glm.vec3(0.25, 0, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.08, 'type': 1},    # H - White
-                {'pos': glm.vec3(-0.2, 0.15, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.08, 'type': 1}, # H - White
+                {'pos': glm.vec3(0.25, 0, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.10, 'type': 1},    # H - White
+                {'pos': glm.vec3(-0.2, 0.15, 0), 'color': glm.vec4(1, 1, 1, 1), 'radius': 0.10, 'type': 1}, # H - White
             ]
         
         # Clear demo mode after use
@@ -76,7 +78,7 @@ class MyChem3DGLWidget(QGLWidget):
     def get_atom_color_and_radius(self, atom_type):
         """Get color and radius for atom type - using project's custom numbering"""
         atom_properties = {
-            1:  {'color': glm.vec4(1.0, 1.0, 1.0, 1.0), 'radius': 0.08},  # Hydrogen - White - Increased size
+            1:  {'color': glm.vec4(1.0, 1.0, 1.0, 1.0), 'radius': 0.10},  # Hydrogen - White - Better visibility
             2:  {'color': glm.vec4(1.0, 0.0, 0.0, 1.0), 'radius': 0.15},  # Oxygen (in H2O) - Red - Increased size
             4:  {'color': glm.vec4(0.3, 0.3, 0.3, 1.0), 'radius': 0.12},  # Carbon (in CH4) - Dark gray
             6:  {'color': glm.vec4(1.0, 1.0, 0.0, 1.0), 'radius': 0.14},  # Carbon - Yellow (like in screenshots)
@@ -130,7 +132,7 @@ class MyChem3DGLWidget(QGLWidget):
             if max_range > 100:  # Large molecule (like fullerene, ATP)
                 scale_factor = 0.01 / max_range  # Adaptive scaling
             else:  # Small molecules like H2O, CH4 - need bigger scale for visibility
-                scale_factor = 0.01  # Increase scale factor for small molecules
+                scale_factor = 0.1  # Much larger scale for small molecules to be visible
             
             for atom_data in data['atoms']:
                 atom_type = atom_data.get('type', 1)

@@ -175,71 +175,47 @@ class MyChem3DLauncher(QMainWindow):
         self.detect_system()
         
     def init_ui(self):
-        """Initialize the user interface"""
+        """Initialize the user interface with button-based menu"""
         self.setWindowTitle("🧪 MyChem3D Launcher")
         self.setFixedSize(600, 500)
         self.setStyleSheet("""
             QMainWindow {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                    stop:0 #f0f0f5, stop:1 #e8e8f0);
-            }
-            QGroupBox {
-                font-weight: bold;
-                border: 2px solid #cccccc;
-                border-radius: 8px;
-                margin: 10px;
-                padding-top: 15px;
-                background: white;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                subcontrol-position: top left;
-                padding: 0 10px;
-                color: #333;
-            }
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #ffffff, stop:1 #f0f0f0);
-                border: 2px solid #cccccc;
-                border-radius: 6px;
-                padding: 8px 16px;
-                font-size: 12px;
-                font-weight: bold;
-                color: #333;
-                min-height: 20px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #e8f4fd, stop:1 #d0e8fc);
-                border-color: #4CAF50;
-            }
-            QPushButton:pressed {
-                background: #c0c0c0;
-            }
-            .recommended {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #d4edda, stop:1 #c3e6cb);
-                border-color: #4CAF50;
-                color: #155724;
-            }
-            .warning {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #fff3cd, stop:1 #ffeaa7);
-                border-color: #ffc107;
-                color: #856404;
+                background-color: #f5f5f5;
             }
             QLabel {
-                color: #333;
+                font-family: system-ui, -apple-system, Arial, sans-serif;
                 font-size: 11px;
+                color: #333;
+                background-color: white;
+                padding: 15px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                margin-bottom: 10px;
             }
-            .title {
-                font-size: 18px;
+            QPushButton {
+                font-family: system-ui, -apple-system, Arial, sans-serif;
+                font-size: 11px;
+                padding: 8px 15px;
+                border: 2px solid #4CAF50;
+                border-radius: 5px;
+                background-color: white;
+                color: #333;
+                margin: 2px;
+            }
+            QPushButton:hover {
+                background-color: #f0f8f0;
+                border-color: #45a049;
+            }
+            QPushButton:pressed {
+                background-color: #e8f5e8;
+            }
+            QPushButton.recommended {
+                background-color: #4CAF50;
+                color: white;
                 font-weight: bold;
-                color: #2c3e50;
             }
-            .subtitle {
-                font-size: 12px;
-                color: #7f8c8d;
+            QPushButton.recommended:hover {
+                background-color: #45a049;
             }
         """)
         
@@ -247,86 +223,69 @@ class MyChem3DLauncher(QMainWindow):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         layout = QVBoxLayout(main_widget)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(10)
         
-        # Title
-        title_label = QLabel("🧪 MyChem3D - 3D Molecular Visualization")
-        title_label.setProperty("class", "title")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title_label)
+        # System info text
+        self.info_label = QLabel()
+        self.info_label.setAlignment(Qt.AlignLeft)
+        layout.addWidget(self.info_label)
         
-        subtitle_label = QLabel("Advanced molecular visualization with automatic OpenGL detection")
-        subtitle_label.setProperty("class", "subtitle")
-        subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(subtitle_label)
+        # Buttons layout
+        buttons_layout = QVBoxLayout()
+        buttons_layout.setSpacing(5)
         
-        # System info group
-        self.system_group = QGroupBox("🖥️ System Information")
-        system_layout = QVBoxLayout(self.system_group)
-        self.system_info_label = QLabel("Detecting system capabilities...")
-        self.opengl_info_label = QLabel("Scanning OpenGL support...")
-        system_layout.addWidget(self.system_info_label)
-        system_layout.addWidget(self.opengl_info_label)
-        layout.addWidget(self.system_group)
+        # Create buttons
+        self.auto_button = QPushButton("1. Auto-Detect (Recommended)")
+        self.auto_button.setProperty("class", "recommended")
+        self.auto_button.clicked.connect(lambda: self.launch_version("auto"))
+        buttons_layout.addWidget(self.auto_button)
         
-        # Version selection group
-        version_group = QGroupBox("🚀 Version Selection")
-        version_layout = QVBoxLayout(version_group)
+        self.full_button = QPushButton("2. Full-Featured Version (OpenGL 4.3+)")
+        self.full_button.clicked.connect(lambda: self.launch_version("full"))
+        buttons_layout.addWidget(self.full_button)
         
-        # Auto-detect button
-        self.auto_btn = QPushButton("🔍 Auto-Detect (Recommended)")
-        self.auto_btn.setProperty("class", "recommended")
-        self.auto_btn.clicked.connect(self._launch_auto_version)
-        version_layout.addWidget(self.auto_btn)
+        self.compat_button = QPushButton("3. Compatibility Version (OpenGL 2.1+)")
+        self.compat_button.clicked.connect(lambda: self.launch_version("compat"))
+        buttons_layout.addWidget(self.compat_button)
         
-        # Full version button
-        self.full_btn = QPushButton("⚡ Full-Featured Version (OpenGL 4.3+)")
-        self.full_btn.clicked.connect(self._launch_full_version)
-        version_layout.addWidget(self.full_btn)
+        # Demo buttons
+        demo_layout = QHBoxLayout()
+        self.demo_button = QPushButton("4. Quick Demo (Water)")
+        self.demo_button.clicked.connect(self.quick_demo)
+        demo_layout.addWidget(self.demo_button)
         
-        # Compatibility button
-        self.compat_btn = QPushButton("🛡️ Compatibility Version (OpenGL 2.1+)")
-        self.compat_btn.clicked.connect(self._launch_compat_version)
-        version_layout.addWidget(self.compat_btn)
+        self.complex_button = QPushButton("5. Test Complex (Fullerene)")
+        self.complex_button.clicked.connect(self.test_complex)
+        demo_layout.addWidget(self.complex_button)
         
-        layout.addWidget(version_group)
+        buttons_layout.addLayout(demo_layout)
         
-        # Quick actions group
-        actions_group = QGroupBox("⚡ Quick Actions")
-        actions_layout = QHBoxLayout(actions_group)
+        # Help and Exit buttons
+        bottom_layout = QHBoxLayout()
+        self.help_button = QPushButton("6. Help")
+        self.help_button.clicked.connect(self.show_help_gui)
+        bottom_layout.addWidget(self.help_button)
         
-        demo_btn = QPushButton("🧬 Quick Demo")
-        demo_btn.clicked.connect(self.quick_demo)
-        actions_layout.addWidget(demo_btn)
+        self.exit_button = QPushButton("7. Exit")
+        self.exit_button.clicked.connect(self.close)
+        bottom_layout.addWidget(self.exit_button)
         
-        test_btn = QPushButton("🔬 Test Complex")
-        test_btn.clicked.connect(self.test_complex)
-        actions_layout.addWidget(test_btn)
+        buttons_layout.addLayout(bottom_layout)
+        layout.addLayout(buttons_layout)
         
-        help_btn = QPushButton("❓ Help")
-        help_btn.clicked.connect(self.show_help_gui)
-        actions_layout.addWidget(help_btn)
-        
-        layout.addWidget(actions_group)
-        
-        # Exit button
-        exit_btn = QPushButton("❌ Exit")
-        exit_btn.clicked.connect(self._handle_exit)
-        layout.addWidget(exit_btn)
-        
-        # Status bar equivalent
-        self.status_label = QLabel("Ready to launch MyChem3D...")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.status_label.setStyleSheet("color: #7f8c8d; font-style: italic;")
-        layout.addWidget(self.status_label)
+        # Show initial info
+        self.update_info("Platform: Detecting...", "OpenGL: Detecting...")
         
     def detect_system(self):
-        """Detect system capabilities in background"""
-        # Update system info immediately
+        """Detect system capabilities and build menu"""
+        # Get system info immediately
         system_info = f"Platform: {platform.system()} {platform.release()}"
         if platform.system() == "Darwin":
             system_info += f" ({platform.machine()})"
-        self.system_info_label.setText(system_info)
+        
+        # Set initial info
+        self.update_info(system_info, "Detecting OpenGL...")
         
         # Set up timer for OpenGL detection
         QTimer.singleShot(500, self.detect_opengl_async)
@@ -337,36 +296,47 @@ class MyChem3DLauncher(QMainWindow):
             self.opengl_mode = detect_opengl_support()
             
             if self.opengl_mode == "full":
-                opengl_text = "✅ OpenGL 4.3+ detected - Full features available"
-                self.auto_btn.setText("🔍 Auto-Detect → Full Version (Recommended)")
-                self.full_btn.setProperty("class", "recommended")
-                self.compat_btn.setProperty("class", "")
+                opengl_text = "OpenGL: 4.3+ detected - Full features available"
+                recommended = "Auto-Detect → Full Version (Recommended)"
             else:
-                opengl_text = "⚠️ OpenGL 2.1 detected - Compatibility mode recommended"
-                self.auto_btn.setText("🔍 Auto-Detect → Compatibility Version (Recommended)")
-                self.compat_btn.setProperty("class", "recommended")
-                self.full_btn.setProperty("class", "warning")
-                
-            self.opengl_info_label.setText(opengl_text)
+                opengl_text = "OpenGL: 2.1 detected - Compatibility mode recommended"
+                recommended = "Auto-Detect → Compatibility Version (Recommended)"
             
-            # Refresh styles
-            # Use QApplication.style() directly for Pylance compatibility
-            app_style = cast(QStyle, QApplication.style())
-            if app_style: # Ensure style object exists
-                app_style.unpolish(self.full_btn)
-                app_style.polish(self.full_btn)
-                app_style.unpolish(self.compat_btn)
-                app_style.polish(self.compat_btn)
+            # Get system info
+            system_info = f"Platform: {platform.system()} {platform.release()}"
+            if platform.system() == "Darwin":
+                system_info += f" ({platform.machine()})"
             
-            self.status_label.setText("System detection complete. Choose your preferred version.")
+            # Update info with OpenGL info
+            self.update_info(system_info, opengl_text, recommended)
             
         except Exception as e:
-            self.opengl_info_label.setText(f"❌ Detection failed: {str(e)}")
-            self.status_label.setText("Detection failed, but you can still choose manually.")
+            opengl_text = f"OpenGL: Detection failed - {str(e)}"
+            system_info = f"Platform: {platform.system()} {platform.release()}"
+            if platform.system() == "Darwin":
+                system_info += f" ({platform.machine()})"
+            self.update_info(system_info, opengl_text)
+    
+    def update_info(self, system_info, opengl_info, recommended=""):
+        """Update the system information display"""
+        info_text = f"""🧪 MyChem3D - 3D Molecular Visualization
+
+System Information:
+{system_info}
+{opengl_info}
+
+Choose an option below:"""
+        
+        self.info_label.setText(info_text)
+        
+        # Update recommended button text
+        if recommended:
+            self.auto_button.setText(f"1. {recommended}")
+            self.auto_button.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
     
     def launch_version(self, version):
         """Launch selected version with proper event loop handling"""
-        self.status_label.setText(f"Starting {version} version...")
+        print(f"🚀 Starting {version} version...")
         
         # Close the launcher properly and schedule the launch
         self.version_to_launch = version
@@ -460,20 +430,6 @@ class MyChem3DLauncher(QMainWindow):
             print(f"❌ Subprocess launch failed: {e}")
             self.show()
 
-    def _launch_auto_version(self):
-        """Helper to launch auto version"""
-        self.launch_version("auto")
-
-    def _launch_full_version(self):
-        """Helper to launch full version"""
-        self.launch_version("full")
-
-    def _launch_compat_version(self):
-        """Helper to launch compatibility version"""
-        self.launch_version("compat")
-    def _handle_exit(self):
-        """Handle exit button click by closing the window."""
-        self.close()
 
     def _close_launcher(self):
         """Helper method to close the launcher window."""
@@ -481,17 +437,44 @@ class MyChem3DLauncher(QMainWindow):
     
     def quick_demo(self):
         """Launch with a quick demo"""
-        self.status_label.setText("Starting quick demo...")
-        # Set environment variable for demo mode
-        os.environ['MYCHEM3D_DEMO'] = 'water'
-        self.launch_version("auto")
+        print("🧬 Starting quick demo...")
+        self.launch_demo_subprocess('water')
     
     def test_complex(self):
         """Launch with complex molecule test"""
-        self.status_label.setText("Starting complex molecule test...")
-        # Set environment variable for complex test
-        os.environ['MYCHEM3D_DEMO'] = 'fullerene'
-        self.launch_version("auto")
+        print("🔬 Starting complex molecule test...")
+        self.launch_demo_subprocess('fullerene')
+    
+    def launch_demo_subprocess(self, demo_type):
+        """Launch demo in subprocess for reliability"""
+        import subprocess
+        try:
+            # Set environment variable
+            env = os.environ.copy()
+            env['MYCHEM3D_DEMO'] = demo_type
+            
+            # Close the launcher window first
+            self.hide()
+            
+            # Launch the appropriate version based on detected OpenGL
+            if self.opengl_mode == "full":
+                cmd = [sys.executable, sys.argv[0], '--full']
+            else:
+                cmd = [sys.executable, sys.argv[0], '--compat']
+            
+            print(f"🚀 Launching {demo_type} demo with command: {' '.join(cmd)}")
+            
+            # Start the subprocess
+            subprocess.Popen(cmd, env=env)
+            
+            # Wait a bit then close the launcher
+            def close_launcher():
+                self.close()
+            QTimer.singleShot(1500, close_launcher)
+            
+        except Exception as e:
+            print(f"❌ Failed to launch demo: {e}")
+            self.show()
     
     def show_help_gui(self):
         """Show help in GUI"""
