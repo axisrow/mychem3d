@@ -131,8 +131,10 @@ class MyChem3DGLWidget(QGLWidget):
             # Scale factor: smaller molecules get better scaling for visibility
             if max_range > 100:  # Large molecule (like fullerene, ATP)
                 scale_factor = 0.01 / max_range  # Adaptive scaling
-            else:  # Small molecules like H2O, CH4 - need bigger scale for visibility
-                scale_factor = 0.1  # Much larger scale for small molecules to be visible
+            elif max_range < 30:  # Very small molecules like H2O (range ~20) - realistic bond lengths
+                scale_factor = 0.018  # Realistic molecular scale avoiding atom overlap (~0.25-0.27)
+            else:  # Medium molecules like CH4, NH3
+                scale_factor = 0.02  # Slightly larger for visibility
             
             for atom_data in data['atoms']:
                 atom_type = atom_data.get('type', 1)
